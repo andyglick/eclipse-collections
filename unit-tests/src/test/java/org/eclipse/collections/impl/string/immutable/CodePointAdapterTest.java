@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,12 +10,14 @@
 
 package org.eclipse.collections.impl.string.immutable;
 
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.eclipse.collections.api.IntIterable;
+import org.eclipse.collections.api.LazyIntIterable;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.impl.block.factory.primitive.IntPredicates;
+import org.eclipse.collections.impl.factory.Strings;
 import org.eclipse.collections.impl.list.immutable.primitive.AbstractImmutableIntListTestCase;
 import org.eclipse.collections.impl.test.Verify;
 import org.junit.Assert;
@@ -403,24 +405,75 @@ public class CodePointAdapterTest extends AbstractImmutableIntListTestCase
         Assert.assertEquals("cba", CodePointAdapter.adapt("abc").toReversed().toString());
     }
 
+    @Test
+    public void primitiveStream()
+    {
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4, 5), this.newWith(1, 2, 3, 4, 5).primitiveStream().boxed().collect(Collectors.toList()));
+    }
+
+    @Test
+    public void primitiveParallelStream()
+    {
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4, 5), this.newWith(1, 2, 3, 4, 5).primitiveParallelStream().boxed().collect(Collectors.toList()));
+    }
+
+    @Test
+    public void toImmutable()
+    {
+        CodePointAdapter adapter = Strings.asCodePoints("123");
+        ImmutableIntList immutable = adapter.toImmutable();
+        Assert.assertSame(adapter, immutable);
+    }
+
+    @Test
+    public void asReversed()
+    {
+        CodePointAdapter adapter = Strings.asCodePoints("123");
+        LazyIntIterable iterable = adapter.asReversed();
+        String string = iterable.collectChar(each -> (char) each).makeString("");
+        Assert.assertEquals("321", string);
+    }
+
+    @Test
+    public void dotProduct()
+    {
+        CodePointAdapter adapter = Strings.asCodePoints("123");
+        Verify.assertThrows(
+                UnsupportedOperationException.class,
+                () -> {
+                    adapter.dotProduct(adapter);
+                });
+    }
+
+    @Test
+    public void binarySearch()
+    {
+        CodePointAdapter adapter = Strings.asCodePoints("123");
+        Verify.assertThrows(
+                UnsupportedOperationException.class,
+                () -> {
+                    adapter.binarySearch((int) '2');
+                });
+    }
+
     private static class SBAppendable implements Appendable
     {
         private final StringBuilder builder = new StringBuilder();
 
         @Override
-        public Appendable append(char c) throws IOException
+        public Appendable append(char c)
         {
             return this.builder.append(c);
         }
 
         @Override
-        public Appendable append(CharSequence csq) throws IOException
+        public Appendable append(CharSequence csq)
         {
             return this.builder.append(csq);
         }
 
         @Override
-        public Appendable append(CharSequence csq, int start, int end) throws IOException
+        public Appendable append(CharSequence csq, int start, int end)
         {
             return this.builder.append(csq, start, end);
         }

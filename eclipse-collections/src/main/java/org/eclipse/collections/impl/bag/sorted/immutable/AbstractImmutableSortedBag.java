@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -29,12 +29,12 @@ import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
 import org.eclipse.collections.api.block.function.primitive.FloatFunction;
 import org.eclipse.collections.api.block.function.primitive.IntFunction;
 import org.eclipse.collections.api.block.function.primitive.LongFunction;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
-import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -127,6 +127,15 @@ abstract class AbstractImmutableSortedBag<T>
         return this.collectWith(function, parameter, Bags.mutable.<V>empty()).toImmutable();
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.countByEach(function, Bags.mutable.empty()).toImmutable();
+    }
+
     @Override
     public <V> ImmutableSortedBagMultimap<V, T> groupBy(Function<? super T, ? extends V> function)
     {
@@ -142,7 +151,7 @@ abstract class AbstractImmutableSortedBag<T>
     @Override
     public <V> ImmutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.<V, T>newMap()).toImmutable();
+        return this.groupByUniqueKey(function, UnifiedMap.<V, T>newMap(this.size())).toImmutable();
     }
 
     @Override
@@ -262,6 +271,12 @@ abstract class AbstractImmutableSortedBag<T>
     }
 
     @Override
+    public <V> ImmutableList<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        return this.collectWithOccurrences(function, FastList.<V>newList()).toImmutable();
+    }
+
+    @Override
     public <V> ImmutableList<V> flatCollect(Function<? super T, ? extends Iterable<V>> function)
     {
         return this.flatCollect(function, FastList.newList()).toImmutable();
@@ -299,7 +314,17 @@ abstract class AbstractImmutableSortedBag<T>
     @Override
     public <S> ImmutableList<Pair<T, S>> zip(Iterable<S> that)
     {
-        MutableList<Pair<T, S>> list = FastList.newList();
+        MutableList<Pair<T, S>> list;
+        if (that instanceof Collection || that instanceof RichIterable)
+        {
+            int thatSize = Iterate.sizeOf(that);
+            list = FastList.newList(Math.min(this.size(), thatSize));
+        }
+        else
+        {
+            list = FastList.newList();
+        }
+
         Iterator<S> iterator = that.iterator();
 
         this.forEachWithOccurrences((each, parameter) ->
@@ -350,11 +375,13 @@ abstract class AbstractImmutableSortedBag<T>
     @Override
     public ImmutableSortedSet<Pair<T, Integer>> zipWithIndex()
     {
-        Comparator<? super T> comparator = (Comparator<? super T>) (this.comparator() == null ? Comparators.naturalOrder() : this.comparator());
+        Comparator<? super T> comparator = this.comparator() == null
+                ? Comparators.naturalOrder()
+                : this.comparator();
         TreeSortedSet<Pair<T, Integer>> pairs = TreeSortedSet.newSet(
-                Comparators.chain(
-                        Comparators.<Pair<T, Integer>, T>byFunction(Functions.<T>firstOfPair(), (Comparator<T>) comparator),
-                        Comparators.<Pair<T, Integer>, Integer>byFunction(Functions.<Integer>secondOfPair())));
+                Comparators.<Pair<T, Integer>>chain(
+                        Comparators.byFunction(Functions.firstOfPair(), comparator),
+                        Comparators.byFunction(Functions.secondOfPair())));
         return Iterate.zipWithIndex(this, pairs).toImmutable();
     }
 
@@ -432,18 +459,6 @@ abstract class AbstractImmutableSortedBag<T>
     public int detectLastIndex(Predicate<? super T> predicate)
     {
         throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".detectLastIndex() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEach(Procedure<? super T> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEach() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super T> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEachWithIndex() not implemented yet");
     }
 
     @Override

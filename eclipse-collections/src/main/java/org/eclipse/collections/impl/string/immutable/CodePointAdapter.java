@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,9 +14,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
 
 import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.MutableIntBag;
 import org.eclipse.collections.api.block.function.primitive.IntToIntFunction;
 import org.eclipse.collections.api.block.function.primitive.IntToObjectFunction;
@@ -36,6 +38,7 @@ import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.bag.mutable.primitive.IntHashBag;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.primitive.IntLists;
 import org.eclipse.collections.impl.lazy.primitive.ReverseIntIterable;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
@@ -45,12 +48,14 @@ import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.eclipse.collections.impl.utility.Iterate;
 
 /**
- * Calculates and provides the code points stored in a String as an ImmutableIntList.  This is a cleaner more OO way of
+ * Calculates and provides the code points stored in a String as an ImmutableIntList. This is a cleaner more OO way of
  * providing many of the iterable protocols available in StringIterate for code points.
  *
  * @since 7.0
  */
-public class CodePointAdapter extends AbstractIntIterable implements CharSequence, ImmutableIntList, Serializable
+public class CodePointAdapter
+        extends AbstractIntIterable
+        implements CharSequence, ImmutableIntList, Serializable
 {
     private static final long serialVersionUID = 1L;
 
@@ -192,7 +197,6 @@ public class CodePointAdapter extends AbstractIntIterable implements CharSequenc
     @Override
     public CodePointAdapter newWithout(int element)
     {
-        StringBuilder builder = new StringBuilder();
         int indexToRemove = this.indexOf(element);
         if (indexToRemove < 0)
         {
@@ -200,6 +204,7 @@ public class CodePointAdapter extends AbstractIntIterable implements CharSequenc
         }
         int currentIndex = 0;
         int length = this.adapted.length();
+        StringBuilder builder = new StringBuilder();
         for (int i = 0; i < length; )
         {
             int codePoint = this.adapted.codePointAt(i);
@@ -539,6 +544,37 @@ public class CodePointAdapter extends AbstractIntIterable implements CharSequenc
     }
 
     @Override
+    public RichIterable<IntIterable> chunk(int size)
+    {
+        if (size <= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList<IntIterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            if (this.size() <= size)
+            {
+                result.add(IntLists.immutable.withAll(this));
+            }
+            else
+            {
+                IntIterator iterator = this.intIterator();
+                while (iterator.hasNext())
+                {
+                    MutableIntList batch = IntLists.mutable.empty();
+                    for (int i = 0; i < size && iterator.hasNext(); i++)
+                    {
+                        batch.add(iterator.next());
+                    }
+                    result.add(CodePointList.from(batch));
+                }
+            }
+        }
+        return result.toImmutable();
+    }
+
+    @Override
     public long sum()
     {
         long sum = 0;
@@ -744,6 +780,12 @@ public class CodePointAdapter extends AbstractIntIterable implements CharSequenc
             target.add(PrimitiveTuples.pair(this.get(i), iterator.next()));
         }
         return target.toImmutable();
+    }
+
+    @Override
+    public Spliterator.OfInt spliterator()
+    {
+        return this.adapted.codePoints().spliterator();
     }
 
     private class InternalIntIterator implements IntIterator

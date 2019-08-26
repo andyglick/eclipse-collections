@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -26,11 +26,10 @@ public \<R extends Mutable<name>Collection> R collect<name>(<name>Function\<? su
     this.forEach(new Collect<name>Procedure\<V>(<type>Function, target));
     return target;
 }
-
 >>
 
 body(type, name) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.map.mutable.primitive;
 
@@ -60,6 +59,7 @@ import org.eclipse.collections.api.bag.primitive.MutableIntBag;
 import org.eclipse.collections.api.bag.primitive.MutableLongBag;
 import org.eclipse.collections.api.bag.primitive.MutableShortBag;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
@@ -99,12 +99,13 @@ import org.eclipse.collections.api.iterator.Mutable<name>Iterator;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.Mutable<name>List;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.<name>ObjectMap;
 import org.eclipse.collections.api.map.primitive.Immutable<name>ObjectMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.map.primitive.Mutable<name>ObjectMap;
-import org.eclipse.collections.api.map.primitive.MutableObject<name>Map;
+<if(!primitive.longPrimitive)><if(!primitive.doublePrimitive)>import org.eclipse.collections.api.map.primitive.MutableObject<name>Map;<endif><endif>
 import org.eclipse.collections.api.map.sorted.MutableSortedMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.multimap.bag.MutableBagMultimap;
@@ -116,7 +117,7 @@ import org.eclipse.collections.api.set.primitive.Mutable<name>Set;
 import org.eclipse.collections.api.set.sorted.MutableSortedSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.<name>ObjectPair;
-import org.eclipse.collections.impl.SpreadFunctions;
+<if(!primitive.bytePrimitive)>import org.eclipse.collections.impl.SpreadFunctions;<endif>
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
 import org.eclipse.collections.impl.bag.mutable.primitive.ByteHashBag;
@@ -133,6 +134,7 @@ import org.eclipse.collections.impl.block.factory.Functions0;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.factory.PrimitiveFunctions;
 import org.eclipse.collections.impl.block.factory.Procedures2;
+import org.eclipse.collections.impl.block.procedure.BiMapCollectProcedure;
 import org.eclipse.collections.impl.block.procedure.MapCollectProcedure;
 import org.eclipse.collections.impl.block.procedure.MutatingAggregationProcedure;
 import org.eclipse.collections.impl.block.procedure.NonMutatingAggregationProcedure;
@@ -147,11 +149,12 @@ import org.eclipse.collections.impl.block.procedure.primitive.CollectIntProcedur
 import org.eclipse.collections.impl.block.procedure.primitive.CollectLongProcedure;
 import org.eclipse.collections.impl.block.procedure.primitive.CollectShortProcedure;
 import org.eclipse.collections.impl.factory.Bags;
+import org.eclipse.collections.impl.factory.BiMaps;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
-import org.eclipse.collections.impl.factory.primitive.<name>ObjectMaps;
-import org.eclipse.collections.impl.factory.primitive.Object<name>Maps;
 import org.eclipse.collections.impl.factory.primitive.<name>Sets;
+import org.eclipse.collections.impl.factory.primitive.<name>ObjectMaps;
+<if(!primitive.longPrimitive)><if(!primitive.doublePrimitive)>import org.eclipse.collections.impl.factory.primitive.Object<name>Maps;<endif><endif>
 import org.eclipse.collections.impl.factory.primitive.ObjectDoubleMaps;
 import org.eclipse.collections.impl.factory.primitive.ObjectLongMaps;
 import org.eclipse.collections.impl.iterator.Unmodifiable<name>Iterator;
@@ -185,8 +188,6 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     private static final int DEFAULT_INITIAL_CAPACITY = 8;
     private static final <type> EMPTY_KEY = <(literal.(type))("0")>;
     private static final <type> REMOVED_KEY = <(literal.(type))("1")>;
-    private static final int OCCUPIED_DATA_RATIO = 2;
-    private static final int OCCUPIED_SENTINEL_RATIO = 4;
     private static final int CACHE_LINE_SIZE = 64;
     private static final int KEY_SIZE = <keySize.(type)>;
     private static final int INITIAL_LINEAR_PROBE = CACHE_LINE_SIZE / KEY_SIZE / 2; /* half a cache line */
@@ -211,7 +212,7 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         {
             throw new IllegalArgumentException("initial capacity cannot be less than 0");
         }
-        int capacity = this.smallestPowerOfTwoGreaterThan(this.fastCeil(initialCapacity * OCCUPIED_DATA_RATIO));
+        int capacity = this.smallestPowerOfTwoGreaterThan(this.fastCeil(initialCapacity \<\< 1));
         this.allocateTable(capacity);
     }
 
@@ -945,12 +946,19 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     }
 
     <collectPrimitive("Boolean", "boolean")>
+
     <collectPrimitive("Byte", "byte")>
+
     <collectPrimitive("Char", "char")>
+
     <collectPrimitive("Double", "double")>
+
     <collectPrimitive("Float", "float")>
+
     <collectPrimitive("Int", "int")>
+
     <collectPrimitive("Long", "long")>
+
     <collectPrimitive("Short", "short")>
 
     @Override
@@ -1465,7 +1473,13 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     @Override
     public \<S> MutableBag\<Pair\<V, S>\> zip(Iterable\<S> that)
     {
-        return this.zip(that, HashBag.\<Pair\<V, S>\>newBag());
+        if (that instanceof Collection || that instanceof RichIterable)
+        {
+            int thatSize = Iterate.sizeOf(that);
+            HashBag\<Pair\<V, S>\> target = HashBag.newBag(Math.min(this.size(), thatSize));
+            return this.zip(that, target);
+        }
+        return this.zip(that, HashBag.newBag());
     }
 
     @Override
@@ -1481,7 +1495,7 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     @Override
     public MutableSet\<Pair\<V, Integer>\> zipWithIndex()
     {
-        return this.zipWithIndex(UnifiedSet.\<Pair\<V, Integer>\>newSet());
+        return this.zipWithIndex(UnifiedSet.\<Pair\<V, Integer>\>newSet(this.size()));
     }
 
     @Override
@@ -1497,17 +1511,19 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         {
             throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
         }
-
-        Iterator\<V> iterator = this.iterator();
         MutableList\<RichIterable\<V>\> result = Lists.mutable.of();
-        while (iterator.hasNext())
+        if (this.notEmpty())
         {
-            MutableList\<V> batch = FastList.newList();
-            for (int i = 0; i \< size && iterator.hasNext(); i++)
+            Iterator\<V> iterator = this.iterator();
+            while (iterator.hasNext())
             {
-                batch.add(iterator.next());
+                MutableList\<V> batch = FastList.newList();
+                for (int i = 0; i \< size && iterator.hasNext(); i++)
+                {
+                    batch.add(iterator.next());
+                }
+                result.add(batch);
             }
-            result.add(batch);
         }
         return result;
     }
@@ -1605,11 +1621,11 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     @Override
     public \<VV> MutableMap\<VV, V> groupByUniqueKey(Function\<? super V, ? extends VV> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.\<VV, V>newMap());
+        return this.groupByUniqueKey(function, UnifiedMap.\<VV, V>newMap(this.size()));
     }
 
     @Override
-    public \<VV, R extends MutableMap\<VV, V>\> R groupByUniqueKey(
+    public \<VV, R extends MutableMapIterable\<VV, V>\> R groupByUniqueKey(
                 Function\<? super V, ? extends VV> function,
                 R target)
     {
@@ -1835,6 +1851,20 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         TreeSortedMap\<NK, NV> sortedMap = TreeSortedMap.newMap(comparator);
         this.forEach(new MapCollectProcedure\<V, NK, NV>(sortedMap, keyFunction, valueFunction));
         return sortedMap;
+    }
+
+    @Override
+    public \<KK extends Comparable\<? super KK>, NK, NV> MutableSortedMap\<NK, NV> toSortedMapBy(Function\<? super NK, KK> sortBy, Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
+    {
+        return this.toSortedMap(Comparators.byFunction(sortBy), keyFunction, valueFunction);
+    }
+
+    @Override
+    public \<NK, NV> MutableBiMap\<NK, NV> toBiMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
+    {
+        MutableBiMap\<NK, NV> biMap = BiMaps.mutable.empty();
+        this.forEach(new BiMapCollectProcedure\<>(biMap, keyFunction, valueFunction));
+        return biMap;
     }
 
     @Override
@@ -2775,7 +2805,7 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         this.keys[index] = key;
         this.values[index] = value;
         ++this.occupiedWithData;
-        if (this.occupiedWithData > this.maxOccupiedWithData())
+        if (this.occupiedWithData + this.occupiedWithSentinels > this.maxOccupiedWithData())
         {
             this.rehashAndGrow();
         }
@@ -2791,10 +2821,6 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         this.values[index] = null;
         this.occupiedWithData--;
         this.occupiedWithSentinels++;
-        if (this.occupiedWithSentinels > this.maxOccupiedWithSentinels())
-        {
-            this.rehash();
-        }
     }
 
     private void copyKeys()
@@ -2933,14 +2959,15 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         this.rehash(this.smallestPowerOfTwoGreaterThan(this.size()));
     }
 
-    private void rehash()
-    {
-        this.rehash(this.keys.length);
-    }
-
     private void rehashAndGrow()
     {
-        this.rehash(this.keys.length \<\< 1);
+        int max = this.maxOccupiedWithData();
+        int newCapacity = Math.max(max, smallestPowerOfTwoGreaterThan((this.occupiedWithData + 1) \<\< 1));
+        if (this.occupiedWithSentinels > 0 && (max >\> 1) + (max >\> 2) \< this.occupiedWithData)
+        {
+            newCapacity \<\<= 1;
+        }
+        this.rehash(newCapacity);
     }
 
     private void rehash(int newCapacity)
@@ -2966,9 +2993,7 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
 
     // exposed for testing
     <(spread.(type))(type)>
-
     <(spread2.(type))(type)>
-
     private int mask(int spread)
     {
         return spread & (this.keys.length - 1);
@@ -2999,12 +3024,7 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     {
         int capacity = this.keys.length;
         // need at least one free slot for open addressing
-        return Math.min(capacity - 1, capacity / OCCUPIED_DATA_RATIO);
-    }
-
-    private int maxOccupiedWithSentinels()
-    {
-        return this.keys.length / OCCUPIED_SENTINEL_RATIO;
+        return Math.min(capacity - 1, capacity >\> 1);
     }
 
     private class KeySet implements Mutable<name>Set
@@ -3100,6 +3120,32 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
                 {
                     result = function.valueOf(result, key);
                 }
+            }
+            return result;
+        }
+
+        @Override
+        public RichIterable\<<name>Iterable> chunk(int size)
+        {
+            if (size \<= 0)
+            {
+                throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+            }
+            if (this.isEmpty())
+            {
+                return Lists.mutable.empty();
+            }
+
+            <name>Iterator iterator = this.<type>Iterator();
+            MutableList\<<name>Iterable> result = Lists.mutable.empty();
+            while (iterator.hasNext())
+            {
+                Mutable<name>Set batch =  <name>Sets.mutable.empty();
+                for (int i = 0; i \< size && iterator.hasNext(); i++)
+                {
+                    batch.add(iterator.next());
+                }
+                result.add(batch);
             }
             return result;
         }
@@ -3346,6 +3392,15 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
         public Mutable<name>Set asSynchronized()
         {
             return Synchronized<name>Set.of(this);
+        }
+
+        /**
+         * @since 9.2.
+         */
+        @Override
+        public Mutable<name>Set newEmpty()
+        {
+            return new <name>HashSet();
         }
 
         @Override
@@ -3871,7 +3926,8 @@ public class <name>ObjectHashMap\<V> implements Mutable<name>ObjectMap\<V>, Exte
     public MutableObject<name>Map\<V> flipUniqueValues()
     {
         MutableObject<name>Map\<V> result = Object<name>Maps.mutable.empty();
-        this.forEachKeyValue((key, value) -> {
+        this.forEachKeyValue((key, value) ->
+        {
             if (result.containsKey(value))
             {
                 throw new IllegalStateException("Duplicate value: " + value + " found at key: " + result.get(value) + " and key: " + key);
@@ -4273,7 +4329,7 @@ int probeThree(<type> element, int removedIndex)
     int nextIndex = (int) SpreadFunctions.<type>SpreadOne(element);
     int spreadTwo = <(reverseSpread.(type))()>(SpreadFunctions.<type>SpreadTwo(element)) | 1;
 
-    while(true)
+    while (true)
     {
         nextIndex = this.mask(nextIndex + spreadTwo);
         <type> keyAtIndex = this.keys[nextIndex];

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -13,11 +13,15 @@ package org.eclipse.collections.impl.list.primitive;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.function.IntConsumer;
 
 import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.MutableIntBag;
 import org.eclipse.collections.api.block.function.primitive.IntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ObjectIntIntToObjectFunction;
@@ -37,6 +41,7 @@ import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.bag.mutable.primitive.IntHashBag;
 import org.eclipse.collections.impl.block.factory.primitive.IntPredicates;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.primitive.IntLists;
 import org.eclipse.collections.impl.lazy.primitive.CollectIntToObjectIterable;
 import org.eclipse.collections.impl.lazy.primitive.LazyIntIterableAdapter;
 import org.eclipse.collections.impl.lazy.primitive.ReverseIntIterable;
@@ -425,7 +430,11 @@ public final class IntInterval
         {
             return false;
         }
-        if (this.from <= this.to)
+        if (this.from == this.to)
+        {
+            return this.from == list.get(0);
+        }
+        if (this.from < this.to)
         {
             int listIndex = 0;
             for (int i = this.from; i <= this.to; i += this.step)
@@ -454,7 +463,11 @@ public final class IntInterval
     public int hashCode()
     {
         int hashCode = 1;
-        if (this.from <= this.to)
+        if (this.from == this.to)
+        {
+            hashCode = 31 + this.from;
+        }
+        else if (this.from < this.to)
         {
             for (int i = this.from; i <= this.to; i += this.step)
             {
@@ -645,6 +658,50 @@ public final class IntInterval
     }
 
     @Override
+    public RichIterable<IntIterable> chunk(int size)
+    {
+        if (size <= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList<IntIterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            int innerFrom = this.from;
+            int lastUpdated = this.from;
+            if (this.from <= this.to)
+            {
+                while ((lastUpdated + this.step) <= this.to)
+                {
+                    MutableIntList batch = IntLists.mutable.empty();
+                    for (int i = innerFrom; i <= this.to && batch.size() < size; i += this.step)
+                    {
+                        batch.add(i);
+                        lastUpdated = i;
+                    }
+                    result.add(batch);
+                    innerFrom = lastUpdated + this.step;
+                }
+            }
+            else
+            {
+                while ((lastUpdated + this.step) >= this.to)
+                {
+                    MutableIntList batch = IntLists.mutable.empty();
+                    for (int i = innerFrom; i >= this.to && batch.size() < size; i += this.step)
+                    {
+                        batch.add(i);
+                        lastUpdated = i;
+                    }
+                    result.add(batch);
+                    innerFrom = lastUpdated + this.step;
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public String toString()
     {
         return this.makeString("[", ", ", "]");
@@ -679,7 +736,7 @@ public final class IntInterval
     {
         if (index < 0 || index >= this.size())
         {
-            throw new IndexOutOfBoundsException(name + ": " + index + ' ' + this.toString());
+            throw new IndexOutOfBoundsException(name + ": " + index + ' ' + this);
         }
     }
 
@@ -927,6 +984,12 @@ public final class IntInterval
         return target.toImmutable();
     }
 
+    @Override
+    public Spliterator.OfInt spliterator()
+    {
+        return new IntIntervalSpliterator(this.from, this.to, this.step);
+    }
+
     private class IntIntervalIterator implements IntIterator
     {
         private int current = IntInterval.this.from;
@@ -951,6 +1014,83 @@ public final class IntInterval
                 return result;
             }
             throw new NoSuchElementException();
+        }
+    }
+
+    private static final class IntIntervalSpliterator implements Spliterator.OfInt
+    {
+        private int current;
+        private final int to;
+        private final int step;
+        private final boolean isAscending;
+
+        private IntIntervalSpliterator(int from, int to, int step)
+        {
+            this.current = from;
+            this.to = to;
+            this.step = step;
+            this.isAscending = from <= to;
+        }
+
+        @Override
+        public Comparator<? super Integer> getComparator()
+        {
+            if (this.isAscending)
+            {
+                return Comparator.naturalOrder();
+            }
+            return  Comparator.reverseOrder();
+        }
+
+        @Override
+        public OfInt trySplit()
+        {
+            OfInt leftSpliterator = null;
+            int numberOfStepsToMid = (int) (this.estimateSize() / 2);
+            int mid = this.current + this.step * numberOfStepsToMid;
+
+            if (this.isAscending)
+            {
+                if (this.current < mid)
+                {
+                    leftSpliterator = new IntIntervalSpliterator(this.current, mid - 1, this.step);
+                    this.current = mid;
+                }
+            }
+            else
+            {
+                if (this.current > mid)
+                {
+                    leftSpliterator = new IntIntervalSpliterator(this.current, mid + 1, this.step);
+                    this.current = mid;
+                }
+            }
+
+            return leftSpliterator;
+        }
+
+        @Override
+        public long estimateSize()
+        {
+            return (long) ((this.to - this.current) / this.step + 1);
+        }
+
+        @Override
+        public int characteristics()
+        {
+            return Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SORTED;
+        }
+
+        @Override
+        public boolean tryAdvance(IntConsumer action)
+        {
+            action.accept(this.current);
+            this.current += this.step;
+            if (this.isAscending)
+            {
+                return this.current <= this.to;
+            }
+            return this.current >= this.to;
         }
     }
 }

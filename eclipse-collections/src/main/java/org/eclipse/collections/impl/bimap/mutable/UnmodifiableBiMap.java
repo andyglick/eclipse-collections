@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -63,6 +63,7 @@ import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.map.sorted.MutableSortedMap;
@@ -813,6 +814,12 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
+    public <NK, NV, R extends Map<NK, NV>> R toMap(Function<? super V, ? extends NK> keyFunction, Function<? super V, ? extends NV> valueFunction, R target)
+    {
+        return this.delegate.toMap(keyFunction, valueFunction, target);
+    }
+
+    @Override
     public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(Function<? super V, ? extends NK> keyFunction, Function<? super V, ? extends NV> valueFunction)
     {
         return this.delegate.toSortedMap(keyFunction, valueFunction);
@@ -822,6 +829,18 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(Comparator<? super NK> comparator, Function<? super V, ? extends NK> keyFunction, Function<? super V, ? extends NV> valueFunction)
     {
         return this.delegate.toSortedMap(comparator, keyFunction, valueFunction);
+    }
+
+    @Override
+    public <NK, NV> MutableBiMap<NK, NV> toBiMap(Function<? super V, ? extends NK> keyFunction, Function<? super V, ? extends NV> valueFunction)
+    {
+        return this.delegate.toBiMap(keyFunction, valueFunction);
+    }
+
+    @Override
+    public <KK extends Comparable<? super KK>, NK, NV> MutableSortedMap<NK, NV> toSortedMapBy(Function<? super NK, KK> sortBy, Function<? super V, ? extends NK> keyFunction, Function<? super V, ? extends NV> valueFunction)
+    {
+        return this.delegate.toSortedMapBy(sortBy, keyFunction, valueFunction);
     }
 
     @Override
@@ -1029,7 +1048,7 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
-    public <VV, R extends MutableMap<VV, V>> R groupByUniqueKey(Function<? super V, ? extends VV> function, R target)
+    public <VV, R extends MutableMapIterable<VV, V>> R groupByUniqueKey(Function<? super V, ? extends VV> function, R target)
     {
         return this.delegate.groupByUniqueKey(function, target);
     }
@@ -1053,13 +1072,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
-    public V putPair(Pair<K, V> keyValuePair)
+    public V putPair(Pair<? extends K, ? extends V> keyValuePair)
     {
         throw new UnsupportedOperationException("Cannot call putPair() on " + this.getClass().getSimpleName());
     }
 
     @Override
-    public V add(Pair<K, V> keyValuePair)
+    public V add(Pair<? extends K, ? extends V> keyValuePair)
     {
         throw new UnsupportedOperationException("Cannot call add() on " + this.getClass().getSimpleName());
     }
@@ -1074,6 +1093,18 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public V removeKey(K key)
     {
         throw new UnsupportedOperationException("Cannot call removeKey() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean removeAllKeys(Set<? extends K> keys)
+    {
+        throw new UnsupportedOperationException("Cannot call removeAllKeys() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        throw new UnsupportedOperationException("Cannot call removeIf() on " + this.getClass().getSimpleName());
     }
 
     @Override

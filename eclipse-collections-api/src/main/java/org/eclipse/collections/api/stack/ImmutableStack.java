@@ -125,12 +125,21 @@ public interface ImmutableStack<T> extends StackIterable<T>
     @Override
     default <V> ImmutableStack<V> collectWithIndex(ObjectIntToObjectFunction<? super T, ? extends V> function)
     {
-        int[] index = { 0 };
+        int[] index = {0};
         return this.collect(each -> function.valueOf(each, index[0]++));
     }
 
     @Override
     <V> ImmutableStack<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> ImmutableStack<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     @Override
     <V> ImmutableListMultimap<V, T> groupBy(Function<? super T, ? extends V> function);
@@ -151,6 +160,15 @@ public interface ImmutableStack<T> extends StackIterable<T>
     default <V, P> ImmutableBag<V> countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
         return this.asLazy().<P, V>collectWith(function, parameter).toBag().toImmutable();
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    default <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.asLazy().flatCollect(function).toBag().toImmutable();
     }
 
     @Override

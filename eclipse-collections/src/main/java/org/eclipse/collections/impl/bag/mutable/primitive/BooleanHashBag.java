@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -18,6 +18,7 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.collections.api.BooleanIterable;
 import org.eclipse.collections.api.LazyBooleanIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.primitive.BooleanBag;
 import org.eclipse.collections.api.bag.primitive.ImmutableBooleanBag;
@@ -38,6 +39,7 @@ import org.eclipse.collections.api.tuple.primitive.BooleanIntPair;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.BooleanBags;
+import org.eclipse.collections.impl.factory.primitive.BooleanSets;
 import org.eclipse.collections.impl.lazy.primitive.LazyBooleanIterableAdapter;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.BooleanHashSet;
@@ -352,11 +354,11 @@ public final class BooleanHashBag implements MutableBooleanBag, Externalizable
             {
                 if (each)
                 {
-                    BooleanHashBag.this.trueCount = 0;
+                    this.trueCount = 0;
                 }
                 else
                 {
-                    BooleanHashBag.this.falseCount = 0;
+                    this.falseCount = 0;
                 }
             });
         }
@@ -607,6 +609,37 @@ public final class BooleanHashBag implements MutableBooleanBag, Externalizable
         while (it.hasNext())
         {
             result = function.valueOf(result, it.next());
+        }
+        return result;
+    }
+
+    @Override
+    public RichIterable<BooleanIterable> chunk(int size)
+    {
+        if (size <= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList<BooleanIterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            if (this.size() <= size)
+            {
+                result.add(BooleanBags.mutable.withAll(this));
+            }
+            else
+            {
+                BooleanIterator iterator = this.booleanIterator();
+                while (iterator.hasNext())
+                {
+                    MutableBooleanBag batch = BooleanBags.mutable.empty();
+                    for (int i = 0; i < size && iterator.hasNext(); i++)
+                    {
+                        batch.add(iterator.next());
+                    }
+                    result.add(batch);
+                }
+            }
         }
         return result;
     }
@@ -904,5 +937,19 @@ public final class BooleanHashBag implements MutableBooleanBag, Externalizable
             }
             this.removedAlready = true;
         }
+    }
+
+    @Override
+    public MutableBooleanSet selectUnique()
+    {
+        MutableBooleanSet result = BooleanSets.mutable.empty();
+        this.forEachWithOccurrences((each, occurrences) ->
+        {
+            if (occurrences == 1)
+            {
+                result.add(each);
+            }
+        });
+        return result;
     }
 }

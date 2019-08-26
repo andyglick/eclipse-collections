@@ -47,8 +47,7 @@ public interface Object<name>Map\<K> extends <name>Iterable
     void forEachKey(Procedure\<? super K> procedure);
 
     void forEachKeyValue(Object<name>Procedure\<? super K> procedure);
-
-    <(flipUniqueValues.(name))(name)>
+    <if(!primitive.booleanPrimitive)><(flipUniqueValues.(name))(name)><endif>
 
     Object<name>Map\<K> select(Object<name>Predicate\<? super K> predicate);
 
@@ -98,12 +97,11 @@ flipUniqueValues ::= [
     "Float": "flipUniqueValues",
     "Double": "flipUniqueValues",
     "Boolean": "noMethods"
-    ]
+]
 
 noMethods(name) ::= ""
 
-flipUniqueValues(name) ::= <<
-/**
+flipUniqueValues(name) ::= <<<\n>/**
  * Return the <name>ObjectMap that is obtained by flipping the direction of this map and making the associations
  * from value to key.
  *

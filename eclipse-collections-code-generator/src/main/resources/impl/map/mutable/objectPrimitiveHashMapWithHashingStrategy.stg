@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -14,7 +14,7 @@ class(primitive) ::= <<
 >>
 
 body(type, name) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.map.mutable.primitive;
 
@@ -39,6 +39,7 @@ import org.eclipse.collections.api.block.function.primitive.<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
+import org.eclipse.collections.api.block.function.primitive.Object<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.Object<name>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.predicate.primitive.Object<name>Predicate;
@@ -64,6 +65,8 @@ import org.eclipse.collections.impl.bag.mutable.primitive.<name>HashBag;
 import org.eclipse.collections.impl.collection.mutable.primitive.Synchronized<name>Collection;
 import org.eclipse.collections.impl.collection.mutable.primitive.Unmodifiable<name>Collection;
 import org.eclipse.collections.impl.lazy.AbstractLazyIterable;
+import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.primitive.<name>Bags;
 import org.eclipse.collections.impl.factory.primitive.<name>Lists;
 import org.eclipse.collections.impl.factory.primitive.Object<name>Maps;
 <if(!primitive.booleanPrimitive)>import org.eclipse.collections.impl.factory.primitive.<name>ObjectMaps;<endif>
@@ -73,6 +76,7 @@ import org.eclipse.collections.impl.list.mutable.primitive.<name>ArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.<name>HashSet;
 <(procedureImport.(type))()>
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+
 /**
  * This file was automatically generated from template file objectPrimitiveHashMapWithHashingStrategy.stg.
  *
@@ -83,8 +87,6 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
     public static final <type> EMPTY_VALUE = <zero.(type)>;
 
     private static final long serialVersionUID = 1L;
-    private static final int OCCUPIED_DATA_RATIO = 2;
-    private static final int OCCUPIED_SENTINEL_RATIO = 4;
     private static final int DEFAULT_INITIAL_CAPACITY = 8;
 
     private static final Object NULL_KEY = new Object()
@@ -137,6 +139,9 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
 
     private HashingStrategy\<? super K> hashingStrategy;
 
+    /**
+     * @deprecated Use Object<name>HashMapWithHashingStrategy(HashingStrategy) instead.
+     */
     @Deprecated
     public Object<name>HashMapWithHashingStrategy()
     {
@@ -155,7 +160,7 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
             throw new IllegalArgumentException("initial capacity cannot be less than 0");
         }
         this.hashingStrategy = hashingStrategy;
-        int capacity = this.smallestPowerOfTwoGreaterThan(this.fastCeil(initialCapacity * OCCUPIED_DATA_RATIO));
+        int capacity = this.smallestPowerOfTwoGreaterThan(this.fastCeil(initialCapacity \<\< 1));
         this.allocateTable(capacity);
     }
 
@@ -446,6 +451,18 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
     }
 
     @Override
+    public void updateValues(Object<name>To<name>Function\<? super K> function)
+    {
+        for (int i = 0; i \< this.keys.length; i++)
+        {
+            if (isNonSentinel(this.keys[i]))
+            {
+                this.values[i] = function.valueOf(this.toNonSentinel(this.keys[i]), this.values[i]);
+            }
+        }
+    }
+
+    @Override
     public void removeKey(K key)
     {
         int index = this.probe(key);
@@ -576,7 +593,7 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
             return this.values[index];
         }
         this.addKeyValueAtIndex(key, toBeAdded, index);
-        return this.values[index];
+        return toBeAdded;
     }
 
     @Override
@@ -899,6 +916,30 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
     }
 
     @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        if (size \<= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList\<<name>Iterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            <name>Iterator iterator = this.<type>Iterator();
+            while (iterator.hasNext())
+            {
+                Mutable<name>Bag batch = <name>Bags.mutable.empty();
+                for (int i = 0; i \< size && iterator.hasNext(); i++)
+                {
+                    batch.add(iterator.next());
+                }
+                result.add(batch);
+            }
+        }
+        return result;
+    }
+
+    @Override
     <if(primitive.floatingPoint)>public <wideType.(type)> sum()
 {
     <wideType.(type)> result = <wideZero.(type)>;
@@ -1129,7 +1170,7 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
     {
         this.hashingStrategy = (HashingStrategy\<? super K>) in.readObject();
         int size = in.readInt();
-        int capacity = this.smallestPowerOfTwoGreaterThan(this.fastCeil(size * OCCUPIED_DATA_RATIO));
+        int capacity = this.smallestPowerOfTwoGreaterThan(this.fastCeil(size \<\< 1));
         this.allocateTable(capacity);
 
         for (int i = 0; i \< size; i++)
@@ -1155,7 +1196,7 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
     public Mutable<name>ObjectMap\<K> flipUniqueValues()
     {
         Mutable<name>ObjectMap\<K> result = <name>ObjectMaps.mutable.empty();
-        this.forEachKeyValue((key, value)->
+        this.forEachKeyValue((key, value) ->
         {
             K oldKey = result.put(value, key);
             if (oldKey != null)
@@ -1177,7 +1218,13 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
 
     private void rehashAndGrow()
     {
-        this.rehash(this.keys.length \<\< 1);
+        int max = this.maxOccupiedWithData();
+        int newCapacity = Math.max(max, smallestPowerOfTwoGreaterThan((this.occupiedWithData + 1) \<\< 1));
+        if (this.occupiedWithSentinels > 0 && (max >\> 1) + (max >\> 2) \< this.occupiedWithData)
+        {
+            newCapacity \<\<= 1;
+        }
+        this.rehash(newCapacity);
     }
 
     private void rehash(int newCapacity)
@@ -1305,12 +1352,7 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
     {
         int capacity = this.keys.length;
         // need at least one free slot for open addressing
-        return Math.min(capacity - 1, capacity / OCCUPIED_DATA_RATIO);
-    }
-
-    private int maxOccupiedWithSentinels()
-    {
-        return this.keys.length / OCCUPIED_SENTINEL_RATIO;
+        return Math.min(capacity - 1, capacity >\> 1);
     }
 
     private class Internal<name>Iterator implements Mutable<name>Iterator
@@ -1862,6 +1904,12 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
         }
 
         @Override
+        public RichIterable\<<name>Iterable> chunk(int size)
+        {
+            return Object<name>HashMapWithHashingStrategy.this.chunk(size);
+        }
+
+        @Override
         public <type> detectIfNone(<name>Predicate predicate, <type> ifNone)
         {
             return Object<name>HashMapWithHashingStrategy.this.detectIfNone(predicate, ifNone);
@@ -1967,6 +2015,15 @@ public class Object<name>HashMapWithHashingStrategy\<K> implements MutableObject
         public double median()
         {
             return Object<name>HashMapWithHashingStrategy.this.median();
+        }
+
+        /**
+         * @since 9.2.
+         */
+        @Override
+        public Mutable<name>Collection newEmpty()
+        {
+            return new <name>HashBag();
         }
     }
 

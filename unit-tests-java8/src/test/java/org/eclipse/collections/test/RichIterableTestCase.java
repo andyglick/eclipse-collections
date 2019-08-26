@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,6 +10,7 @@
 
 package org.eclipse.collections.test;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,10 @@ import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.SortedSets;
+import org.eclipse.collections.impl.factory.primitive.ObjectDoubleMaps;
+import org.eclipse.collections.impl.factory.primitive.ObjectLongMaps;
 import org.eclipse.collections.impl.list.Interval;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.map.sorted.mutable.TreeSortedMap;
 import org.eclipse.collections.impl.multimap.bag.HashBagMultimap;
@@ -206,6 +210,19 @@ public interface RichIterableTestCase extends IterableTestCase
         assertEquals(this.newMutableForFilter(11), result);
 
         this.newWith().forEach(Procedures.cast(each -> fail()));
+    }
+
+    @Test
+    default void RichIterable_tap()
+    {
+        Procedure<Object> noop = each -> {
+        };
+
+        RichIterable<Integer> iterable = this.newWith(3, 3, 3, 2, 2, 1);
+        MutableCollection<Integer> result = this.newMutableForFilter();
+        iterable.tap(result::add).forEach(noop);
+        assertEquals(this.newMutableForFilter(3, 3, 3, 2, 2, 1), result);
+        this.newWith().tap(Procedures.cast(each -> fail()));
     }
 
     @Test
@@ -837,6 +854,65 @@ public interface RichIterableTestCase extends IterableTestCase
         });
         assertEquals(expectedIterationOrder, sumOfLongIterationOrder);
 
+        /*
+         * TODO: Fix sumByPrimitive methods for bags, to only iterate once per item, not per occurrence.
+        MutableCollection<Integer> sumByDoubleIterationOrder1 = this.newMutableForFilter();
+        MutableCollection<Integer> sumByDoubleIterationOrder2 = this.newMutableForFilter();
+        this.getInstanceUnderTest().sumByDouble(
+                each -> {
+                    sumByDoubleIterationOrder1.add(each);
+                    return each;
+                },
+                each -> {
+                    sumByDoubleIterationOrder2.add(each);
+                    return 0.0;
+                });
+        assertEquals(expectedIterationOrder, sumByDoubleIterationOrder1);
+        assertEquals(expectedIterationOrder, sumByDoubleIterationOrder2);
+
+        MutableCollection<Integer> sumByFloatIterationOrder1 = this.newMutableForFilter();
+        MutableCollection<Integer> sumByFloatIterationOrder2 = this.newMutableForFilter();
+        this.getInstanceUnderTest().sumByFloat(
+                each -> {
+                    sumByFloatIterationOrder1.add(each);
+                    return each;
+                },
+                each -> {
+                    sumByFloatIterationOrder2.add(each);
+                    return 0.0f;
+                });
+        assertEquals(expectedIterationOrder, sumByFloatIterationOrder1);
+        assertEquals(expectedIterationOrder, sumByFloatIterationOrder2);
+
+        MutableCollection<Integer> sumByIntIterationOrder1 = this.newMutableForFilter();
+        MutableCollection<Integer> sumByIntIterationOrder2 = this.newMutableForFilter();
+        this.getInstanceUnderTest().sumByInt(
+                each -> {
+                    sumByIntIterationOrder1.add(each);
+                    return each;
+                },
+                each -> {
+                    sumByIntIterationOrder2.add(each);
+                    return 0;
+                });
+        assertEquals(expectedIterationOrder, sumByIntIterationOrder1);
+        assertEquals(expectedIterationOrder, sumByIntIterationOrder2);
+
+        MutableCollection<Integer> sumByLongIterationOrder1 = this.newMutableForFilter();
+        MutableCollection<Integer> sumByLongIterationOrder2 = this.newMutableForFilter();
+        this.getInstanceUnderTest().sumByLong(
+                each -> {
+                    sumByLongIterationOrder1.add(each);
+                    return each;
+                },
+                each -> {
+                    sumByLongIterationOrder2.add(each);
+                    return 0L;
+                });
+        assertEquals(expectedIterationOrder, sumByLongIterationOrder1);
+        assertEquals(expectedIterationOrder, sumByLongIterationOrder2);
+        */
+
         MutableCollection<Integer> expectedInjectIntoIterationOrder = this.allowsDuplicates()
                 ? this.newMutableForFilter(4, 4, 4, 4, 3, 3, 3, 2, 2, 1)
                 : expectedIterationOrder;
@@ -883,12 +959,11 @@ public interface RichIterableTestCase extends IterableTestCase
         });
         assertEquals(expectedIterationOrder.size() - 1, toSortedListCount.getCount());
 
-/*
+        /*
         MutableCollection<Integer> toSortedListByIterationOrder = this.newMutableForFilter();
         this.getInstanceUnderTest().toSortedListBy(toSortedListByIterationOrder::add);
         assertEquals(expectedIterationOrder.size(), toSortedListByIterationOrder.size());
-
-*/
+        */
 
         Counter toSortedSetCount = new Counter();
         this.getInstanceUnderTest().toSortedSet((o1, o2) -> {
@@ -897,11 +972,11 @@ public interface RichIterableTestCase extends IterableTestCase
         });
         assertEquals(expectedIterationOrder.size(), toSortedSetCount.getCount());
 
-/*
+        /*
         MutableCollection<Integer> toSortedSetByIterationOrder = this.newMutableForFilter();
         this.getInstanceUnderTest().toSortedSetBy(toSortedSetByIterationOrder::add);
         assertEquals(expectedIterationOrder.size(), toSortedSetByIterationOrder.size());
-*/
+        */
 
         Counter toSortedBagCount = new Counter();
         this.getInstanceUnderTest().toSortedBag((o1, o2) -> {
@@ -910,11 +985,11 @@ public interface RichIterableTestCase extends IterableTestCase
         });
         assertEquals(expectedIterationOrder.size(), toSortedBagCount.getCount());
 
-/*
+        /*
         MutableCollection<Integer> toSortedBagByIterationOrder = this.newMutableForFilter();
         this.getInstanceUnderTest().toSortedBagBy(toSortedBagByIterationOrder::add);
         assertEquals(expectedIterationOrder.size(), toSortedBagByIterationOrder.size());
-*/
+        */
 
         MutableCollection<Integer> summarizeIntOrder = this.newMutableForFilter();
         this.getInstanceUnderTest().summarizeInt(each -> {
@@ -1171,6 +1246,18 @@ public interface RichIterableTestCase extends IterableTestCase
         assertEquals(
                 this.newMutableForTransform(1, 2, 3, 1, 2, 1, 2, 1),
                 this.newWith(3, 2, 2, 1).flatCollect(Interval::oneTo, this.newMutableForTransform()));
+    }
+
+    @Test
+    default void RichIterable_flatCollectWith()
+    {
+        assertEquals(
+                this.getExpectedTransformed(3, 4, 5, 2, 3, 4, 5, 2, 3, 4, 5, 1, 2, 3, 4, 5),
+                this.newWith(3, 2, 2, 1).flatCollectWith(Interval::fromTo, 5));
+
+        assertEquals(
+                this.newMutableForTransform(3, 2, 1, 2, 1, 2, 1, 1),
+                this.newWith(3, 2, 2, 1).flatCollectWith(Interval::fromTo, 1, this.newMutableForTransform()));
     }
 
     @Test
@@ -1474,11 +1561,11 @@ public interface RichIterableTestCase extends IterableTestCase
     {
         assertEquals(Optional.of("da"), this.newWith("ed", "da", "ca", "bc", "ab").minByOptional(string -> string.charAt(string.length() - 1)));
         assertSame(Optional.empty(), this.<String>newWith().minByOptional(string -> string.charAt(string.length() - 1)));
-        assertThrows(NullPointerException.class, () -> this.newWith(new Object[]{null}).minByOptional(object -> object == null));
+        assertThrows(NullPointerException.class, () -> this.newWith(new Object[]{null}).minByOptional(Objects::isNull));
 
         assertEquals(Optional.of("dz"), this.newWith("ew", "dz", "cz", "bx", "ay").maxByOptional(string -> string.charAt(string.length() - 1)));
         assertSame(Optional.empty(), this.<String>newWith().maxByOptional(string -> string.charAt(string.length() - 1)));
-        assertThrows(NullPointerException.class, () -> this.newWith(new Object[]{null}).maxByOptional(object -> object == null));
+        assertThrows(NullPointerException.class, () -> this.newWith(new Object[]{null}).maxByOptional(Objects::isNull));
     }
 
     @Test
@@ -1547,6 +1634,27 @@ public interface RichIterableTestCase extends IterableTestCase
         Assert.assertEquals(3, evensAndOdds2.occurrencesOf(0));
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Test
+    default void RichIterable_countByEach()
+    {
+        RichIterable<Integer> integerList = this.newWith(1, 2, 4);
+        Bag<Integer> integerBag1 = integerList.countByEach(each -> IntInterval.oneTo(5).collect(i -> each * i));
+        assertEquals(1, integerBag1.occurrencesOf(1));
+        assertEquals(2, integerBag1.occurrencesOf(2));
+        assertEquals(3, integerBag1.occurrencesOf(4));
+        assertEquals(2, integerBag1.occurrencesOf(8));
+        assertEquals(1, integerBag1.occurrencesOf(12));
+        Bag<Integer> integerBag2 = integerList.countByEach(each -> IntInterval.oneTo(5).collect(i -> each * i), Bags.mutable.empty());
+        assertEquals(1, integerBag2.occurrencesOf(1));
+        assertEquals(2, integerBag2.occurrencesOf(2));
+        assertEquals(3, integerBag2.occurrencesOf(4));
+        assertEquals(2, integerBag2.occurrencesOf(8));
+        assertEquals(1, integerBag2.occurrencesOf(12));
+    }
+
     @Test
     default void RichIterable_aggregateBy_aggregateInPlaceBy()
     {
@@ -1581,6 +1689,28 @@ public interface RichIterableTestCase extends IterableTestCase
         Assert.assertEquals(30.0, iterable.sumOfDouble(Integer::doubleValue), 0.001);
         Assert.assertEquals(30, iterable.sumOfInt(Integer::intValue));
         Assert.assertEquals(30L, iterable.sumOfLong(Integer::longValue));
+    }
+
+    @Test
+    default void RichIterable_sumByPrimitive()
+    {
+        RichIterable<String> iterable = this.newWith("4", "4", "4", "4", "3", "3", "3", "2", "2", "1");
+
+        assertEquals(
+                ObjectLongMaps.immutable.with(0, 20L).newWithKeyValue(1, 10L),
+                iterable.sumByInt(s -> Integer.parseInt(s) % 2, Integer::parseInt));
+
+        assertEquals(
+                ObjectLongMaps.immutable.with(0, 20L).newWithKeyValue(1, 10L),
+                iterable.sumByLong(s -> Integer.parseInt(s) % 2, Long::parseLong));
+
+        assertEquals(
+                ObjectDoubleMaps.immutable.with(0, 20.0d).newWithKeyValue(1, 10.0d),
+                iterable.sumByDouble(s -> Integer.parseInt(s) % 2, Double::parseDouble));
+
+        assertEquals(
+                ObjectDoubleMaps.immutable.with(0, 20.0d).newWithKeyValue(1, 10.0d),
+                iterable.sumByFloat(s -> Integer.parseInt(s) % 2, Float::parseFloat));
     }
 
     @Test
@@ -1902,6 +2032,24 @@ public interface RichIterableTestCase extends IterableTestCase
     }
 
     @Test
+    default void RichIterable_toMapTarget()
+    {
+        RichIterable<Integer> iterable = this.newWith(13, 12, 11, 3, 2, 1);
+
+        Map<String, Integer> jdkMap = new HashMap<>();
+        jdkMap.put("13", 3);
+        jdkMap.put("12", 2);
+        jdkMap.put("11", 1);
+        jdkMap.put("3", 3);
+        jdkMap.put("2", 2);
+        jdkMap.put("1", 1);
+
+        assertEquals(
+                jdkMap,
+                iterable.toMap(Object::toString, each -> each % 10, new HashMap<String, Integer>()));
+    }
+
+    @Test
     default void RichIterable_toSortedMap()
     {
         RichIterable<Integer> iterable = this.newWith(13, 13, 12, 12, 11, 11, 3, 3, 2, 2, 1, 1);
@@ -1924,6 +2072,12 @@ public interface RichIterableTestCase extends IterableTestCase
                         Comparators.reverseNaturalOrder(),
                         pairs),
                 iterable.toSortedMap(Comparators.reverseNaturalOrder(), Object::toString, each -> each % 10));
+
+        assertEquals(
+                TreeSortedMap.newMapWith(
+                        Comparators.naturalOrder(),
+                        pairs),
+                iterable.toSortedMapBy(Functions.getStringPassThru(), Object::toString, each -> each % 10));
     }
 
     @Test

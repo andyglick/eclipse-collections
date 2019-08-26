@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<!--
+    <!--
   ~ Copyright (c) 2017 Zoltan Ujhelyi and Eclipse Collections project.
   ~ All rights reserved. This program and the accompanying materials
   ~ are made available under the terms of the Eclipse Public License v1.0
@@ -11,12 +11,8 @@
   -->
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.eclipse.collections</groupId>
-        <artifactId>eclipse-collections-parent</artifactId>
-        <version>9.1.0-SNAPSHOT</version>
-    </parent>
-
+    <groupId>org.eclipse.collections</groupId>
+    <version>10.0.0-SNAPSHOT</version>
     <artifactId>p2-feature</artifactId>
     <packaging>pom</packaging>
 
@@ -32,15 +28,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- versions used for plug-ins below -->
-        <tycho-version>1.0.0</tycho-version>
-        <tycho-extras-version>1.0.0</tycho-extras-version>
+        <tycho-version>1.2.0</tycho-version>
+        <tycho-extras-version>1.2.0</tycho-extras-version>
 
         <!-- pattern/format used for the qualifier -->
         <qualifier.format>'v'yyyyMMdd-HHmm</qualifier.format>
 
         <!-- by default complain if working tree is dirty (error|warning|ignore) -->
         <dirtyWorkingTree>warning</dirtyWorkingTree>
-        
+
         <collections.repository.url>file://${project.basedir}/../p2-repository/org.eclipse.collections/target/repository</collections.repository.url>
     </properties>
 
@@ -52,6 +48,18 @@
             <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>tycho-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.eclipse.tycho</groupId>
+                        <artifactId>tycho-core</artifactId>
+                        <version>${tycho-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.tycho</groupId>
+                        <artifactId>tycho-p2-facade</artifactId>
+                        <version>${tycho-version}</version>
+                    </dependency>
+                </dependencies>
                 <extensions>true</extensions>
             </plugin>
 

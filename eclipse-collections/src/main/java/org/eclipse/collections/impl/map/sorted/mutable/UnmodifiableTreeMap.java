@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -13,13 +13,16 @@ package org.eclipse.collections.impl.map.sorted.mutable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.eclipse.collections.api.LazyIterable;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
@@ -104,8 +107,8 @@ public class UnmodifiableTreeMap<K, V>
     }
 
     /**
-     * This method will take a MutableSortedMap and wrap it directly in a UnmodifiableMutableMap.  It will
-     * take any other non-GS-SortedMap and first adapt it will a SortedMapAdapter, and then return a
+     * This method will take a MutableSortedMap and wrap it directly in a UnmodifiableMutableMap. It will
+     * take any other non-Eclipse-Collections SortedMap and first adapt it will a SortedMapAdapter, and then return a
      * UnmodifiableSortedMap that wraps the adapter.
      */
     public static <K, V, M extends SortedMap<K, V>> UnmodifiableTreeMap<K, V> of(M map)
@@ -118,13 +121,13 @@ public class UnmodifiableTreeMap<K, V>
     }
 
     @Override
-    public V putPair(Pair<K, V> keyValuePair)
+    public V putPair(Pair<? extends K, ? extends V> keyValuePair)
     {
         throw new UnsupportedOperationException("Cannot call putPair() on " + this.getClass().getSimpleName());
     }
 
     @Override
-    public V add(Pair<K, V> keyValuePair)
+    public V add(Pair<? extends K, ? extends V> keyValuePair)
     {
         throw new UnsupportedOperationException("Cannot call add() on " + this.getClass().getSimpleName());
     }
@@ -133,6 +136,18 @@ public class UnmodifiableTreeMap<K, V>
     public V removeKey(K key)
     {
         throw new UnsupportedOperationException("Cannot call removeKey() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean removeAllKeys(Set<? extends K> keys)
+    {
+        throw new UnsupportedOperationException("Cannot call removeAllKeys() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        throw new UnsupportedOperationException("Cannot call removeIf() on " + this.getClass().getSimpleName());
     }
 
     @Override
@@ -564,6 +579,15 @@ public class UnmodifiableTreeMap<K, V>
     }
 
     @Override
+    public <NK, NV, R extends Map<NK, NV>> R toMap(
+            Function<? super V, ? extends NK> keyFunction,
+            Function<? super V, ? extends NV> valueFunction,
+            R target)
+    {
+        return this.getMutableSortedMap().toMap(keyFunction, valueFunction, target);
+    }
+
+    @Override
     public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(
             Function<? super V, ? extends NK> keyFunction,
             Function<? super V, ? extends NV> valueFunction)
@@ -578,6 +602,23 @@ public class UnmodifiableTreeMap<K, V>
             Function<? super V, ? extends NV> valueFunction)
     {
         return this.getMutableSortedMap().toSortedMap(comparator, keyFunction, valueFunction);
+    }
+
+    @Override
+    public <KK extends Comparable<? super KK>, NK, NV> MutableSortedMap<NK, NV> toSortedMapBy(
+            Function<? super NK, KK> sortBy,
+            Function<? super V, ? extends NK> keyFunction,
+            Function<? super V, ? extends NV> valueFunction)
+    {
+        return this.getMutableSortedMap().toSortedMapBy(sortBy, keyFunction, valueFunction);
+    }
+
+    @Override
+    public <NK, NV> MutableBiMap<NK, NV> toBiMap(
+            Function<? super V, ? extends NK> keyFunction,
+            Function<? super V, ? extends NV> valueFunction)
+    {
+        return this.getMutableSortedMap().toBiMap(keyFunction, valueFunction);
     }
 
     @Override
@@ -797,7 +838,7 @@ public class UnmodifiableTreeMap<K, V>
     }
 
     @Override
-    public <VV, R extends MutableMap<VV, V>> R groupByUniqueKey(Function<? super V, ? extends VV> function, R target)
+    public <VV, R extends MutableMapIterable<VV, V>> R groupByUniqueKey(Function<? super V, ? extends VV> function, R target)
     {
         return this.getMutableSortedMap().groupByUniqueKey(function, target);
     }
@@ -1252,18 +1293,6 @@ public class UnmodifiableTreeMap<K, V>
     public MutableList<V> distinct()
     {
         throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".distinct() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEach(Procedure<? super V> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEach() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super V> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEachWithIndex() not implemented yet");
     }
 
     @Override

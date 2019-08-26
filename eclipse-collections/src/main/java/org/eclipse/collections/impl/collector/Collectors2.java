@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -31,6 +31,7 @@ import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
 import org.eclipse.collections.api.bimap.ImmutableBiMap;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
+import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.function.primitive.BooleanFunction;
 import org.eclipse.collections.api.block.function.primitive.ByteFunction;
@@ -55,6 +56,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.multimap.ImmutableMultimap;
@@ -737,6 +739,21 @@ public final class Collectors2
     }
 
     /**
+     * <p>Same as {@link #countBy(Function)}, except the result of applying the specified function will return a
+     * collection of keys for each value.</p>
+     *
+     * @since 9.2
+     */
+    public static <T, K> Collector<T, ?, MutableBag<K>> countByEach(Function<? super T, ? extends Iterable<K>> function)
+    {
+        return Collector.of(
+                Bags.mutable::empty,
+                (bag, each) -> bag.withAll(function.valueOf(each)),
+                MutableBag::withAll,
+                EMPTY_CHARACTERISTICS);
+    }
+
+    /**
      * <p>Returns the elements as an MutableMultimap grouping each element using the specified groupBy Function.</p>
      * <p>Examples:</p>
      * {@code MutableListMultimap<String, Integer> multimap1 =
@@ -788,9 +805,9 @@ public final class Collectors2
      * <p>Same as {@link #groupBy(Function, Supplier)}, except the result of evaluating groupBy function should return a
      * unique key, or else an exception is thrown.</p>
      *
-     * <p>Equivalent to using @{@link RichIterable#groupByUniqueKey(Function, MutableMap)}</p>
+     * <p>Equivalent to using {@link RichIterable#groupByUniqueKey(Function, MutableMapIterable)}</p>
      */
-    public static <T, K, R extends MutableMap<K, T>> Collector<T, ?, R> groupByUniqueKey(
+    public static <T, K, R extends MutableMapIterable<K, T>> Collector<T, ?, R> groupByUniqueKey(
             Function<? super T, ? extends K> groupBy,
             Supplier<R> supplier)
     {
@@ -875,6 +892,32 @@ public final class Collectors2
                     return r1;
                 },
                 finisher,
+                EMPTY_CHARACTERISTICS);
+    }
+
+    /**
+     * Groups the elements using the {@code groupBy} function and all the elements that map to the same key are
+     * aggregated together using the {@code aggregator} function. The second parameter, the {@code zeroValueFactory}
+     * function, creates the initial value in each aggregation. Aggregate results are allowed to be immutable as they
+     * will be replaced in the map.
+     */
+    public static <T, K, R extends MutableMapIterable<K, T>> Collector<T, ?, R> aggregateBy(
+            Function<? super T, ? extends K> groupBy,
+            Function0<? extends T> zeroValueFactory,
+            Function2<? super T, ? super T, ? extends T> aggregator,
+            Supplier<R> supplier)
+    {
+        return Collector.of(
+                supplier,
+                (map, each) ->
+                {
+                    map.updateValueWith(groupBy.valueOf(each), zeroValueFactory, aggregator, each);
+                },
+                (r1, r2) ->
+                {
+                    r2.forEachKeyValue((key, value) -> r1.updateValueWith(key, zeroValueFactory, aggregator, value));
+                    return r1;
+                },
                 EMPTY_CHARACTERISTICS);
     }
 
@@ -1483,7 +1526,9 @@ public final class Collectors2
                 supplier,
                 (partition, each) ->
                 {
-                    MutableCollection<T> bucket = predicate.accept(each) ? partition.getSelected() : partition.getRejected();
+                    MutableCollection<T> bucket = predicate.accept(each)
+                            ? partition.getSelected()
+                            : partition.getRejected();
                     bucket.add(each);
                 },
                 Collectors2.mergePartitions(),
@@ -1522,7 +1567,7 @@ public final class Collectors2
 
     /**
      * <p>Returns a new collection with the results of applying the specified function on each element of the source
-     * collection.  This method is also commonly called transform or map. The new collection is created as the result
+     * collection. This method is also commonly called transform or map. The new collection is created as the result
      * of evaluating the provided Supplier.</p>
      * <p>Examples:</p>
      * {@code MutableList<String> collect1 =
@@ -1547,7 +1592,7 @@ public final class Collectors2
     /**
      * The method {@code flatCollect} is a special case of {@link #collect(Function, Supplier)}. With {@code collect},
      * when the {@link Function} returns a collection, the result is a collection of collections. {@code flatCollect} outputs
-     * a single "flattened" collection instead.  This method is commonly called flatMap.
+     * a single "flattened" collection instead. This method is commonly called flatMap.
      * <p>Example:</p>
      * <pre>{@code
      * List<MutableList<String>> lists =
@@ -1819,24 +1864,6 @@ public final class Collectors2
                     return collection1;
                 },
                 EMPTY_CHARACTERISTICS);
-    }
-
-    /**
-     * Returns a SummaryStatistics with results for int, long and double functions calculated for
-     * each element in the Stream or Collection this Collector is applied to.
-     *
-     * @since 8.1
-     */
-    public static <T> Collector<T, ?, SummaryStatistics<T>> summarizing(
-            ImmutableList<IntFunction<? super T>> intFunctions,
-            ImmutableList<LongFunction<? super T>> longFunctions,
-            ImmutableList<DoubleFunction<? super T>> doubleFunctions)
-    {
-        SummaryStatistics<T> summaryStatistics = new SummaryStatistics<>();
-        intFunctions.forEachWithIndex((each, index) -> summaryStatistics.addIntFunction(Integer.valueOf(index), each));
-        longFunctions.forEachWithIndex((each, index) -> summaryStatistics.addLongFunction(Integer.valueOf(index), each));
-        doubleFunctions.forEachWithIndex((each, index) -> summaryStatistics.addDoubleFunction(Integer.valueOf(index), each));
-        return summaryStatistics.toCollector();
     }
 
     /**

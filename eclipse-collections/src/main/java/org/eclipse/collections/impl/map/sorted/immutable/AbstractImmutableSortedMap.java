@@ -450,7 +450,7 @@ public abstract class AbstractImmutableSortedMap<K, V>
     @Override
     public <V1> ImmutableMap<V1, V> groupByUniqueKey(Function<? super V, ? extends V1> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.<V1, V>newMap()).toImmutable();
+        return this.groupByUniqueKey(function, UnifiedMap.<V1, V>newMap(this.size())).toImmutable();
     }
 
     @Override
@@ -501,18 +501,6 @@ public abstract class AbstractImmutableSortedMap<K, V>
     {
         MutableObjectDoubleMap<V1> result = ObjectDoubleHashMap.newMap();
         return this.injectInto(result, PrimitiveFunctions.sumByDoubleFunction(groupBy, function)).toImmutable();
-    }
-
-    @Override
-    public void reverseForEach(Procedure<? super V> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEach() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super V> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEachWithIndex() not implemented yet");
     }
 
     @Override
@@ -609,5 +597,14 @@ public abstract class AbstractImmutableSortedMap<K, V>
     public <V1, P> ImmutableBag<V1> countByWith(Function2<? super V, ? super P, ? extends V1> function, P parameter)
     {
         return this.collectWith(function, parameter, Bags.mutable.<V1>empty()).toImmutable();
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V1> ImmutableBag<V1> countByEach(Function<? super V, ? extends Iterable<V1>> function)
+    {
+        return this.countByEach(function, Bags.mutable.empty()).toImmutable();
     }
 }

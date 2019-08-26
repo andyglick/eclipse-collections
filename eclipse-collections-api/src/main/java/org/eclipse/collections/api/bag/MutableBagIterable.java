@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,7 +10,9 @@
 
 package org.eclipse.collections.api.bag;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.Function;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
@@ -30,14 +32,14 @@ public interface MutableBagIterable<T> extends Bag<T>, MutableCollection<T>
      * Add number of {@code occurrences} for an {@code item}. If the {@code item} does not exist, then the {@code item} is added to the bag.
      *
      * <p>
-     *  For Example:
-     *  <pre>
+     * For Example:
+     * <pre>
      * MutableBagIterable&lt;String&gt; names = Bags.mutable.of("A", "B", "B");
      * Assert.assertEquals(4, names.<b>addOccurrences</b>("A", 3));
      * </pre>
      *
      * @return updated number of occurrences.
-     * @throws  IllegalArgumentException if {@code occurrences} are less than 0.
+     * @throws IllegalArgumentException if {@code occurrences} are less than 0.
      */
     int addOccurrences(T item, int occurrences);
 
@@ -81,6 +83,21 @@ public interface MutableBagIterable<T> extends Bag<T>, MutableCollection<T>
     @Override
     MutableBagIterable<T> selectByOccurrences(IntPredicate predicate);
 
+    /**
+     * @since 9.2
+     */
+    @Override
+    default MutableBagIterable<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    MutableSetIterable<T> selectUnique();
+
     @Override
     MutableMapIterable<T, Integer> toMapOfItemToCount();
 
@@ -107,4 +124,7 @@ public interface MutableBagIterable<T> extends Bag<T>, MutableCollection<T>
 
     @Override
     MutableBagIterable<T> withoutAll(Iterable<? extends T> elements);
+
+    @Override
+    <V> RichIterable<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
 }

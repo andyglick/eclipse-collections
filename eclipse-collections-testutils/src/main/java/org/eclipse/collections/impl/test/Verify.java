@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -21,6 +21,9 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +32,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.codec.binary.Base64;
 import org.eclipse.collections.api.InternalIterable;
 import org.eclipse.collections.api.PrimitiveIterable;
 import org.eclipse.collections.api.bag.Bag;
@@ -77,6 +79,8 @@ public final class Verify extends Assert
 {
     private static final int MAX_DIFFERENCES = 5;
     private static final byte[] LINE_SEPARATOR = {'\n'};
+    private static final Encoder ENCODER = Base64.getMimeEncoder(76, LINE_SEPARATOR);
+    private static final Decoder DECODER = Base64.getMimeDecoder();
 
     private Verify()
     {
@@ -1629,10 +1633,10 @@ public final class Verify extends Assert
     {
         try
         {
-            MutableList<T> unnacceptable = Iterate.reject(iterable, predicate, Lists.mutable.of());
-            if (unnacceptable.notEmpty())
+            MutableList<T> unacceptable = Iterate.reject(iterable, predicate, Lists.mutable.of());
+            if (unacceptable.notEmpty())
             {
-                Assert.fail(message + " <" + unnacceptable + '>');
+                Assert.fail(message + " <" + unacceptable + '>');
             }
         }
         catch (AssertionError e)
@@ -1705,10 +1709,10 @@ public final class Verify extends Assert
     {
         try
         {
-            MutableList<T> unnacceptable = Iterate.select(iterable, predicate, Lists.mutable.empty());
-            if (unnacceptable.notEmpty())
+            MutableList<T> unacceptable = Iterate.select(iterable, predicate, Lists.mutable.empty());
+            if (unacceptable.notEmpty())
             {
-                Assert.fail(message + " <" + unnacceptable + '>');
+                Assert.fail(message + " <" + unacceptable + '>');
             }
         }
         catch (AssertionError e)
@@ -2440,7 +2444,7 @@ public final class Verify extends Assert
 
             for (K key : expectedBagMultimap.keysView())
             {
-                Verify.assertBagsEqual(multimapName + " value bag for key:" + key, (Bag<V>) expectedBagMultimap.get(key), (Bag<V>) actualBagMultimap.get(key));
+                Verify.assertBagsEqual(multimapName + " value bag for key:" + key, expectedBagMultimap.get(key), actualBagMultimap.get(key));
             }
             Assert.assertEquals(multimapName, expectedBagMultimap, actualBagMultimap);
         }
@@ -2518,7 +2522,7 @@ public final class Verify extends Assert
 
             for (K key : expectedSortedBagMultimap.keysView())
             {
-                Verify.assertSortedBagsEqual(multimapName + " value set for key:" + key, (SortedBag<V>) expectedSortedBagMultimap.get(key), (SortedBag<V>) actualSortedBagMultimap.get(key));
+                Verify.assertSortedBagsEqual(multimapName + " value set for key:" + key, expectedSortedBagMultimap.get(key), actualSortedBagMultimap.get(key));
             }
             Assert.assertEquals(multimapName, expectedSortedBagMultimap, actualSortedBagMultimap);
         }
@@ -3614,6 +3618,21 @@ public final class Verify extends Assert
         }
     }
 
+    public static void assertPostSerializedEqualsHashCodeAndToString(Object object)
+    {
+        try
+        {
+            Object deserialized = SerializeTestHelper.serializeDeserialize(object);
+            Verify.assertEqualsAndHashCode("objects", object, deserialized);
+            Assert.assertNotSame("not same object", object, deserialized);
+            Assert.assertEquals("not same toString", object.toString(), deserialized.toString());
+        }
+        catch (AssertionError e)
+        {
+            Verify.throwMangledException(e);
+        }
+    }
+
     public static void assertPostSerializedIdentity(Object object)
     {
         try
@@ -3690,14 +3709,10 @@ public final class Verify extends Assert
     {
         try
         {
-            byte[] bytes = Base64.decodeBase64(expectedBase64Form);
+            byte[] bytes = DECODER.decode(expectedBase64Form);
             return new ObjectInputStream(new ByteArrayInputStream(bytes)).readObject();
         }
-        catch (IOException e)
-        {
-            throw new AssertionError(e);
-        }
-        catch (ClassNotFoundException e)
+        catch (IOException | ClassNotFoundException e)
         {
             throw new AssertionError(e);
         }
@@ -3713,19 +3728,13 @@ public final class Verify extends Assert
             objectOutputStream.flush();
             objectOutputStream.close();
 
-            String string = new Base64(76, LINE_SEPARATOR, false).encodeAsString(byteArrayOutputStream.toByteArray());
-            String trimmedString = Verify.removeFinalNewline(string);
-            return Verify.addFinalNewline(trimmedString);
+            String string = ENCODER.encodeToString(byteArrayOutputStream.toByteArray());
+            return Verify.addFinalNewline(string);
         }
         catch (IOException e)
         {
             throw new AssertionError(e);
         }
-    }
-
-    private static String removeFinalNewline(String string)
-    {
-        return string.substring(0, string.length() - 1);
     }
 
     private static String addFinalNewline(String string)
@@ -3877,23 +3886,7 @@ public final class Verify extends Assert
             Assert.assertNotSame(prefix, object, clone);
             Verify.assertEqualsAndHashCode(prefix, object, clone);
         }
-        catch (IllegalArgumentException e)
-        {
-            throw new AssertionError(e.getLocalizedMessage());
-        }
-        catch (InvocationTargetException e)
-        {
-            throw new AssertionError(e.getLocalizedMessage());
-        }
-        catch (SecurityException e)
-        {
-            throw new AssertionError(e.getLocalizedMessage());
-        }
-        catch (NoSuchMethodException e)
-        {
-            throw new AssertionError(e.getLocalizedMessage());
-        }
-        catch (IllegalAccessException e)
+        catch (IllegalArgumentException | IllegalAccessException | NoSuchMethodException | SecurityException | InvocationTargetException e)
         {
             throw new AssertionError(e.getLocalizedMessage());
         }
@@ -3939,23 +3932,7 @@ public final class Verify extends Assert
             declaredConstructor.newInstance();
             return true;
         }
-        catch (NoSuchMethodException e)
-        {
-            return false;
-        }
-        catch (InvocationTargetException e)
-        {
-            return false;
-        }
-        catch (InstantiationException e)
-        {
-            return false;
-        }
-        catch (IllegalAccessException e)
-        {
-            return false;
-        }
-        catch (AssertionError e)
+        catch (NoSuchMethodException | AssertionError | IllegalAccessException | InstantiationException | InvocationTargetException e)
         {
             return false;
         }
@@ -4132,7 +4109,7 @@ public final class Verify extends Assert
      * <p>
      * e.g.
      * <pre>
-     * Verify.assertThrowsWithCause(RuntimeException.class, IOException.class, new Callable<Void>()
+     * Verify.assertThrowsWithCause(RuntimeException.class, IOException.class, new Callable&lt;Void&gt;()
      * {
      *    public Void call() throws Exception
      *    {

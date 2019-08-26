@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.ExecutorService;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.annotation.Beta;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.sorted.ImmutableSortedBag;
@@ -33,7 +34,6 @@ import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
-import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableByteList;
@@ -48,6 +48,7 @@ import org.eclipse.collections.api.partition.bag.sorted.PartitionMutableSortedBa
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.bag.mutable.AbstractMutableBagIterable;
 import org.eclipse.collections.impl.factory.Bags;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.SortedBags;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
@@ -60,6 +61,7 @@ import org.eclipse.collections.impl.list.mutable.primitive.LongArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.ShortArrayList;
 import org.eclipse.collections.impl.map.sorted.mutable.TreeSortedMap;
 import org.eclipse.collections.impl.partition.bag.sorted.PartitionTreeBag;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.internal.IterableIterate;
 
 public abstract class AbstractMutableSortedBag<T>
@@ -149,6 +151,15 @@ public abstract class AbstractMutableSortedBag<T>
         return this.countByWith(function, parameter, Bags.mutable.empty());
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V> MutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.countByEach(function, Bags.mutable.empty());
+    }
+
     @Override
     public MutableSortedBag<T> select(Predicate<? super T> predicate)
     {
@@ -189,7 +200,9 @@ public abstract class AbstractMutableSortedBag<T>
     {
         PartitionMutableSortedBag<T> result = new PartitionTreeBag<>(this.comparator());
         this.forEachWithOccurrences((each, index) -> {
-            MutableSortedBag<T> bucket = predicate.accept(each, parameter) ? result.getSelected() : result.getRejected();
+            MutableSortedBag<T> bucket = predicate.accept(each, parameter)
+                    ? result.getSelected()
+                    : result.getRejected();
             bucket.addOccurrences(each, index);
         });
         return result;
@@ -206,6 +219,12 @@ public abstract class AbstractMutableSortedBag<T>
     public <V> MutableList<V> collect(Function<? super T, ? extends V> function)
     {
         return this.collect(function, FastList.newList(this.size()));
+    }
+
+    @Override
+    public <V> MutableList<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        return this.collectWithOccurrences(function, Lists.mutable.empty());
     }
 
     /**
@@ -304,6 +323,12 @@ public abstract class AbstractMutableSortedBag<T>
     @Override
     public <S> MutableList<Pair<T, S>> zip(Iterable<S> that)
     {
+        if (that instanceof Collection || that instanceof RichIterable)
+        {
+            int thatSize = Iterate.sizeOf(that);
+            FastList<Pair<T, S>> target = FastList.newList(Math.min(this.size(), thatSize));
+            return this.zip(that, target);
+        }
         return this.zip(that, FastList.newList());
     }
 
@@ -311,18 +336,6 @@ public abstract class AbstractMutableSortedBag<T>
     public MutableSortedBag<T> toReversed()
     {
         throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".toReversed() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEach(Procedure<? super T> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEach() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super T> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEachWithIndex() not implemented yet");
     }
 
     @Override

@@ -84,20 +84,26 @@ public class PredicatesTest
         Verify.assertThrowsWithCause(
                 RuntimeException.class,
                 IOException.class,
-                () -> { Predicates.throwing(
-                        a -> { throw new IOException(); },
-                        (each, ce) -> new RuntimeException(ce)).accept(null); });
+                () -> {
+                    Predicates.throwing(
+                            a -> { throw new IOException(); },
+                            (each, ce) -> new RuntimeException(ce)).accept(null);
+                });
         Verify.assertThrowsWithCause(
                 MyRuntimeException.class,
                 IOException.class,
-                () -> { Predicates.throwing(
-                        a -> { throw new IOException(); },
-                        this::throwMyException).accept(null); });
+                () -> {
+                    Predicates.throwing(
+                            a -> { throw new IOException(); },
+                            this::throwMyException).accept(null);
+                });
         Verify.assertThrows(
                 NullPointerException.class,
-                () -> { Predicates.throwing(
-                        a -> { throw new NullPointerException(); },
-                        this::throwMyException).accept(null); });
+                () -> {
+                    Predicates.throwing(
+                            a -> { throw new NullPointerException(); },
+                            this::throwMyException).accept(null);
+                });
     }
 
     private MyRuntimeException throwMyException(Object each, Throwable exception)
@@ -984,37 +990,37 @@ public class PredicatesTest
     public enum DependentType
     {
         SPOUSE
-                {
-                    @Override
-                    public boolean isImmediate()
-                    {
-                        return true;
-                    }
-                },
+        {
+            @Override
+            public boolean isImmediate()
+            {
+                return true;
+            }
+        },
         CHILD
-                {
-                    @Override
-                    public boolean isImmediate()
-                    {
-                        return true;
-                    }
-                },
+        {
+            @Override
+            public boolean isImmediate()
+            {
+                return true;
+            }
+        },
         PARENT
-                {
-                    @Override
-                    public boolean isImmediate()
-                    {
-                        return false;
-                    }
-                },
+        {
+            @Override
+            public boolean isImmediate()
+            {
+                return false;
+            }
+        },
         GRANDPARENT
-                {
-                    @Override
-                    public boolean isImmediate()
-                    {
-                        return false;
-                    }
-                };
+        {
+            @Override
+            public boolean isImmediate()
+            {
+                return false;
+            }
+        };
 
         public abstract boolean isImmediate();
     }

@@ -53,6 +53,7 @@ import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.multimap.ImmutableMultimap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.partition.PartitionMutableCollection;
@@ -1080,9 +1081,9 @@ public final class IteratorIterate
     }
 
     /**
-     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMap)
+     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMapIterable)
      */
-    public static <K, T, R extends MutableMap<K, T>> R groupByUniqueKey(
+    public static <K, T, R extends MutableMapIterable<K, T>> R groupByUniqueKey(
             Iterator<T> iterator,
             Function<? super T, ? extends K> function,
             R target)
@@ -1308,7 +1309,10 @@ public final class IteratorIterate
         return result;
     }
 
-    public static <V, T> MutableMap<V, BigDecimal> sumByBigDecimal(Iterator<T> iterator, Function<T, V> groupBy, Function<? super T, BigDecimal> function)
+    public static <V, T> MutableMap<V, BigDecimal> sumByBigDecimal(
+            Iterator<T> iterator,
+            Function<? super T, ? extends V> groupBy,
+            Function<? super T, BigDecimal> function)
     {
         MutableMap<V, BigDecimal> result = UnifiedMap.newMap();
         while (iterator.hasNext())
@@ -1319,7 +1323,10 @@ public final class IteratorIterate
         return result;
     }
 
-    public static <V, T> MutableMap<V, BigInteger> sumByBigInteger(Iterator<T> iterator, Function<T, V> groupBy, Function<? super T, BigInteger> function)
+    public static <V, T> MutableMap<V, BigInteger> sumByBigInteger(
+            Iterator<T> iterator,
+            Function<? super T, ? extends V> groupBy,
+            Function<? super T, BigInteger> function)
     {
         MutableMap<V, BigInteger> result = UnifiedMap.newMap();
         while (iterator.hasNext())

@@ -24,6 +24,7 @@ import org.eclipse.collections.api.block.function.primitive.<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name>To<name>Function;
 import org.eclipse.collections.api.map.primitive.MutableObject<name>Map;
+import org.eclipse.collections.impl.factory.Iterables;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.test.Verify;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
@@ -119,6 +120,13 @@ public class UnmodifiableObject<name>MapTest extends AbstractMutableObject<name>
 
     @Override
     @Test(expected = UnsupportedOperationException.class)
+    public void updateValues()
+    {
+        this.map.updateValues((k, v) -> v);
+    }
+
+    @Override
+    @Test(expected = UnsupportedOperationException.class)
     public void withKeysValues()
     {
         this.map.withKeyValue("1", <(literal.(type))("0")>);
@@ -136,6 +144,13 @@ public class UnmodifiableObject<name>MapTest extends AbstractMutableObject<name>
     public void withoutAllKeys()
     {
         this.map.withoutAllKeys(FastList.newListWith("0", "1"));
+    }
+
+    @Override
+    @Test(expected = UnsupportedOperationException.class)
+    public void withAllKeyValues()
+    {
+        this.map.withAllKeyValues(Iterables.iList(PrimitiveTuples.pair("1", <(literal.(type))("1")>)));
     }
 
     @Override

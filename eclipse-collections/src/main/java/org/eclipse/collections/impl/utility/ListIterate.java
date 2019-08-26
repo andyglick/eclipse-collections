@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -64,6 +64,7 @@ import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.list.primitive.MutableShortList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.ObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.ObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -100,9 +101,13 @@ public final class ListIterate
         }
         if (one instanceof RandomAccess)
         {
-            return two instanceof RandomAccess ? ListIterate.randomAccessEquals(one, two) : ListIterate.oneRandomAccessEquals(one, two);
+            return two instanceof RandomAccess
+                    ? ListIterate.randomAccessEquals(one, two)
+                    : ListIterate.oneRandomAccessEquals(one, two);
         }
-        return two instanceof RandomAccess ? ListIterate.oneRandomAccessEquals(two, one) : ListIterate.nonRandomAccessEquals(one, two);
+        return two instanceof RandomAccess
+                ? ListIterate.oneRandomAccessEquals(two, one)
+                : ListIterate.nonRandomAccessEquals(one, two);
     }
 
     private static boolean randomAccessEquals(List<?> one, List<?> two)
@@ -712,7 +717,7 @@ public final class ListIterate
     }
 
     /**
-     * Iterates over the section of the list covered by the specified indexes.  The indexes are both inclusive.  If the
+     * Iterates over the section of the list covered by the specified indexes. The indexes are both inclusive. If the
      * from is less than the to, the list is iterated in forward order. If the from is greater than the to, then the
      * list is iterated in the reverse order.
      * <p>
@@ -759,7 +764,7 @@ public final class ListIterate
     }
 
     /**
-     * Iterates over the section of the list covered by the specified indexes.  The indexes are both inclusive.  If the
+     * Iterates over the section of the list covered by the specified indexes. The indexes are both inclusive. If the
      * from is less than the to, the list is iterated in forward order. If the from is greater than the to, then the
      * list is iterated in the reverse order. The index passed into the ObjectIntProcedure is the actual index of the
      * range.
@@ -1569,9 +1574,9 @@ public final class ListIterate
     }
 
     /**
-     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMap)
+     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMapIterable)
      */
-    public static <K, T, R extends MutableMap<K, T>> R groupByUniqueKey(
+    public static <K, T, R extends MutableMapIterable<K, T>> R groupByUniqueKey(
             List<T> list,
             Function<? super T, ? extends K> function,
             R target)
@@ -1680,6 +1685,13 @@ public final class ListIterate
             List<X> list,
             Iterable<Y> iterable)
     {
+        if (iterable instanceof Collection || iterable instanceof RichIterable)
+        {
+            int listSize = list.size();
+            int iterableSize = Iterate.sizeOf(iterable);
+            FastList<Pair<X, Y>> target = FastList.newList(Math.min(listSize, iterableSize));
+            return ListIterate.zip(list, iterable, target);
+        }
         return ListIterate.zip(list, iterable, FastList.newList());
     }
 

@@ -81,7 +81,7 @@ public class ImmutableBagMultimapTest extends AbstractImmutableMultimapTestCase
         mutableMultimap.putAll("One", FastList.newListWith(1, 2, 3, 4, 2));
         mutableMultimap.putAll("Two", FastList.newListWith(2, 3, 4, 5, 2));
         ImmutableBagMultimap<String, Integer> immutableMap = mutableMultimap.toImmutable();
-        ImmutableBagMultimap<String, Integer> selectedMultimap = immutableMap.selectKeysValues((key, value) -> ("Two".equals(key) && (value % 2 == 0)));
+        ImmutableBagMultimap<String, Integer> selectedMultimap = immutableMap.selectKeysValues((key, value) -> "Two".equals(key) && (value % 2 == 0));
         MutableBagMultimap<String, Integer> expectedMultimap = HashBagMultimap.newMultimap();
         expectedMultimap.putAll("Two", FastList.newListWith(2, 4, 2));
         ImmutableBagMultimap<String, Integer> expectedImmutableMultimap = expectedMultimap.toImmutable();
@@ -96,7 +96,7 @@ public class ImmutableBagMultimapTest extends AbstractImmutableMultimapTestCase
         mutableMultimap.putAll("One", FastList.newListWith(1, 2, 3, 4, 1));
         mutableMultimap.putAll("Two", FastList.newListWith(2, 3, 4, 5, 1));
         ImmutableBagMultimap<String, Integer> immutableMap = mutableMultimap.toImmutable();
-        ImmutableBagMultimap<String, Integer> rejectedMultimap = immutableMap.rejectKeysValues((key, value) -> ("Two".equals(key) || (value % 2 == 0)));
+        ImmutableBagMultimap<String, Integer> rejectedMultimap = immutableMap.rejectKeysValues((key, value) -> "Two".equals(key) || (value % 2 == 0));
         MutableBagMultimap<String, Integer> expectedMultimap = HashBagMultimap.newMultimap();
         expectedMultimap.putAll("One", FastList.newListWith(1, 3, 1));
         ImmutableBagMultimap<String, Integer> expectedImmutableMultimap = expectedMultimap.toImmutable();
@@ -113,7 +113,7 @@ public class ImmutableBagMultimapTest extends AbstractImmutableMultimapTestCase
         mutableMultimap.putAll(3, FastList.newListWith("2", "3", "4", "5", "2"));
         mutableMultimap.putAll(4, FastList.newListWith("1", "3", "4"));
         ImmutableBagMultimap<Integer, String> immutableMap = mutableMultimap.toImmutable();
-        ImmutableBagMultimap<Integer, String> selectedMultimap = immutableMap.selectKeysMultiValues((key, values) -> (key % 2 == 0 && Iterate.sizeOf(values) > 3));
+        ImmutableBagMultimap<Integer, String> selectedMultimap = immutableMap.selectKeysMultiValues((key, values) -> key % 2 == 0 && Iterate.sizeOf(values) > 3);
         MutableBagMultimap<Integer, String> expectedMultimap = HashBagMultimap.newMultimap();
         expectedMultimap.putAll(2, FastList.newListWith("2", "3", "4", "5", "2"));
         ImmutableBagMultimap<Integer, String> expectedImmutableMultimap = expectedMultimap.toImmutable();
@@ -130,7 +130,7 @@ public class ImmutableBagMultimapTest extends AbstractImmutableMultimapTestCase
         mutableMultimap.putAll(3, FastList.newListWith("2", "3", "4", "2"));
         mutableMultimap.putAll(4, FastList.newListWith("1", "3", "4", "5"));
         ImmutableBagMultimap<Integer, String> immutableMap = mutableMultimap.toImmutable();
-        ImmutableBagMultimap<Integer, String> rejectedMultimap = immutableMap.rejectKeysMultiValues((key, values) -> (key % 2 == 0 || Iterate.sizeOf(values) > 4));
+        ImmutableBagMultimap<Integer, String> rejectedMultimap = immutableMap.rejectKeysMultiValues((key, values) -> key % 2 == 0 || Iterate.sizeOf(values) > 4);
         MutableBagMultimap<Integer, String> expectedMultimap = HashBagMultimap.newMultimap();
         expectedMultimap.putAll(3, FastList.newListWith("2", "3", "4", "2"));
         ImmutableBagMultimap<Integer, String> expectedImmutableMultimap = expectedMultimap.toImmutable();
@@ -153,6 +153,31 @@ public class ImmutableBagMultimapTest extends AbstractImmutableMultimapTestCase
         Verify.assertBagMultimapsEqual(expectedImmutableMultimap1, collectedMultimap);
 
         ImmutableBagMultimap<Integer, String> collectedMultimap2 = immutableMap.collectKeysValues((key, value) -> Tuples.pair(1, value + "Value"));
+        MutableBagMultimap<Integer, String> expectedMultimap2 = HashBagMultimap.newMultimap();
+        expectedMultimap2.putAll(1, FastList.newListWith("1Value", "2Value", "3Value", "4Value", "1Value"));
+        expectedMultimap2.putAll(1, FastList.newListWith("2Value", "3Value", "4Value", "5Value", "2Value"));
+        ImmutableBagMultimap<Integer, String> expectedImmutableMultimap2 = expectedMultimap2.toImmutable();
+        Verify.assertBagMultimapsEqual(expectedImmutableMultimap2, collectedMultimap2);
+    }
+
+    @Override
+    @Test
+    public void collectKeyMultiValues()
+    {
+        super.collectKeyMultiValues();
+
+        MutableBagMultimap<String, Integer> mutableMultimap = HashBagMultimap.newMultimap();
+        mutableMultimap.putAll("1", FastList.newListWith(1, 2, 3, 4, 1));
+        mutableMultimap.putAll("2", FastList.newListWith(2, 3, 4, 5, 2));
+        ImmutableBagMultimap<String, Integer> immutableMap = mutableMultimap.toImmutable();
+        ImmutableBagMultimap<Integer, String> collectedMultimap = immutableMap.collectKeyMultiValues(Integer::valueOf, value -> value + "Value");
+        MutableBagMultimap<Integer, String> expectedMultimap1 = HashBagMultimap.newMultimap();
+        expectedMultimap1.putAll(1, FastList.newListWith("1Value", "2Value", "3Value", "4Value", "1Value"));
+        expectedMultimap1.putAll(2, FastList.newListWith("2Value", "3Value", "4Value", "5Value", "2Value"));
+        ImmutableBagMultimap<Integer, String> expectedImmutableMultimap1 = expectedMultimap1.toImmutable();
+        Verify.assertBagMultimapsEqual(expectedImmutableMultimap1, collectedMultimap);
+
+        ImmutableBagMultimap<Integer, String> collectedMultimap2 = immutableMap.collectKeyMultiValues(key -> 1, value -> value + "Value");
         MutableBagMultimap<Integer, String> expectedMultimap2 = HashBagMultimap.newMultimap();
         expectedMultimap2.putAll(1, FastList.newListWith("1Value", "2Value", "3Value", "4Value", "1Value"));
         expectedMultimap2.putAll(1, FastList.newListWith("2Value", "3Value", "4Value", "5Value", "2Value"));

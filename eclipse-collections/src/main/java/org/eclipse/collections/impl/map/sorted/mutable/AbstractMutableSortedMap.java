@@ -345,19 +345,7 @@ public abstract class AbstractMutableSortedMap<K, V> extends AbstractMutableMapI
     @Override
     public <VV> MutableMap<VV, V> groupByUniqueKey(Function<? super V, ? extends VV> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.newMap());
-    }
-
-    @Override
-    public void reverseForEach(Procedure<? super V> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEach() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super V> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEachWithIndex() not implemented yet");
+        return this.groupByUniqueKey(function, UnifiedMap.newMap(this.size()));
     }
 
     @Override

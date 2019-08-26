@@ -29,6 +29,7 @@ import org.eclipse.collections.api.block.function.primitive.<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
+import org.eclipse.collections.api.block.function.primitive.Object<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.Object<name>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.predicate.primitive.Object<name>Predicate;
@@ -48,14 +49,13 @@ import org.eclipse.collections.api.tuple.primitive.Object<name>Pair;
 import org.eclipse.collections.impl.collection.mutable.primitive.Unmodifiable<name>Collection;
 import org.eclipse.collections.impl.factory.primitive.Object<name>Maps;
 import org.eclipse.collections.impl.iterator.Unmodifiable<name>Iterator;
-import org.eclipse.collections.api.tuple.primitive.Object<name>Pair;
 
 /**
  * This file was automatically generated from template file unmodifiableObjectPrimitiveMap.stg.
  *
  * @since 3.2
  */
-public final class UnmodifiableObject<name>Map\<K>
+public class UnmodifiableObject<name>Map\<K>
         implements MutableObject<name>Map\<K>, Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -63,7 +63,7 @@ public final class UnmodifiableObject<name>Map\<K>
 
     public UnmodifiableObject<name>Map(MutableObject<name>Map\<K> map)
     {
-        if(map == null)
+        if (map == null)
         {
             throw new IllegalArgumentException("Cannot create a UnmodifiableObject<name>Map on a null map");
         }
@@ -108,6 +108,12 @@ public final class UnmodifiableObject<name>Map\<K>
     public void putAll(Object<name>Map\<? extends K> map)
     {
         throw new UnsupportedOperationException("Cannot call putAll() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public void updateValues(Object<name>To<name>Function\<? super K> function)
+    {
+        throw new UnsupportedOperationException("Cannot call updateValue() on " + this.getClass().getSimpleName());
     }
 
     @Override
@@ -485,6 +491,12 @@ public final class UnmodifiableObject<name>Map\<K>
     public \<T> T injectInto(T injectedValue, Object<name>ToObjectFunction\<? super T, ? extends T> function)
     {
         return this.map.injectInto(injectedValue, function);
+    }
+
+    @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        return this.map.chunk(size);
     }
 }
 

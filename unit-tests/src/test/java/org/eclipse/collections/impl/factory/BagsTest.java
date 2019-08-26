@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,12 +10,17 @@
 
 package org.eclipse.collections.impl.factory;
 
+import java.util.stream.Stream;
+
 import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.bag.ImmutableBag;
+import org.eclipse.collections.api.bag.MultiReaderBag;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.factory.bag.ImmutableBagFactory;
+import org.eclipse.collections.api.factory.bag.MultiReaderBagFactory;
 import org.eclipse.collections.api.factory.bag.MutableBagFactory;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
+import org.eclipse.collections.impl.bag.mutable.MultiReaderHashBag;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.test.Verify;
@@ -49,6 +54,8 @@ public class BagsTest
         Verify.assertInstanceOf(MutableBag.class, bagFactory.ofAll(FastList.newListWith(1, 2, 2, 3, 3, 3)));
         Verify.assertBagsEqual(HashBag.newBagWith(1, 2, 3, 4, 5), bagFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3, 4, 5)));
         Verify.assertInstanceOf(MutableBag.class, bagFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3, 4, 5)));
+        Verify.assertBagsEqual(HashBag.newBagWith(1, 2, 2, 3, 3, 3), bagFactory.fromStream(Stream.of(1, 2, 2, 3, 3, 3)));
+        Verify.assertInstanceOf(MutableBag.class, bagFactory.fromStream(Stream.of(1, 2, 2, 3, 3, 3)));
     }
 
     @Test
@@ -79,6 +86,8 @@ public class BagsTest
         Verify.assertInstanceOf(ImmutableBag.class, bagFactory.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
         Assert.assertEquals(HashBag.newBagWith(3, 2, 1), bagFactory.ofAll(HashBag.newBagWith(1, 2, 3)));
         Verify.assertInstanceOf(ImmutableBag.class, bagFactory.ofAll(HashBag.newBagWith(1, 2, 3)));
+        Assert.assertEquals(HashBag.newBagWith(3, 2, 1), bagFactory.fromStream(Stream.of(1, 2, 3)));
+        Verify.assertInstanceOf(ImmutableBag.class, bagFactory.fromStream(Stream.of(1, 2, 3)));
     }
 
     @Test
@@ -150,6 +159,20 @@ public class BagsTest
         Assert.assertEquals(bag = bag.newWith("10"), hashBag.toImmutable());
         hashBag.add("11");
         Assert.assertEquals(bag = bag.newWith("11"), hashBag.toImmutable());
+    }
+
+    @Test
+    public void multiReader()
+    {
+        MultiReaderBagFactory bagFactory = Bags.multiReader;
+        Assert.assertEquals(MultiReaderHashBag.newBag(), bagFactory.of());
+        Verify.assertInstanceOf(MultiReaderBag.class, bagFactory.of());
+        Assert.assertEquals(MultiReaderHashBag.newBag(), bagFactory.with());
+        Verify.assertInstanceOf(MultiReaderBag.class, bagFactory.with());
+        Assert.assertEquals(MultiReaderHashBag.newBagWith(1), bagFactory.of(1));
+        Verify.assertInstanceOf(MultiReaderBag.class, bagFactory.of(1));
+        Assert.assertEquals(MultiReaderHashBag.newBagWith(1, 2, 3), bagFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3)));
+        Verify.assertInstanceOf(MultiReaderBag.class, bagFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3)));
     }
 
     @Test

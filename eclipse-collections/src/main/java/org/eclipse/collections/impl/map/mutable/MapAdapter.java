@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.collections.api.block.function.Function;
+import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
@@ -25,7 +26,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.MapIterate;
 
 /**
- * This class provides a MutableMap wrapper around a JDK Collections Map interface instance.  All of the MutableMap
+ * This class provides a MutableMap wrapper around a JDK Collections Map interface instance. All of the MutableMap
  * interface methods are supported in addition to the JDK Map interface methods.
  * <p>
  * To create a new wrapper around an existing Map instance, use the {@link #adapt(Map)} factory method.
@@ -161,6 +162,22 @@ public class MapAdapter<K, V>
     public V removeKey(K key)
     {
         return this.delegate.remove(key);
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        int previousSize = this.size();
+        Iterator<Entry<K, V>> iterator = this.entrySet().iterator();
+        while (iterator.hasNext())
+        {
+            Entry<K, V> entry = iterator.next();
+            if (predicate.accept(entry.getKey(), entry.getValue()))
+            {
+                iterator.remove();
+            }
+        }
+        return previousSize > this.size();
     }
 
     @Override

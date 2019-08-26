@@ -27,6 +27,7 @@ import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
 import org.eclipse.collections.api.map.primitive.Mutable<name>ObjectMap;
+import org.eclipse.collections.impl.factory.Iterables;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.block.factory.Functions0;
 import org.eclipse.collections.impl.block.function.AddFunction;
@@ -143,13 +144,21 @@ public class Unmodifiable<name>ObjectMapTest extends AbstractMutable<name>Object
 
     @Override
     @Test(expected = UnsupportedOperationException.class)
+    public void withAllKeyValues()
+    {
+        this.map.withAllKeyValues(Iterables.iList(PrimitiveTuples.pair(<(literal.(type))("1")>, "one")));
+    }
+
+    @Override
+    @Test(expected = UnsupportedOperationException.class)
     public void putDuplicateWithRemovedSlot()
     {
         <type> collision1 = AbstractMutable<name>ObjectMapTestCase.generateCollisions().getFirst();
         this.getEmptyMap().put(collision1, "one");
     }
 
-<if(primitive.floatingPoint)><NaNTests("NaN")>
+<if(primitive.floatingPoint)>
+    <NaNTests("NaN")>
     <NaNTests("POSITIVE_INFINITY")>
     <NaNTests("NEGATIVE_INFINITY")>
     <ZeroTests()>

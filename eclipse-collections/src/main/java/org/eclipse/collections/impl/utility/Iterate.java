@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -61,6 +61,7 @@ import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.ObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.ObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -91,7 +92,7 @@ import org.eclipse.collections.impl.utility.internal.RandomAccessListIterate;
 
 /**
  * The Iterate utility class acts as a router to other utility classes to provide optimized iteration pattern
- * implementations based on the type of iterable.  The lowest common denominator used will normally be IterableIterate.
+ * implementations based on the type of iterable. The lowest common denominator used will normally be IterableIterate.
  * Iterate can be used when a JDK interface is the only type available to the developer, as it can
  * determine the best way to iterate based on instanceof checks.
  *
@@ -109,7 +110,7 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * Iterate.<b>forEach</b>(people, person -> LOGGER.info(person.getName());
+     * Iterate.<b>forEach</b>(people, person -&gt; LOGGER.info(person.getName());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -153,7 +154,7 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * Iterate.<b>forEachWith</b>(people, (Person person, Person other) ->
+     * Iterate.<b>forEachWith</b>(people, (Person person, Person other) -&gt;
      *  {
      *      if (other.equals(person))
      *      {
@@ -208,7 +209,7 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * Iterate.<b>forEachWithIndex</b>(people, (Person person, int index) -> LOGGER.info("Index: " + index + " person: " + person.getName()));
+     * Iterate.<b>forEachWithIndex</b>(people, (Person person, int index) -&gt; LOGGER.info("Index: " + index + " person: " + person.getName()));
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -252,7 +253,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * Collection&lt;Person&gt; selected =
-     *     Iterate.<b>select</b>(people, person -> person.getAddress().getCity().equals("Metuchen"));
+     *     Iterate.<b>select</b>(people, person -&gt; person.getAddress().getCity().equals("Metuchen"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -301,7 +302,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * Collection&lt;Person&gt; selected =
-     *     Iterate.<b>selectWith</b>(people, (Person person, Integer age) -> person.getAge() >= age, Integer.valueOf(18));
+     *     Iterate.<b>selectWith</b>(people, (Person person, Integer age) -&gt; person.getAge() &gt;= age, Integer.valueOf(18));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -311,7 +312,7 @@ public final class Iterate
      *     {
      *         public boolean accept(Person person, Integer age)
      *         {
-     *             return person.getAge() >= age;
+     *             return person.getAge() &gt;= age;
      *         }
      *     }, Integer.valueOf(18));
      * </pre>
@@ -354,7 +355,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * Twin&lt;MutableList&lt;Person&gt;&gt;selectedRejected =
-     *      Iterate.<b>selectAndRejectWith</b>(people, (Person person, String lastName) -> lastName.equals(person.getLastName()), "Mason");
+     *      Iterate.<b>selectAndRejectWith</b>(people, (Person person, String lastName) -&gt; lastName.equals(person.getLastName()), "Mason");
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -399,7 +400,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * PartitionIterable&lt;Person&gt; newYorkersAndNonNewYorkers =
-     *      Iterate.<b>partition</b>(people, person -> person.getAddress().getState().getName().equals("New York"));
+     *      Iterate.<b>partition</b>(people, person -&gt; person.getAddress().getState().getName().equals("New York"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -440,8 +441,8 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * PartitionIterable&lt;Person>&gt newYorkersAndNonNewYorkers =
-     *     Iterate.<b>partitionWith</b>(people, (Person person, String state) -> person.getAddress().getState().getName().equals(state), "New York");
+     * PartitionIterable&lt;Person&gt; newYorkersAndNonNewYorkers =
+     *     Iterate.<b>partitionWith</b>(people, (Person person, String state) -&gt; person.getAddress().getState().getName().equals(state), "New York");
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -515,7 +516,7 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * int count = Iterate.<b>count</b>(people, person -> person.getAddress().getState().getName().equals("New York"));
+     * int count = Iterate.<b>count</b>(people, person -&gt; person.getAddress().getState().getName().equals("New York"));
      * </pre>
      * <p>
      * Example using anonymous inner class
@@ -650,7 +651,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * MutableList&lt;Person&gt; selected =
-     *      Iterate.<b>select</b>(people, person -> person.person.getLastName().equals("Smith"), FastList.newList());
+     *      Iterate.<b>select</b>(people, person -&gt; person.person.getLastName().equals("Smith"), FastList.newList());
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -795,7 +796,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * Collection&lt;Person&gt; rejected =
-     *      Iterate.<b>reject</b>(people, person -> person.person.getLastName().equals("Smith"));
+     *      Iterate.<b>reject</b>(people, person -&gt; person.person.getLastName().equals("Smith"));
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -846,7 +847,7 @@ public final class Iterate
     }
 
     /**
-     * SortThis is a mutating method.  The List passed in is also returned.
+     * SortThis is a mutating method. The List passed in is also returned.
      */
     public static <T extends Comparable<? super T>, L extends List<T>> L sortThis(L list)
     {
@@ -869,7 +870,7 @@ public final class Iterate
     }
 
     /**
-     * SortThis is a mutating method.  The List passed in is also returned.
+     * SortThis is a mutating method. The List passed in is also returned.
      */
     public static <T, L extends List<T>> L sortThis(L list, Comparator<? super T> comparator)
     {
@@ -892,7 +893,7 @@ public final class Iterate
     }
 
     /**
-     * SortThis is a mutating method.  The List passed in is also returned.
+     * SortThis is a mutating method. The List passed in is also returned.
      */
     public static <T, L extends List<T>> L sortThis(L list, Predicate2<? super T, ? super T> predicate)
     {
@@ -911,7 +912,7 @@ public final class Iterate
 
     /**
      * Sort the list by comparing an attribute defined by the function.
-     * SortThisBy is a mutating method.  The List passed in is also returned.
+     * SortThisBy is a mutating method. The List passed in is also returned.
      */
     public static <T, V extends Comparable<? super V>, L extends List<T>> L sortThisBy(L list, Function<? super T, ? extends V> function)
     {
@@ -975,7 +976,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * Collection&lt;Person&gt; rejected =
-     *     Iterate.<b>rejectWith</b>(people, (Person person, Integer age) -> person.getAge() >= age, Integer.valueOf(18));
+     *     Iterate.<b>rejectWith</b>(people, (Person person, Integer age) -&gt; person.getAge() &gt;= age, Integer.valueOf(18));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -985,7 +986,7 @@ public final class Iterate
      *     {
      *         public boolean accept(Person person, Integer age)
      *         {
-     *             return person.getAge() >= age;
+     *             return person.getAge() &gt;= age;
      *         }
      *     }, Integer.valueOf(18));
      * </pre>
@@ -1028,7 +1029,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * MutableList&lt;Person&gt; rejected =
-     *      Iterate.<b>reject</b>(people, person -> person.person.getLastName().equals("Smith"), FastList.newList());
+     *      Iterate.<b>reject</b>(people, person -&gt; person.person.getLastName().equals("Smith"), FastList.newList());
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -1166,7 +1167,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * Collection&lt;String&gt; names =
-     *      Iterate.<b>collect</b>(people, person -> person.getFirstName() + " " + person.getLastName());
+     *      Iterate.<b>collect</b>(people, person -&gt; person.getFirstName() + " " + person.getLastName());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1221,7 +1222,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableList&lt;String&gt; names =
-     *      Iterate.<b>collect</b>(people, person -> person.getFirstName() + " " + person.getLastName(), FastList.newList());
+     *      Iterate.<b>collect</b>(people, person -&gt; person.getFirstName() + " " + person.getLastName(), FastList.newList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1267,7 +1268,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * MutableBooleanCollection voters =
-     *      Iterable.<b>collectBoolean</b>(people, person -> person.canVote());
+     *      Iterable.<b>collectBoolean</b>(people, person -&gt; person.canVote());
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -1313,7 +1314,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * BooleanArrayList voters =
-     *      Iterable.<b>collectBoolean</b>(people, person -> person.canVote(), new BooleanArrayList());
+     *      Iterable.<b>collectBoolean</b>(people, person -&gt; person.canVote(), new BooleanArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1359,7 +1360,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * MutableByteCollection bytes =
-     *      Iterate.<b>collectByte</b>(people, person -> person.getCode());
+     *      Iterate.<b>collectByte</b>(people, person -&gt; person.getCode());
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -1405,7 +1406,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * ByteArrayList bytes =
-     *      Iterate.<b>collectByte</b>(people, person -> person.getCode(), new ByteArrayList());
+     *      Iterate.<b>collectByte</b>(people, person -&gt; person.getCode(), new ByteArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1451,7 +1452,7 @@ public final class Iterate
      * Example using Java 8 lambda:
      * <pre>
      * MutableCharCollection chars =
-     *      Iterate.<b>collectChar</b>(people, person -> person.getMiddleInitial());
+     *      Iterate.<b>collectChar</b>(people, person -&gt; person.getMiddleInitial());
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -1496,7 +1497,7 @@ public final class Iterate
      * <p>
      * <pre>
      * CharArrayList chars =
-     *      Iterate.<b>collectChar</b>(people, person -> person.getMiddleInitial());
+     *      Iterate.<b>collectChar</b>(people, person -&gt; person.getMiddleInitial());
      * </pre>
      * <p>
      * Example using anonymous inner class:
@@ -1542,7 +1543,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableDoubleCollection doubles =
-     *      Iterate.<b>collectDouble</b>(people, person -> person.getMilesFromNorthPole());
+     *      Iterate.<b>collectDouble</b>(people, person -&gt; person.getMilesFromNorthPole());
      * </pre>
      * Example using an anonymous inner class:
      * <pre>
@@ -1587,7 +1588,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * DoubleArrayList doubles =
-     *      Iterate.<b>collectDouble</b>(people, person -> person.getMilesFromNorthPole());
+     *      Iterate.<b>collectDouble</b>(people, person -&gt; person.getMilesFromNorthPole());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1633,7 +1634,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableFloatCollection floats =
-     *      Iterate.<b>collectFloat</b>(people, person -> person.getHeightInInches());
+     *      Iterate.<b>collectFloat</b>(people, person -&gt; person.getHeightInInches());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1679,7 +1680,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * FloatArrayList floats =
-     *      Iterate.<b>collectFloat</b>(people, person -> person.getHeightInInches(), new FloatArrayList());
+     *      Iterate.<b>collectFloat</b>(people, person -&gt; person.getHeightInInches(), new FloatArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1725,7 +1726,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableIntCollection ages =
-     *      Iterate.<b>collectInt</b>(people, person -> person.getAge());
+     *      Iterate.<b>collectInt</b>(people, person -&gt; person.getAge());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1771,7 +1772,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * IntArrayList ages =
-     *      Iterate.<b>collectInt</b>(people, person -> person.getAge(), new IntArrayList());
+     *      Iterate.<b>collectInt</b>(people, person -&gt; person.getAge(), new IntArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1817,7 +1818,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableLongCollection longs =
-     *      Iterate.<b>collectLong</b>(people, person -> person.getGuid());
+     *      Iterate.<b>collectLong</b>(people, person -&gt; person.getGuid());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1863,7 +1864,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * LongArrayList longs =
-     *      Iterate.<b>collectLong</b>(people, person -> person.getGuid(), new LongArrayList());
+     *      Iterate.<b>collectLong</b>(people, person -&gt; person.getGuid(), new LongArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1909,7 +1910,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableShortCollection shorts =
-     *      Iterate.<b>collectShort</b>(people, person -> person.getNumberOfJunkMailItemsReceivedPerMonth());
+     *      Iterate.<b>collectShort</b>(people, person -&gt; person.getNumberOfJunkMailItemsReceivedPerMonth());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1955,7 +1956,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * ShortArrayList shorts =
-     *      Iterate.<b>collectShort</b>(people, person -> person.getNumberOfJunkMailItemsReceivedPerMonth(), new ShortArrayList());
+     *      Iterate.<b>collectShort</b>(people, person -&gt; person.getNumberOfJunkMailItemsReceivedPerMonth(), new ShortArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -2142,7 +2143,7 @@ public final class Iterate
     }
 
     /**
-     * Returns the first element of a collection.  In the case of a List it is the element at the first index.  In the
+     * Returns the first element of a collection. In the case of a List it is the element at the first index. In the
      * case of any other Collection, it is the first element that would be returned during an iteration. If the
      * Collection is empty, the result is {@code null}.
      * <p>
@@ -2177,7 +2178,7 @@ public final class Iterate
     }
 
     /**
-     * A null-safe check on a collection to see if it isEmpty.  A null collection results in a true.
+     * A null-safe check on a collection to see if it isEmpty. A null collection results in a true.
      */
     public static boolean isEmpty(Iterable<?> iterable)
     {
@@ -2197,7 +2198,7 @@ public final class Iterate
     }
 
     /**
-     * A null-safe check on a collection to see if it is notEmpty.  A null collection results in a false.
+     * A null-safe check on a collection to see if it is notEmpty. A null collection results in a false.
      */
     public static boolean notEmpty(Iterable<?> iterable)
     {
@@ -2205,7 +2206,7 @@ public final class Iterate
     }
 
     /**
-     * Returns the last element of a collection.  In the case of a List it is the element at the last index.  In the
+     * Returns the last element of a collection. In the case of a List it is the element at the last index. In the
      * case of any other Collection, it is the last element that would be returned during an iteration. If the
      * Collection is empty, the result is {@code null}.
      * <p>
@@ -2245,7 +2246,7 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * Person person = Iterate.<b>detect</b>(people, person -> person.getFirstName().equals("John") && person.getLastName().equals("Smith"));
+     * Person person = Iterate.<b>detect</b>(people, person -&gt; person.getFirstName().equals("John") &amp;&amp; person.getLastName().equals("Smith"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -2254,7 +2255,7 @@ public final class Iterate
      * {
      *     public boolean accept(Person person)
      *     {
-     *         return person.getFirstName().equals("John") && person.getLastName().equals("Smith");
+     *         return person.getFirstName().equals("John") &amp;&amp; person.getLastName().equals("Smith");
      *     }
      * });
      * </pre>
@@ -2286,7 +2287,7 @@ public final class Iterate
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * Person person = Iterate.<b>detectWith</b>(people, (person, fullName) -> person.getFullName().equals(fullName), "John Smith");
+     * Person person = Iterate.<b>detectWith</b>(people, (person, fullName) -&gt; person.getFullName().equals(fullName), "John Smith");
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -2331,7 +2332,7 @@ public final class Iterate
      * <pre>
      * Optional&lt;Person&gt; person =
      *      Iterate.<b>detectOptional</b>(people,
-     *          person -> person.getFirstName().equals("John") && person.getLastName().equals("Smith"));
+     *          person -&gt; person.getFirstName().equals("John") &amp;&amp; person.getLastName().equals("Smith"));
      * </pre>
      * <p>
      *
@@ -2367,7 +2368,7 @@ public final class Iterate
      * <pre>
      * Optional&lt;Person&gt; person =
      *      Iterate.<b>detectWithOptional</b>(people,
-     *          (person, fullName) -> person.getFullName().equals(fullName), "John Smith");
+     *          (person, fullName) -&gt; person.getFullName().equals(fullName), "John Smith");
      * </pre>
      * <p>
      *
@@ -3078,6 +3079,19 @@ public final class Iterate
     }
 
     /**
+     * Iterate over the specified collection applying the specified Functions to each element to calculate
+     * a key and value, and return the results in the specified Map instance.
+     */
+    public static <T, K, V, R extends Map<K, V>> R toMap(
+            Iterable<T> iterable,
+            Function<? super T, ? extends K> keyFunction,
+            Function<? super T, ? extends V> valueFunction,
+            R target)
+    {
+        return Iterate.addToMap(iterable, keyFunction, valueFunction, target);
+    }
+
+    /**
      * Iterate over the specified collection applying a specific Function to each element to calculate a
      * key, and add the results to input Map.
      * This method will mutate the input Map.
@@ -3113,7 +3127,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableMultimap&lt;String, String&gt; multimap =
-     *      Iterate.<b>toMultimap</b>(integers, each -> "key:" + each, each -> Lists.mutable.of("value:" + each), FastListMultimap.newMultimap());
+     *      Iterate.<b>toMultimap</b>(integers, each -&gt; "key:" + each, each -&gt; Lists.mutable.of("value:" + each), FastListMultimap.newMultimap());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -3430,7 +3444,7 @@ public final class Iterate
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableMultimap&lt;String, String&gt; multimap =
-     *      Iterate.<b>groupByAndCollect</b>(integers, each -> "key:" + each, each -> "value:" + each, FastListMultimap.newMultimap());
+     *      Iterate.<b>groupByAndCollect</b>(integers, each -&gt; "key:" + each, each -&gt; "value:" + each, FastListMultimap.newMultimap());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -3485,9 +3499,9 @@ public final class Iterate
     }
 
     /**
-     * @see RichIterable#groupByUniqueKey(Function, MutableMap)
+     * @see RichIterable#groupByUniqueKey(Function, MutableMapIterable)
      */
-    public static <V, T, R extends MutableMap<V, T>> R groupByUniqueKey(
+    public static <V, T, R extends MutableMapIterable<V, T>> R groupByUniqueKey(
             Iterable<T> iterable,
             Function<? super T, ? extends V> function,
             R target)

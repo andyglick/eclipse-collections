@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -18,6 +18,7 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.collections.api.BooleanIterable;
 import org.eclipse.collections.api.LazyBooleanIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.MutableBooleanBag;
 import org.eclipse.collections.api.block.function.primitive.BooleanToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ObjectBooleanToObjectFunction;
@@ -25,6 +26,7 @@ import org.eclipse.collections.api.block.predicate.primitive.BooleanPredicate;
 import org.eclipse.collections.api.block.procedure.primitive.BooleanProcedure;
 import org.eclipse.collections.api.iterator.BooleanIterator;
 import org.eclipse.collections.api.iterator.MutableBooleanIterator;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.primitive.BooleanSet;
@@ -32,6 +34,7 @@ import org.eclipse.collections.api.set.primitive.ImmutableBooleanSet;
 import org.eclipse.collections.api.set.primitive.MutableBooleanSet;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
 import org.eclipse.collections.impl.block.factory.primitive.BooleanPredicates;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.BooleanSets;
 import org.eclipse.collections.impl.lazy.primitive.LazyBooleanIterableAdapter;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
@@ -180,6 +183,9 @@ public class BooleanHashSet implements MutableBooleanSet, Externalizable
                     {
                         throw new IllegalStateException();
                     }
+                    return;
+                default:
+                    throw new AssertionError();
             }
         }
     }
@@ -407,6 +413,40 @@ public class BooleanHashSet implements MutableBooleanSet, Externalizable
             case 3:
                 result = function.valueOf(result, false);
                 result = function.valueOf(result, true);
+                return result;
+            default:
+                throw new AssertionError("Invalid state");
+        }
+    }
+
+    @Override
+    public RichIterable<BooleanIterable> chunk(int size)
+    {
+        if (size <= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList<BooleanIterable> result = Lists.mutable.empty();
+        switch (this.state)
+        {
+            case 0:
+                return result;
+            case 1:
+                result.add(BooleanSets.mutable.with(false));
+                return result;
+            case 2:
+                result.add(BooleanSets.mutable.with(true));
+                return result;
+            case 3:
+                if (size == 1)
+                {
+                    result.add(BooleanSets.mutable.with(false));
+                    result.add(BooleanSets.mutable.with(true));
+                }
+                else
+                {
+                    result.add(BooleanSets.mutable.with(false, true));
+                }
                 return result;
             default:
                 throw new AssertionError("Invalid state");
@@ -874,7 +914,7 @@ public class BooleanHashSet implements MutableBooleanSet, Externalizable
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
+    public void readExternal(ObjectInput in) throws IOException
     {
         int size = in.readInt();
         for (int i = 0; i < size; i++)

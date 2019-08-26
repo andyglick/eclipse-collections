@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -83,8 +83,8 @@ public class SynchronizedSortedSet<T>
     }
 
     /**
-     * This method will take a MutableSortedSet and wrap it directly in a SynchronizedSortedSet.  It will
-     * take any other non-GS-collection and first adapt it will a SortedSetAdapter, and then return a
+     * This method will take a MutableSortedSet and wrap it directly in a SynchronizedSortedSet. It will
+     * take any other non-Eclipse-Collections collection and first adapt it will a SortedSetAdapter, and then return a
      * SynchronizedSortedSet that wraps the adapter.
      */
     public static <E, S extends SortedSet<E>> SynchronizedSortedSet<E> of(S set)
@@ -93,9 +93,9 @@ public class SynchronizedSortedSet<T>
     }
 
     /**
-     * This method will take a MutableSortedSet and wrap it directly in a SynchronizedSortedSet.  It will
-     * take any other non-GS-collection and first adapt it will a SortedSetAdapter, and then return a
-     * SynchronizedSortedSet that wraps the adapter.  Additionally, a developer specifies which lock to use
+     * This method will take a MutableSortedSet and wrap it directly in a SynchronizedSortedSet. It will
+     * take any other non-Eclipse-Collections collection and first adapt it will a SortedSetAdapter, and then return a
+     * SynchronizedSortedSet that wraps the adapter. Additionally, a developer specifies which lock to use
      * with the collection.
      */
     public static <E, S extends SortedSet<E>> MutableSortedSet<E> of(S set, Object lock)

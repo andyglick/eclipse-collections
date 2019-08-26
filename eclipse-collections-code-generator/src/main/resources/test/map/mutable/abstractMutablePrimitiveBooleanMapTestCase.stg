@@ -28,10 +28,13 @@ import org.eclipse.collections.api.block.function.primitive.BooleanToBooleanFunc
 import org.eclipse.collections.api.block.function.primitive.<name>ToBooleanFunction;
 import org.eclipse.collections.api.iterator.MutableBooleanIterator;
 import org.eclipse.collections.api.map.primitive.Mutable<name>BooleanMap;
+import org.eclipse.collections.api.tuple.primitive.<name>BooleanPair;
+import org.eclipse.collections.impl.factory.Iterables;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.<name>ArrayList;
 import org.eclipse.collections.impl.map.primitive.Abstract<name>BooleanMapTestCase;
 import org.eclipse.collections.impl.test.Verify;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -185,6 +188,25 @@ public abstract class AbstractMutable<name>BooleanMapTestCase extends Abstract<n
         this.map.put(<(literal.(type))("30")>, true);
         expected.put(<(literal.(type))("30")>, true);
         Assert.assertEquals(expected, this.map);
+    }
+
+    @Test
+    public void updateValues()
+    {
+        Mutable<name>BooleanMap map1 = this.newWithKeysValues(<(literal.(type))("0")>, true, <(literal.(type))("1")>, false, <(literal.(type))("2")>, false);
+        map1.updateValues((k, v) -> v);
+        Mutable<name>BooleanMap expected1 = this.newWithKeysValues(<(literal.(type))("0")>, true, <(literal.(type))("1")>, false, <(literal.(type))("2")>, false);
+        Assert.assertEquals(expected1, map1);
+
+        Mutable<name>BooleanMap map2 = this.newWithKeysValues(<(literal.(type))("0")>, true, <(literal.(type))("1")>, false, <(literal.(type))("2")>, false);
+        map2.updateValues((k, v) -> !v);
+        Mutable<name>BooleanMap expected2 = this.newWithKeysValues(<(literal.(type))("0")>, false, <(literal.(type))("1")>, true, <(literal.(type))("2")>, true);
+        Assert.assertEquals(expected2, map2);
+
+        Mutable<name>BooleanMap map3 = this.newWithKeysValues(<(literal.(type))("0")>, true, <(literal.(type))("1")>, false, <(literal.(type))("2")>, false);
+        map3.updateValues((k, v) -> k == <(literal.(type))("2")> ? true : v);
+        Mutable<name>BooleanMap expected3 = this.newWithKeysValues(<(literal.(type))("0")>, true, <(literal.(type))("1")>, false, <(literal.(type))("2")>, true);
+        Assert.assertEquals(expected3, map3);
     }
 
     @Test
@@ -602,6 +624,26 @@ public abstract class AbstractMutable<name>BooleanMapTestCase extends Abstract<n
         Mutable<name>BooleanMap hashMap = this.getEmptyMap();
         Assert.assertSame(hashMap.withKeyValue(<(literal.(type))("1")>, false), hashMap);
         Assert.assertEquals(<name>BooleanHashMap.newWithKeysValues(<(literal.(type))("1")>, false), hashMap);
+    }
+
+    @Test
+    public void withAllKeyValues()
+    {
+        Mutable<name>BooleanMap emptyMap = this.getEmptyMap();
+        Mutable<name>BooleanMap partialMap = this.newWithKeysValues(<(literal.(type))("1")>, true, <(literal.(type))("3")>, false);
+        Mutable<name>BooleanMap completeMap = this.newWithKeysValues(<(literal.(type))("1")>, true, <(literal.(type))("2")>, true, <(literal.(type))("3")>, false, <(literal.(type))("4")>, false);
+        Iterable\<<name>BooleanPair> emptyIterable = Iterables.iList();
+        Iterable\<<name>BooleanPair> partialIterable = Iterables.iList(PrimitiveTuples.pair(<(literal.(type))("1")>, true), PrimitiveTuples.pair(<(literal.(type))("3")>, false));
+        Iterable\<<name>BooleanPair> completeIterable = Iterables.iList(PrimitiveTuples.pair(<(literal.(type))("1")>, true), PrimitiveTuples.pair(<(literal.(type))("2")>, true), PrimitiveTuples.pair(<(literal.(type))("3")>, false), PrimitiveTuples.pair(<(literal.(type))("4")>, false));
+        Assert.assertEquals(emptyMap, emptyMap.withAllKeyValues(emptyIterable));
+        Assert.assertEquals(partialMap, emptyMap.withAllKeyValues(partialIterable));
+        Assert.assertEquals(completeMap, emptyMap.withAllKeyValues(completeIterable));
+        Assert.assertEquals(partialMap, partialMap.withAllKeyValues(emptyIterable));
+        Assert.assertEquals(partialMap, partialMap.withAllKeyValues(partialIterable));
+        Assert.assertEquals(completeMap, partialMap.withAllKeyValues(completeIterable));
+        Assert.assertEquals(completeMap, completeMap.withAllKeyValues(emptyIterable));
+        Assert.assertEquals(completeMap, completeMap.withAllKeyValues(partialIterable));
+        Assert.assertEquals(completeMap, completeMap.withAllKeyValues(completeIterable));
     }
 
     @Test

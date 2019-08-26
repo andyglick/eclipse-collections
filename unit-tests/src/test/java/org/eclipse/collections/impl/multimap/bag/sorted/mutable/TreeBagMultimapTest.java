@@ -180,15 +180,17 @@ public class TreeBagMultimapTest extends AbstractMutableSortedBagMultimapTestCas
         Verify.assertPostSerializedEqualsAndHashCode(map);
 
         TreeBagMultimap<Integer, Integer> deserialized = SerializeTestHelper.serializeDeserialize(map);
-        Verify.assertSortedBagsEqual(TreeBag.newBagWith(Comparators.reverseNaturalOrder(), 1, 2, 3, 4),
+        Verify.assertSortedBagsEqual(
+                TreeBag.newBagWith(Comparators.reverseNaturalOrder(), 1, 2, 3, 4),
                 deserialized.get(1));
 
         deserialized.putAll(3, FastList.newListWith(8, 9, 10));
         Verify.assertListsEqual(FastList.newListWith(10, 9, 8), deserialized.get(3).toList());
     }
 
+    @Test
     @Override
-    public void testClear()
+    public void clear()
     {
         MutableMultimap<Integer, String> multimap = this.newMultimapWithKeysValues(1, "One", 2, "Two", 3, "Three");
         multimap.clear();

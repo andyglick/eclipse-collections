@@ -18,9 +18,11 @@ package org.eclipse.collections.impl.collection.mutable.primitive;
 
 import java.io.Serializable;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.<name>Iterable;
 import org.eclipse.collections.api.Lazy<name>Iterable;
 import org.eclipse.collections.api.bag.primitive.Mutable<name>Bag;
+import org.eclipse.collections.api.block.function.primitive.<(wideName.(type))><name>To<(wideName.(type))>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.Object<name>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
@@ -48,7 +50,7 @@ public abstract class AbstractUnmodifiable<name>Collection
 
     protected AbstractUnmodifiable<name>Collection(Mutable<name>Collection collection)
     {
-        if(collection == null)
+        if (collection == null)
         {
             throw new IllegalArgumentException("Cannot create a AbstractUnmodifiable<name>Collection on a null collection");
         }
@@ -352,6 +354,24 @@ public abstract class AbstractUnmodifiable<name>Collection
     public \<T> T injectInto(T injectedValue, Object<name>ToObjectFunction\<? super T, ? extends T> function)
     {
         return this.collection.injectInto(injectedValue, function);
+    }
+
+    @Override
+    public <(wideType.(type))> reduce(<(wideName.(type))><name>To<(wideName.(type))>Function accumulator)
+    {
+        return this.collection.reduce(accumulator);
+    }
+
+    @Override
+    public <(wideType.(type))> reduceIfEmpty(<(wideName.(type))><name>To<(wideName.(type))>Function accumulator, <(wideType.(type))> defaultValue)
+    {
+        return this.collection.reduceIfEmpty(accumulator, defaultValue);
+    }
+
+    @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        return this.collection.chunk(size);
     }
 }
 

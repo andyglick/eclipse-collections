@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -34,6 +34,7 @@ import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.ObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.ObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -55,8 +56,8 @@ import org.eclipse.collections.impl.utility.Iterate;
 import static org.eclipse.collections.impl.factory.Iterables.iList;
 
 /**
- * The ParallelIterate class contains several parallel algorithms that work with Collections.  All of the higher
- * level parallel algorithms depend on the basic parallel algorithm named {@code forEach}.  The forEach algorithm employs
+ * The ParallelIterate class contains several parallel algorithms that work with Collections. All of the higher
+ * level parallel algorithms depend on the basic parallel algorithm named {@code forEach}. The forEach algorithm employs
  * a batching fork and join approach.
  * <p>
  * All Collections that are not either a {@link RandomAccess} or {@link List} are first converted to a Java array
@@ -88,12 +89,12 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified, in parallel batches using default runtime parameter values.  The
+     * Iterate over the collection specified, in parallel batches using default runtime parameter values. The
      * {@code ObjectIntProcedure} used must be stateless, or use concurrent aware objects if they are to be shared.
      * <p>
      * e.g.
      * <pre>
-     * {@code final Map<Integer, Object> chm = new ConcurrentHashMap<Integer, Object>();}
+     * final Map&lt;Integer, Object&gt; chm = new ConcurrentHashMap&lt;Integer, Object&gt;();
      * ParallelIterate.<b>forEachWithIndex</b>(collection, new ObjectIntProcedure()
      * {
      *     public void value(Object object, int index)
@@ -111,12 +112,12 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified in parallel batches using the default runtime parameters.  The
-     * ObjectIntProcedure used must be stateless, or use concurrent aware objects if they are to be shared.  The code
+     * Iterate over the collection specified in parallel batches using the default runtime parameters. The
+     * ObjectIntProcedure used must be stateless, or use concurrent aware objects if they are to be shared. The code
      * is executed against the specified executor.
      * <p>
      * <pre>e.g.
-     * {@code final Map<Integer, Object> chm = new ConcurrentHashMap<Integer, Object>();}
+     * final Map&lt;Integer, Object&gt; chm = new ConcurrentHashMap&lt;Integer, Object&gt;();
      * ParallelIterate.<b>forEachWithIndex</b>(collection, new ObjectIntProcedure()
      * {
      *     public void value(Object object, int index)
@@ -140,8 +141,8 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified in parallel batches.  The
-     * ObjectIntProcedure used must be stateless, or use concurrent aware objects if they are to be shared.  The
+     * Iterate over the collection specified in parallel batches. The
+     * ObjectIntProcedure used must be stateless, or use concurrent aware objects if they are to be shared. The
      * specified minimum fork size and task count are used instead of the default values.
      *
      * @param minForkSize Only run in parallel if input collection is longer than this.
@@ -256,12 +257,12 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified in parallel batches using default runtime parameter values.  The
+     * Iterate over the collection specified in parallel batches using default runtime parameter values. The
      * {@code Procedure} used must be stateless, or use concurrent aware objects if they are to be shared.
      * <p>
      * e.g.
      * <pre>
-     * {@code final Map<Object, Boolean> chm = new ConcurrentHashMap<Object, Boolean>();}
+     * final Map&lt;Object, Boolean&gt; chm = new ConcurrentHashMap&lt;Object, Boolean&gt;();
      * ParallelIterate.<b>forEach</b>(collection, new Procedure()
      * {
      *     public void value(Object object)
@@ -277,12 +278,12 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified in parallel batches using default runtime parameter values.  The
+     * Iterate over the collection specified in parallel batches using default runtime parameter values. The
      * {@code Procedure} used must be stateless, or use concurrent aware objects if they are to be shared.
      * <p>
      * e.g.
      * <pre>
-     * {@code final Map<Object, Boolean> chm = new ConcurrentHashMap<Object, Boolean>();}
+     * final Map&lt;Object, Boolean&gt; chm = new ConcurrentHashMap&lt;Object, Boolean&gt;();
      * ParallelIterate.<b>forEachBatchSize</b>(collection, new Procedure()
      * {
      *     public void value(Object object)
@@ -374,13 +375,13 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified in parallel batches using the default values for the task size.  The
+     * Iterate over the collection specified in parallel batches using the default values for the task size. The
      * ProcedureFactory can create stateful closures that will be collected and combined using the specified Combiner.
      * <p>
      * <pre>e.g. The <b>ParallelIterate.select()</b> implementation
-     * <p>
-     * {@code CollectionCombiner<T, SelectProcedure<T>> combiner = CollectionCombiner.forSelect(collection);}
-     * ParallelIterate.<b>forEach</b>(collection,{@code new SelectProcedureFactory<T>(predicate, taskSize), combiner, 1000);}
+     *
+     * CollectionCombiner&lt;T, SelectProcedure&lt;T&gt;&gt; combiner = CollectionCombiner.forSelect(collection);
+     * ParallelIterate.<b>forEach</b>(collection, new SelectProcedureFactory&lt;T&gt;(predicate, taskSize), combiner, 1000);
      * </pre>
      */
     @SuppressWarnings("JavaDoc")
@@ -404,15 +405,15 @@ public final class ParallelIterate
     }
 
     /**
-     * Iterate over the collection specified in parallel batches using the default values for the task size.  The
+     * Iterate over the collection specified in parallel batches using the default values for the task size. The
      * ProcedureFactory can create stateful closures that will be collected and combined using the specified Combiner.
      * <p>
      * <pre>e.g. The <b>ParallelIterate.select()</b> implementation
-     * <p>
+     *
      * int taskCount = Math.max(DEFAULT_PARALLEL_TASK_COUNT, collection.size() / DEFAULT_MIN_FORK_SIZE);
      * final int taskSize = collection.size() / taskCount / 2;
-     * {@code CollectionCombiner<T, SelectProcedure<T>> combiner = CollectionCombiner.forSelect(collection);}
-     * ParallelIterate.<b>forEach</b>(collection,{@code new SelectProcedureFactory<T>(predicate, taskSize), combiner, DEFAULT_MIN_FORK_SIZE, taskCount);}
+     * CollectionCombiner&lt;T, SelectProcedure&lt;T&gt;&gt; combiner = CollectionCombiner.forSelect(collection);
+     * ParallelIterate.<b>forEach</b>(collection, new SelectProcedureFactory&lt;T&gt;(predicate, taskSize), combiner, DEFAULT_MIN_FORK_SIZE, taskCount);
      * </pre>
      */
     @SuppressWarnings("JavaDoc")
@@ -974,7 +975,7 @@ public final class ParallelIterate
                 ParallelIterate.DEFAULT_MIN_FORK_SIZE);
     }
 
-    public static <T, K, V, R extends MutableMap<K, V>> R aggregateBy(
+    public static <T, K, V, R extends MutableMapIterable<K, V>> R aggregateBy(
             Iterable<T> iterable,
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
@@ -1006,7 +1007,7 @@ public final class ParallelIterate
                 ParallelIterate.EXECUTOR_SERVICE);
     }
 
-    public static <T, K, V, R extends MutableMap<K, V>> R aggregateBy(
+    public static <T, K, V, R extends MutableMapIterable<K, V>> R aggregateBy(
             Iterable<T> iterable,
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
@@ -1042,7 +1043,7 @@ public final class ParallelIterate
                 executor);
     }
 
-    public static <T, K, V, R extends MutableMap<K, V>> R aggregateBy(
+    public static <T, K, V, R extends MutableMapIterable<K, V>> R aggregateBy(
             Iterable<T> iterable,
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
@@ -1076,7 +1077,7 @@ public final class ParallelIterate
                 ParallelIterate.DEFAULT_MIN_FORK_SIZE);
     }
 
-    public static <T, K, V, R extends MutableMap<K, V>> R aggregateInPlaceBy(
+    public static <T, K, V, R extends MutableMapIterable<K, V>> R aggregateInPlaceBy(
             Iterable<T> iterable,
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
@@ -1108,7 +1109,7 @@ public final class ParallelIterate
                 ParallelIterate.EXECUTOR_SERVICE);
     }
 
-    public static <T, K, V, R extends MutableMap<K, V>> R aggregateInPlaceBy(
+    public static <T, K, V, R extends MutableMapIterable<K, V>> R aggregateInPlaceBy(
             Iterable<T> iterable,
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
@@ -1146,7 +1147,7 @@ public final class ParallelIterate
         return map;
     }
 
-    public static <T, K, V, R extends MutableMap<K, V>> R aggregateInPlaceBy(
+    public static <T, K, V, R extends MutableMapIterable<K, V>> R aggregateInPlaceBy(
             Iterable<T> iterable,
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
@@ -1238,7 +1239,7 @@ public final class ParallelIterate
 
     public static <T, V> ObjectDoubleMap<V> sumByDouble(
             Iterable<T> iterable,
-            Function<T, V> groupBy,
+            Function<? super T, ? extends V> groupBy,
             DoubleFunction<? super T> function)
     {
         ObjectDoubleHashMap<V> result = ObjectDoubleHashMap.newMap();
@@ -1253,7 +1254,7 @@ public final class ParallelIterate
 
     public static <T, V> ObjectDoubleMap<V> sumByFloat(
             Iterable<T> iterable,
-            Function<T, V> groupBy,
+            Function<? super T, ? extends V> groupBy,
             FloatFunction<? super T> function)
     {
         ObjectDoubleHashMap<V> result = ObjectDoubleHashMap.newMap();
@@ -1268,7 +1269,7 @@ public final class ParallelIterate
 
     public static <T, V> ObjectLongMap<V> sumByLong(
             Iterable<T> iterable,
-            Function<T, V> groupBy,
+            Function<? super T, ? extends V> groupBy,
             LongFunction<? super T> function)
     {
         ObjectLongHashMap<V> result = ObjectLongHashMap.newMap();
@@ -1283,7 +1284,7 @@ public final class ParallelIterate
 
     public static <T, V> ObjectLongMap<V> sumByInt(
             Iterable<T> iterable,
-            Function<T, V> groupBy,
+            Function<? super T, ? extends V> groupBy,
             IntFunction<? super T> function)
     {
         ObjectLongHashMap<V> result = ObjectLongHashMap.newMap();
@@ -1299,7 +1300,10 @@ public final class ParallelIterate
     /**
      * @since 6.0
      */
-    public static <V, T> MutableMap<V, BigDecimal> sumByBigDecimal(Iterable<T> iterable, Function<T, V> groupBy, Function<? super T, BigDecimal> function)
+    public static <V, T> MutableMap<V, BigDecimal> sumByBigDecimal(
+            Iterable<T> iterable,
+            Function<? super T, ? extends V> groupBy,
+            Function<? super T, BigDecimal> function)
     {
         MutableMap<V, BigDecimal> result = UnifiedMap.newMap();
         ParallelIterate.forEach(
@@ -1314,7 +1318,10 @@ public final class ParallelIterate
     /**
      * @since 6.0
      */
-    public static <V, T> MutableMap<V, BigInteger> sumByBigInteger(Iterable<T> iterable, Function<T, V> groupBy, Function<? super T, BigInteger> function)
+    public static <V, T> MutableMap<V, BigInteger> sumByBigInteger(
+            Iterable<T> iterable,
+            Function<? super T, ? extends V> groupBy,
+            Function<? super T, BigInteger> function)
     {
         MutableMap<V, BigInteger> result = UnifiedMap.newMap();
         ParallelIterate.forEach(
@@ -1330,7 +1337,7 @@ public final class ParallelIterate
      * Returns a brand new ExecutorService using the specified poolName with the specified maximum thread pool size. The
      * same poolName may be used more than once resulting in multiple pools with the same name.
      * <p>
-     * The pool will be initialised with newPoolSize threads.  If that number of threads are in use and another thread
+     * The pool will be initialised with newPoolSize threads. If that number of threads are in use and another thread
      * is requested, the pool will reject execution and the submitting thread will execute the task.
      */
     public static ExecutorService newPooledExecutor(int newPoolSize, String poolName, boolean useDaemonThreads)
@@ -1347,7 +1354,7 @@ public final class ParallelIterate
 
     /**
      * Returns a brand new ExecutorService using the specified poolName and uses the optional property named
-     * to set the maximum thread pool size.  The same poolName may be used more than
+     * to set the maximum thread pool size. The same poolName may be used more than
      * once resulting in multiple pools with the same name.
      */
     public static ExecutorService newPooledExecutor(String poolName, boolean useDaemonThreads)
@@ -1373,10 +1380,10 @@ public final class ParallelIterate
     private static final class SumByDoubleProcedure<T, V> implements Procedure<T>, ProcedureFactory<SumByDoubleProcedure<T, V>>
     {
         private final MutableMap<V, DoubleDoublePair> map = Maps.mutable.of();
-        private final Function<T, V> groupBy;
+        private final Function<? super T, ? extends V> groupBy;
         private final DoubleFunction<? super T> function;
 
-        private SumByDoubleProcedure(Function<T, V> groupBy, DoubleFunction<? super T> function)
+        private SumByDoubleProcedure(Function<? super T, ? extends V> groupBy, DoubleFunction<? super T> function)
         {
             this.groupBy = groupBy;
             this.function = function;
@@ -1447,10 +1454,10 @@ public final class ParallelIterate
     private static final class SumByFloatProcedure<T, V> implements Procedure<T>, ProcedureFactory<SumByFloatProcedure<T, V>>
     {
         private final MutableMap<V, DoubleDoublePair> map = Maps.mutable.of();
-        private final Function<T, V> groupBy;
+        private final Function<? super T, ? extends V> groupBy;
         private final FloatFunction<? super T> function;
 
-        private SumByFloatProcedure(Function<T, V> groupBy, FloatFunction<? super T> function)
+        private SumByFloatProcedure(Function<? super T, ? extends V> groupBy, FloatFunction<? super T> function)
         {
             this.groupBy = groupBy;
             this.function = function;
@@ -1521,10 +1528,10 @@ public final class ParallelIterate
     private static final class SumByLongProcedure<T, V> implements Procedure<T>, ProcedureFactory<SumByLongProcedure<T, V>>
     {
         private final ObjectLongHashMap<V> map = ObjectLongHashMap.newMap();
-        private final Function<T, V> groupBy;
+        private final Function<? super T, ? extends V> groupBy;
         private final LongFunction<? super T> function;
 
-        private SumByLongProcedure(Function<T, V> groupBy, LongFunction<? super T> function)
+        private SumByLongProcedure(Function<? super T, ? extends V> groupBy, LongFunction<? super T> function)
         {
             this.groupBy = groupBy;
             this.function = function;
@@ -1575,10 +1582,10 @@ public final class ParallelIterate
     private static final class SumByIntProcedure<T, V> implements Procedure<T>, ProcedureFactory<SumByIntProcedure<T, V>>
     {
         private final ObjectLongHashMap<V> map = ObjectLongHashMap.newMap();
-        private final Function<T, V> groupBy;
+        private final Function<? super T, ? extends V> groupBy;
         private final IntFunction<? super T> function;
 
-        private SumByIntProcedure(Function<T, V> groupBy, IntFunction<? super T> function)
+        private SumByIntProcedure(Function<? super T, ? extends V> groupBy, IntFunction<? super T> function)
         {
             this.groupBy = groupBy;
             this.function = function;
@@ -1629,10 +1636,10 @@ public final class ParallelIterate
     private static final class SumByBigDecimalProcedure<T, V> implements Procedure<T>, ProcedureFactory<SumByBigDecimalProcedure<T, V>>
     {
         private final MutableMap<V, BigDecimal> map = UnifiedMap.newMap();
-        private final Function<T, V> groupBy;
+        private final Function<? super T, ? extends V> groupBy;
         private final Function<? super T, BigDecimal> function;
 
-        private SumByBigDecimalProcedure(Function<T, V> groupBy, Function<? super T, BigDecimal> function)
+        private SumByBigDecimalProcedure(Function<? super T, ? extends V> groupBy, Function<? super T, BigDecimal> function)
         {
             this.groupBy = groupBy;
             this.function = function;
@@ -1683,10 +1690,10 @@ public final class ParallelIterate
     private static final class SumByBigIntegerProcedure<T, V> implements Procedure<T>, ProcedureFactory<SumByBigIntegerProcedure<T, V>>
     {
         private final MutableMap<V, BigInteger> map = UnifiedMap.newMap();
-        private final Function<T, V> groupBy;
+        private final Function<? super T, ? extends V> groupBy;
         private final Function<? super T, BigInteger> function;
 
-        private SumByBigIntegerProcedure(Function<T, V> groupBy, Function<? super T, BigInteger> function)
+        private SumByBigIntegerProcedure(Function<? super T, ? extends V> groupBy, Function<? super T, BigInteger> function)
         {
             this.groupBy = groupBy;
             this.function = function;

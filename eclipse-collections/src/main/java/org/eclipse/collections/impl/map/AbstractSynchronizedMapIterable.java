@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -235,6 +235,24 @@ public abstract class AbstractSynchronizedMapIterable<K, V>
     }
 
     @Override
+    public boolean removeAllKeys(Set<? extends K> keys)
+    {
+        synchronized (this.lock)
+        {
+            return this.getDelegate().removeAllKeys(keys);
+        }
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        synchronized (this.lock)
+        {
+            return this.getDelegate().removeIf(predicate);
+        }
+    }
+
+    @Override
     public void putAll(Map<? extends K, ? extends V> map)
     {
         synchronized (this.lock)
@@ -253,7 +271,7 @@ public abstract class AbstractSynchronizedMapIterable<K, V>
     }
 
     @Override
-    public V putPair(Pair<K, V> keyValuePair)
+    public V putPair(Pair<? extends K, ? extends V> keyValuePair)
     {
         synchronized (this.lock)
         {
@@ -262,7 +280,7 @@ public abstract class AbstractSynchronizedMapIterable<K, V>
     }
 
     @Override
-    public V add(Pair<K, V> keyValuePair)
+    public V add(Pair<? extends K, ? extends V> keyValuePair)
     {
         synchronized (this.lock)
         {
@@ -463,6 +481,15 @@ public abstract class AbstractSynchronizedMapIterable<K, V>
     public <V1, P> MutableBag<V1> countByWith(Function2<? super V, ? super P, ? extends V1> function, P parameter)
     {
         return (MutableBag<V1>) super.<V1, P>countByWith(function, parameter);
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V1> MutableBag<V1> countByEach(Function<? super V, ? extends Iterable<V1>> function)
+    {
+        return (MutableBag<V1>) super.countByEach(function);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -30,6 +30,7 @@ import java.util.Spliterators;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 
 import org.eclipse.collections.api.block.HashingStrategy;
@@ -73,6 +74,7 @@ import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.list.primitive.MutableShortList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -103,18 +105,18 @@ import org.eclipse.collections.impl.utility.internal.RandomAccessListIterate;
 
 /**
  * FastList is an attempt to provide the same functionality as ArrayList without the support for concurrent
- * modification exceptions.  It also attempts to correct the problem with subclassing ArrayList
- * in that the data elements are protected, not private.  It is this issue that caused this class
- * to be created in the first place.  The intent was to provide optimized internal iterators which use direct access
+ * modification exceptions. It also attempts to correct the problem with subclassing ArrayList
+ * in that the data elements are protected, not private. It is this issue that caused this class
+ * to be created in the first place. The intent was to provide optimized internal iterators which use direct access
  * against the array of items, which is currently not possible by subclassing ArrayList.
  * <p>
  * An empty FastList created by calling the default constructor starts with a shared reference to a static
- * empty array (DEFAULT_SIZED_EMPTY_ARRAY).  This makes empty FastLists very memory efficient.  The
+ * empty array (DEFAULT_SIZED_EMPTY_ARRAY). This makes empty FastLists very memory efficient. The
  * first call to add will lazily create an array of size 10.
  * <p>
  * An empty FastList created by calling the pre-size constructor with a value of 0 (new FastList(0)) starts
- * with a shared reference to a static  empty array (ZERO_SIZED_ARRAY).  This makes FastLists presized to 0 very
- * memory efficient as well.  The first call to add will lazily create an array of size 1.
+ * with a shared reference to a static  empty array (ZERO_SIZED_ARRAY). This makes FastLists presized to 0 very
+ * memory efficient as well. The first call to add will lazily create an array of size 1.
  */
 public class FastList<T>
         extends AbstractMutableList<T>
@@ -134,6 +136,10 @@ public class FastList<T>
 
     public FastList(int initialCapacity)
     {
+        if (initialCapacity < 0)
+        {
+            throw new IllegalArgumentException("Expected initial capacity is greater than or equal to 0. Was: " + initialCapacity);
+        }
         this.items = initialCapacity == 0 ? (T[]) ZERO_SIZED_ARRAY : (T[]) new Object[initialCapacity];
     }
 
@@ -192,7 +198,7 @@ public class FastList<T>
      *
      * @since 3.0
      */
-    public static <E> FastList<E> newWithNValues(int size, Function0<E> factory)
+    public static <E> FastList<E> newWithNValues(int size, Function0<? extends E> factory)
     {
         FastList<E> newFastList = FastList.newList(size);
         for (int i = 0; i < size; i++)
@@ -216,7 +222,7 @@ public class FastList<T>
     @Override
     public void clear()
     {
-        Arrays.fill(this.items, 0, size, null);
+        Arrays.fill(this.items, 0, this.size, null);
         this.size = 0;
     }
 
@@ -257,18 +263,27 @@ public class FastList<T>
         return this.toArray((E[]) new Object[sourceToIndex - sourceFromIndex + 1], sourceFromIndex, sourceToIndex, 0);
     }
 
+    /**
+     * Overrides default method from List.
+     *
+     * @since 10.0 - Overridden for efficiency
+     */
+    @Override
+    public void sort(Comparator<? super T> comparator)
+    {
+        Arrays.sort(this.items, 0, this.size, comparator);
+    }
+
     @Override
     public FastList<T> sortThis(Comparator<? super T> comparator)
     {
-        Arrays.sort(this.items, 0, this.size, comparator);
-        return this;
+        return (FastList<T>) super.sortThis(comparator);
     }
 
     @Override
     public FastList<T> sortThis()
     {
-        Arrays.sort(this.items, 0, this.size);
-        return this;
+        return (FastList<T>) super.sortThis();
     }
 
     @Override
@@ -540,11 +555,11 @@ public class FastList<T>
     @Override
     public <K> MutableMap<K, T> groupByUniqueKey(Function<? super T, ? extends K> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.newMap());
+        return this.groupByUniqueKey(function, UnifiedMap.newMap(this.size()));
     }
 
     @Override
-    public <K, R extends MutableMap<K, T>> R groupByUniqueKey(Function<? super T, ? extends K> function, R target)
+    public <K, R extends MutableMapIterable<K, T>> R groupByUniqueKey(Function<? super T, ? extends K> function, R target)
     {
         return InternalArrayIterate.groupByUniqueKey(this.items, this.size, function, target);
     }
@@ -1545,6 +1560,15 @@ public class FastList<T>
             hashCode = 31 * hashCode + (item == null ? 0 : item.hashCode());
         }
         return hashCode;
+    }
+
+    /**
+     * @since 10.0
+     */
+    @Override
+    public void replaceAll(UnaryOperator<T> operator)
+    {
+        InternalArrayIterate.replaceAll(this.items, this.size, operator);
     }
 
     @Override

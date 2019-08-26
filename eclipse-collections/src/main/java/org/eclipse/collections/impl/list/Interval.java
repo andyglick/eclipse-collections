@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -49,7 +49,7 @@ import org.eclipse.collections.impl.list.mutable.MutableListIterator;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 /**
- * An Interval is a range of integers that may be iterated over using a step value.  Interval
+ * An Interval is a range of integers that may be iterated over using a step value. Interval
  * is an OO implementation of a for-loop.
  */
 public final class Interval
@@ -518,7 +518,7 @@ public final class Interval
     }
 
     /**
-     * This method runs a runnable a specified number of times against an executor.  The method is effectively
+     * This method runs a runnable a specified number of times against an executor. The method is effectively
      * asynchronous because it does not wait for all of the runnables to finish.
      */
     public void run(Runnable runnable, Executor executor)
@@ -628,7 +628,7 @@ public final class Interval
         this.reverseThis().forEach(procedure);
     }
 
-    public <R> R reverseInjectInto(R injectValue, Function2<R, Integer, R> function)
+    public <R> R reverseInjectInto(R injectValue, Function2<? super R, Integer, ? extends R> function)
     {
         return this.reverseThis().injectInto(injectValue, function);
     }
@@ -691,7 +691,7 @@ public final class Interval
             for (int i = this.from; i <= this.to && listIterator.hasNext(); i += this.step)
             {
                 Object object = listIterator.next();
-                if (this.intObjectEqual(i, object))
+                if (this.intObjectNotEqual(i, object))
                 {
                     return false;
                 }
@@ -702,7 +702,7 @@ public final class Interval
             for (int i = this.from; i >= this.to && listIterator.hasNext(); i += this.step)
             {
                 Object object = listIterator.next();
-                if (this.intObjectEqual(i, object))
+                if (this.intObjectNotEqual(i, object))
                 {
                     return false;
                 }
@@ -712,9 +712,9 @@ public final class Interval
         return !listIterator.hasNext();
     }
 
-    private boolean intObjectEqual(int i, Object object)
+    private boolean intObjectNotEqual(int i, Object object)
     {
-        return object == null || !(object instanceof Integer) || ((Integer) object).intValue() != i;
+        return !(object instanceof Integer) || ((Integer) object).intValue() != i;
     }
 
     @Override
@@ -883,7 +883,7 @@ public final class Interval
     {
         if (index < 0 || index >= this.size())
         {
-            throw new IndexOutOfBoundsException(name + ": " + index + ' ' + this.toString());
+            throw new IndexOutOfBoundsException(name + ": " + index + ' ' + this);
         }
     }
 

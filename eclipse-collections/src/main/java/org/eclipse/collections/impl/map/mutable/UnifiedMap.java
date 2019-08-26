@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -52,8 +52,8 @@ import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.eclipse.collections.impl.utility.Iterate;
 
 /**
- * UnifiedMap stores key/value pairs in a single array, where alternate slots are keys and values.  This is nicer to CPU caches as
- * consecutive memory addresses are very cheap to access.  Entry objects are not stored in the table like in java.util.HashMap.
+ * UnifiedMap stores key/value pairs in a single array, where alternate slots are keys and values. This is nicer to CPU caches as
+ * consecutive memory addresses are very cheap to access. Entry objects are not stored in the table like in java.util.HashMap.
  * Instead of trying to deal with collisions in the main array using Entry objects, we put a special object in
  * the key slot and put a regular Object[] in the value slot. The array contains the key value pairs in consecutive slots,
  * just like the main array, but it's a linear list with no hashing.
@@ -271,7 +271,7 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
     @Override
     public MutableMap<K, V> newEmpty(int capacity)
     {
-        return UnifiedMap.newMap(capacity);
+        return new UnifiedMap<>(capacity, this.loadFactor);
     }
 
     private int fastCeil(float v)
@@ -313,7 +313,7 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
         this.maxSize = Math.min(capacity - 1, (int) (capacity * this.loadFactor));
     }
 
-    protected final int index(Object key)
+    protected int index(Object key)
     {
         // This function ensures that hashCodes that differ only by
         // constant multiples at each bit position have a bounded
@@ -826,7 +826,7 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
     }
 
     /**
-     * Returns the number of JVM words that is used by this map.  A word is 4 bytes in a 32bit VM and 8 bytes in a 64bit
+     * Returns the number of JVM words that is used by this map. A word is 4 bytes in a 32bit VM and 8 bytes in a 64bit
      * VM. Each array has a 2 word header, thus the formula is:
      * words = (internal table length + 2) + sum (for all chains (chain length + 2))
      *
@@ -1033,6 +1033,22 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
     public V removeKey(K key)
     {
         return this.remove(key);
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        int previousSize = this.size();
+        Iterator<Entry<K, V>> iterator = this.entrySet().iterator();
+        while (iterator.hasNext())
+        {
+            Entry<K, V> entry = iterator.next();
+            if (predicate.accept(entry.getKey(), entry.getValue()))
+            {
+                iterator.remove();
+            }
+        }
+        return previousSize > this.size();
     }
 
     private void chainedForEachEntry(Object[] chain, Procedure2<? super K, ? super V> procedure)
@@ -1515,7 +1531,8 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
     {
         int size = in.readInt();
         this.loadFactor = in.readFloat();
-        this.init(Math.max((int) (size / this.loadFactor) + 1,
+        this.init(Math.max(
+                (int) (size / this.loadFactor) + 1,
                 DEFAULT_INITIAL_CAPACITY));
         for (int i = 0; i < size; i++)
         {
@@ -1628,7 +1645,7 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
     @Override
     public <R> MutableMap<K, R> collectValues(Function2<? super K, ? super V, ? extends R> function)
     {
-        UnifiedMap<K, R> target = UnifiedMap.newMap();
+        UnifiedMap<K, R> target = (UnifiedMap<K, R>) this.newEmpty();
         target.loadFactor = this.loadFactor;
         target.occupied = this.occupied;
         target.allocate(this.table.length >> 1);
@@ -1762,6 +1779,42 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
         }
 
         return null;
+    }
+
+    @Override
+    public Optional<Pair<K, V>> detectOptional(Predicate2<? super K, ? super V> predicate)
+    {
+        for (int i = 0; i < this.table.length; i += 2)
+        {
+            if (this.table[i] == CHAINED_KEY)
+            {
+                Object[] chainedTable = (Object[]) this.table[i + 1];
+                for (int j = 0; j < chainedTable.length; j += 2)
+                {
+                    if (chainedTable[j] != null)
+                    {
+                        K key = this.nonSentinel(chainedTable[j]);
+                        V value = (V) chainedTable[j + 1];
+                        if (predicate.accept(key, value))
+                        {
+                            return Optional.of(Tuples.pair(key, value));
+                        }
+                    }
+                }
+            }
+            else if (this.table[i] != null)
+            {
+                K key = this.nonSentinel(this.table[i]);
+                V value = (V) this.table[i + 1];
+
+                if (predicate.accept(key, value))
+                {
+                    return Optional.of(Tuples.pair(key, value));
+                }
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
@@ -2125,7 +2178,7 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
         public boolean retainAll(Collection<?> collection)
         {
             int retainedSize = collection.size();
-            UnifiedMap<K, V> retainedCopy = new UnifiedMap<>(retainedSize, UnifiedMap.this.loadFactor);
+            UnifiedMap<K, V> retainedCopy = (UnifiedMap<K, V>) UnifiedMap.this.newEmpty(retainedSize);
             for (Object key : collection)
             {
                 this.putIfFound(key, retainedCopy);
@@ -2641,7 +2694,7 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
         public boolean retainAll(Collection<?> collection)
         {
             int retainedSize = collection.size();
-            UnifiedMap<K, V> retainedCopy = new UnifiedMap<>(retainedSize, UnifiedMap.this.loadFactor);
+            UnifiedMap<K, V> retainedCopy = (UnifiedMap<K, V>) UnifiedMap.this.newEmpty(retainedSize);
 
             for (Object obj : collection)
             {

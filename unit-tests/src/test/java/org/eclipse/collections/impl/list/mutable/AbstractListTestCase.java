@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -13,6 +13,7 @@ package org.eclipse.collections.impl.list.mutable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,6 +66,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static org.eclipse.collections.impl.factory.Iterables.iList;
+import static org.junit.Assert.fail;
 
 /**
  * Abstract JUnit test for {@link MutableList}s.
@@ -402,8 +404,8 @@ public abstract class AbstractListTestCase
     @Test
     public void reverseForEachWithIndex_emptyList()
     {
-        MutableList<Integer> integers = Lists.mutable.empty();
-        integers.reverseForEachWithIndex((each, index) -> Assert.assertTrue("Should not be evaluated", false));
+        MutableList<Integer> list = Lists.mutable.empty();
+        list.reverseForEachWithIndex((each, index) -> fail());
     }
 
     @Test
@@ -929,7 +931,7 @@ public abstract class AbstractListTestCase
         try
         {
             this.newWith(item).get(-1);
-            Assert.fail("Should not reach here! Exception should be thrown on previous line.");
+            fail("Should not reach here! Exception should be thrown on previous line.");
         }
         catch (Exception e)
         {
@@ -1115,6 +1117,7 @@ public abstract class AbstractListTestCase
         }
     }
 
+    @Test
     @Override
     public void forEachWithIndex()
     {
@@ -1130,5 +1133,21 @@ public abstract class AbstractListTestCase
         });
         Assert.assertEquals(FastList.newListWith(1, 2, 3, 4), elements);
         Assert.assertEquals(IntArrayList.newListWith(0, 1, 2, 3), indexes);
+    }
+
+    @Test
+    public void replaceAll()
+    {
+        MutableList<Integer> integers = this.newWith(1, 2, 3, 4);
+        integers.replaceAll(i -> i * 2);
+        Assert.assertEquals(Lists.mutable.with(2, 4, 6, 8), integers);
+    }
+
+    @Test
+    public void sort()
+    {
+        MutableList<Integer> integers = this.newWith(1, 2, 3, 4);
+        integers.sort(Comparator.reverseOrder());
+        Assert.assertEquals(Lists.mutable.with(4, 3, 2, 1), integers);
     }
 }

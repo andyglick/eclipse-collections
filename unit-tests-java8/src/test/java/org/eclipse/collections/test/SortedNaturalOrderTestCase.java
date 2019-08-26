@@ -196,6 +196,18 @@ public interface SortedNaturalOrderTestCase extends OrderedIterableTestCase
                 this.newWith(1, 2, 2, 3).flatCollect(Interval::oneTo, this.newMutableForTransform()));
     }
 
+    @Test
+    default void RichIterable_flatCollectWith()
+    {
+        assertEquals(
+                this.getExpectedTransformed(1, 2, 3, 4, 5, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5),
+                this.newWith(1, 2, 2, 3).flatCollectWith(Interval::fromTo, 5));
+
+        assertEquals(
+                this.newMutableForTransform(1, 2, 1, 2, 1, 3, 2, 1),
+                this.newWith(1, 2, 2, 3).flatCollectWith(Interval::fromTo, 1, this.newMutableForTransform()));
+    }
+
     @Override
     @Test
     default void RichIterable_detect()
@@ -383,7 +395,7 @@ public interface SortedNaturalOrderTestCase extends OrderedIterableTestCase
     @Test
     default void OrderedIterable_collectWithIndex()
     {
-        OrderedIterable<Integer> iterable = (OrderedIterable) this.newWith(1, 2, 2, 3, 3, 3, 4, 4, 4, 4);
+        OrderedIterable<Integer> iterable = (OrderedIterable<Integer>) this.newWith(1, 2, 2, 3, 3, 3, 4, 4, 4, 4);
         Assert.assertEquals(
                 Lists.immutable.with(
                         PrimitiveTuples.pair(Integer.valueOf(1), 0),
@@ -406,7 +418,7 @@ public interface SortedNaturalOrderTestCase extends OrderedIterableTestCase
     @Test
     default void OrderedIterable_collectWithIndexWithTarget()
     {
-        OrderedIterable<Integer> iterable = (OrderedIterable) this.newWith(1, 2, 2, 3, 3, 3, 4, 4, 4, 4);
+        OrderedIterable<Integer> iterable = (OrderedIterable<Integer>) this.newWith(1, 2, 2, 3, 3, 3, 4, 4, 4, 4);
         Assert.assertEquals(
                 Lists.immutable.with(
                         PrimitiveTuples.pair(Integer.valueOf(1), 0),

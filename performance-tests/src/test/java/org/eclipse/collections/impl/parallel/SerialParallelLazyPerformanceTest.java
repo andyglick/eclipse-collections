@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -899,7 +899,8 @@ public class SerialParallelLazyPerformanceTest
         }, count, 10);
     }
 
-    private double basicParallelLazyGroupByPerformance(UnifiedSet<String> iterable,
+    private double basicParallelLazyGroupByPerformance(
+            UnifiedSet<String> iterable,
             String parameterType,
             Function<String, Alphagram> function,
             int count,
@@ -915,7 +916,8 @@ public class SerialParallelLazyPerformanceTest
                 + this.formatSizeOf(iterable) + " cores: " + cores, () -> Verify.assertNotEmpty(iterable.asParallel(service, batchSize).groupBy(function)), count, WARM_UP_COUNT);
     }
 
-    private double basicParallelLazyJava8GroupByPerformance(Set<String> iterable,
+    private double basicParallelLazyJava8GroupByPerformance(
+            Set<String> iterable,
             String parameterType,
             java.util.function.Function<String, Alphagram> function,
             int count)
@@ -945,7 +947,7 @@ public class SerialParallelLazyPerformanceTest
         }
 
         /**
-         * This method can take either a Runnable or a RunnableWithSetup.  In the case of RunnableWithSetup, the setup
+         * This method can take either a Runnable or a RunnableWithSetup. In the case of RunnableWithSetup, the setup
          * method will be called first, without impacting the timing.
          */
         public static long millisecondsToRun(Runnable runnable)
@@ -964,7 +966,7 @@ public class SerialParallelLazyPerformanceTest
         }
 
         /**
-         * This method can take either a Runnable or a RunnableWithSetup.  In the case of RunnableWithSetup, the setup
+         * This method can take either a Runnable or a RunnableWithSetup. In the case of RunnableWithSetup, the setup
          * method will be called first, without impacting the timing.
          */
         public static long nanosecondsToRun(Runnable runnable)

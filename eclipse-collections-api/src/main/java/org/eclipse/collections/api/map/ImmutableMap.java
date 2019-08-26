@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -42,7 +42,7 @@ import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 
 /**
- * An ImmutableMap is different than a JCF Map but in that it has no mutating methods.  It shares the read-only
+ * An ImmutableMap is different than a JCF Map but in that it has no mutating methods. It shares the read-only
  * protocol of a JDK Map.
  */
 public interface ImmutableMap<K, V>
@@ -139,6 +139,15 @@ public interface ImmutableMap<K, V>
 
     @Override
     <R> ImmutableBag<R> flatCollect(Function<? super V, ? extends Iterable<R>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, R> ImmutableBag<R> flatCollectWith(Function2<? super V, ? super P, ? extends Iterable<R>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     /**
      * @deprecated in 6.0. Use {@link OrderedIterable#zip(Iterable)} instead.

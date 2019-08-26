@@ -30,6 +30,7 @@ import org.eclipse.collections.api.block.function.primitive.<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
+import org.eclipse.collections.api.block.function.primitive.Object<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.Object<name>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.predicate.primitive.Object<name>Predicate;
@@ -52,7 +53,6 @@ import org.eclipse.collections.impl.collection.mutable.primitive.Synchronized<na
 import org.eclipse.collections.impl.factory.primitive.Object<name>Maps;
 import org.eclipse.collections.impl.set.mutable.SynchronizedMutableSet;
 import org.eclipse.collections.impl.utility.LazyIterate;
-import org.eclipse.collections.api.tuple.primitive.Object<name>Pair;
 
 /**
  * A synchronized view of a {@link MutableObject<name>Map}. It is imperative that the user manually synchronize on the collection when iterating over it using the
@@ -64,7 +64,7 @@ import org.eclipse.collections.api.tuple.primitive.Object<name>Pair;
  * @see MutableMap#asSynchronized()
  * @since 3.1.
  */
-public final class SynchronizedObject<name>Map\<K>
+public class SynchronizedObject<name>Map\<K>
         implements MutableObject<name>Map\<K>, Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -78,7 +78,7 @@ public final class SynchronizedObject<name>Map\<K>
 
     public SynchronizedObject<name>Map(MutableObject<name>Map\<K> map, Object newLock)
     {
-        if(map == null)
+        if (map == null)
         {
             throw new IllegalArgumentException("Cannot create a SynchronizedObject<name>Map on a null map");
         }
@@ -120,6 +120,15 @@ public final class SynchronizedObject<name>Map\<K>
         synchronized (this.lock)
         {
             this.map.putAll(map);
+        }
+    }
+
+    @Override
+    public void updateValues(Object<name>To<name>Function\<? super K> function)
+    {
+        synchronized (this.lock)
+        {
+            this.map.updateValues(function);
         }
     }
 
@@ -490,7 +499,10 @@ public final class SynchronizedObject<name>Map\<K>
     @Override
     public MutableObject<name>Map\<K> asUnmodifiable()
     {
-        return new UnmodifiableObject<name>Map\<>(this);
+        synchronized (this.lock)
+        {
+            return new UnmodifiableObject<name>Map\<>(this);
+        }
     }
 
     @Override
@@ -502,7 +514,10 @@ public final class SynchronizedObject<name>Map\<K>
     @Override
     public ImmutableObject<name>Map\<K> toImmutable()
     {
-        return Object<name>Maps.immutable.withAll(this);
+        synchronized (this.lock)
+        {
+            return Object<name>Maps.immutable.withAll(this);
+        }
     }
 
     @Override
@@ -663,6 +678,15 @@ public final class SynchronizedObject<name>Map\<K>
         synchronized (this.lock)
         {
             return this.map.injectInto(injectedValue, function);
+        }
+    }
+
+    @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        synchronized (this.lock)
+        {
+            return this.map.chunk(size);
         }
     }
 }

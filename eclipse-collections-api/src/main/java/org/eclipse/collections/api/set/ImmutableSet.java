@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -40,7 +40,7 @@ import org.eclipse.collections.api.tuple.Pair;
 
 /**
  * ImmutableSet is the non-modifiable equivalent interface to {@link MutableSet}. {@link MutableSet#toImmutable()} will
- * give you an appropriately trimmed implementation of ImmutableSet.  All ImmutableSet implementations must implement
+ * give you an appropriately trimmed implementation of ImmutableSet. All ImmutableSet implementations must implement
  * the java.util.Set interface so they can satisfy the equals() contract and be compared against other set structures
  * like UnifiedSet or HashSet.
  */
@@ -118,6 +118,15 @@ public interface ImmutableSet<T>
 
     @Override
     <V> ImmutableSet<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> ImmutableSet<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     @Override
     <V> ImmutableSetMultimap<V, T> groupBy(Function<? super T, ? extends V> function);

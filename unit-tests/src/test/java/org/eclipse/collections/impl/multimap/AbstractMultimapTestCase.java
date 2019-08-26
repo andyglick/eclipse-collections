@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -17,6 +17,8 @@ import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.multimap.Multimap;
+import org.eclipse.collections.api.multimap.list.MutableListMultimap;
+import org.eclipse.collections.api.multimap.set.SetMultimap;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
@@ -24,6 +26,7 @@ import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.block.procedure.CollectionAddProcedure;
 import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Multimaps;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -184,7 +187,8 @@ public abstract class AbstractMultimapTestCase
     public void multiValuesView()
     {
         Multimap<Integer, String> multimap = this.newMultimapWithKeysValues(1, "1", 2, "2", 3, "3");
-        Assert.assertEquals(Bags.mutable.of("1", "2", "3"),
+        Assert.assertEquals(
+                Bags.mutable.of("1", "2", "3"),
                 multimap.multiValuesView().flatCollect(Functions.getPassThru()).toBag());
     }
 
@@ -209,7 +213,8 @@ public abstract class AbstractMultimapTestCase
     public void keysWithMultiValuesView()
     {
         Multimap<Integer, String> multimap = this.newMultimapWithKeysValues(1, "1", 2, "2", 3, "3");
-        Assert.assertEquals(Bags.mutable.of(1, 2, 3),
+        Assert.assertEquals(
+                Bags.mutable.of(1, 2, 3),
                 multimap.keyMultiValuePairsView().collect(Pair::getOne).toBag());
         Assert.assertEquals(
                 Bags.mutable.of("1", "2", "3"),
@@ -220,7 +225,8 @@ public abstract class AbstractMultimapTestCase
     public void keyValuePairsView()
     {
         Multimap<Integer, String> multimap = this.newMultimapWithKeysValues(1, "1", 2, "2", 3, "3");
-        Assert.assertEquals(Bags.mutable.of(Tuples.pair(1, "1"), Tuples.pair(2, "2"), Tuples.pair(3, "3")),
+        Assert.assertEquals(
+                Bags.mutable.of(Tuples.pair(1, "1"), Tuples.pair(2, "2"), Tuples.pair(3, "3")),
                 multimap.keyValuePairsView().toBag());
     }
 
@@ -335,6 +341,35 @@ public abstract class AbstractMultimapTestCase
         Multimap<Integer, String> collectedMultimap = multimap.collectKeysValues((key, value) -> Tuples.pair(Integer.valueOf(key), value + "Value"));
         Multimap<Integer, String> expectedMultimap = this.newMultimapWithKeysValues(1, "1Value", 1, "12Value", 2, "2Value", 3, "3Value");
         Assert.assertEquals(expectedMultimap, collectedMultimap);
+    }
+
+    @Test
+    public void collectKeyMultiValues()
+    {
+        Multimap<String, Integer> multimap = this.newMultimap(
+                Tuples.pair("1", 1),
+                Tuples.pair("1", 1),
+                Tuples.pair("1", 12),
+                Tuples.pair("2", 2),
+                Tuples.pair("2", 2),
+                Tuples.pair("3", 3));
+        Multimap<Integer, Integer> collectedMultimap1 = multimap.collectKeyMultiValues(
+                key -> 1,
+                value -> value % 2 == 0 ? value + 1 : value,
+                Multimaps.mutable.set.empty());
+        SetMultimap<Integer, Integer> expectedMultimap1 = Multimaps.mutable.set.with(1, 1, 1, 13, 1, 3);
+        Assert.assertEquals(expectedMultimap1, collectedMultimap1);
+
+        Multimap<Integer, Integer> collectedMultimap2 = multimap.collectKeyMultiValues(
+                key -> 1,
+                value -> value % 2 == 0 ? value + 1 : value,
+                Multimaps.mutable.list.empty());
+        MutableListMultimap<Integer, Integer> expectedMultimap2 = Multimaps.mutable.list.with(1, 1, 1, 1, 1, 13);
+        expectedMultimap2.put(1, 3);
+        expectedMultimap2.put(1, 3);
+        expectedMultimap2.put(1, 3);
+        Assert.assertEquals(expectedMultimap2.keySet(), collectedMultimap2.keySet());
+        Assert.assertEquals(expectedMultimap2.get(1).toBag(), collectedMultimap2.get(1).toBag());
     }
 
     @Test

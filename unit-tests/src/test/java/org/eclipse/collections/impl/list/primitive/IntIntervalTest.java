@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -11,10 +11,15 @@
 package org.eclipse.collections.impl.list.primitive;
 
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
+import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.iterator.IntIterator;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
@@ -73,6 +78,12 @@ public class IntIntervalTest
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void oneToBy_throws_count_size_zero()
+    {
+        IntInterval.oneToBy(0, 1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void zeroToBy_throws_step_size_zero()
     {
         IntInterval.zeroToBy(0, 0);
@@ -98,6 +109,11 @@ public class IntIntervalTest
         Assert.assertNotEquals(IntArrayList.newListWith(3, 2, 0), IntInterval.fromTo(3, 1));
 
         Verify.assertEqualsAndHashCode(IntArrayList.newListWith(-1, -2, -3), IntInterval.fromTo(-1, -3));
+
+        Verify.assertEqualsAndHashCode(IntArrayList.newListWith(1), IntInterval.fromToBy(1, 1, 1));
+        Verify.assertEqualsAndHashCode(IntArrayList.newListWith(1), IntInterval.fromToBy(1, 1, 2));
+        Verify.assertEqualsAndHashCode(IntArrayList.newListWith(-1), IntInterval.fromToBy(-1, -1, -1));
+        Verify.assertEqualsAndHashCode(IntArrayList.newListWith(-1), IntInterval.fromToBy(-1, -1, -2));
     }
 
     @Test
@@ -180,6 +196,80 @@ public class IntIntervalTest
         IntInterval interval2 = IntInterval.fromTo(3, 1);
         MutableInteger result2 = interval2.injectIntoWithIndex(new MutableInteger(0), (object, value, index) -> object.add(value * this.intInterval.get(index)));
         Assert.assertEquals(new MutableInteger(10), result2);
+    }
+
+    @Test
+    public void chunk()
+    {
+        IntInterval interval1 = IntInterval.fromToBy(0, 5, 1);
+        MutableList<IntInterval> expected1 = Lists.mutable.with(
+                IntInterval.fromToBy(0, 1, 1),
+                IntInterval.fromToBy(2, 3, 1),
+                IntInterval.fromToBy(4, 5, 1));
+        Assert.assertEquals(expected1, interval1.chunk(2));
+
+        IntInterval interval2 = IntInterval.fromToBy(0, -5, -1);
+        MutableList<IntInterval> expected2 = Lists.mutable.with(
+                IntInterval.fromToBy(0, -1, -1),
+                IntInterval.fromToBy(-2, -3, -1),
+                IntInterval.fromToBy(-4, -5, -1));
+        Assert.assertEquals(expected2, interval2.chunk(2));
+
+        IntInterval interval3 = IntInterval.fromToBy(0, 6, 1);
+        MutableList<IntInterval> expected3 = Lists.mutable.with(
+                IntInterval.fromToBy(0, 1, 1),
+                IntInterval.fromToBy(2, 3, 1),
+                IntInterval.fromToBy(4, 5, 1),
+                IntInterval.fromToBy(6, 6, 1));
+        Assert.assertEquals(expected3, interval3.chunk(2));
+
+        IntInterval interval4 = IntInterval.fromToBy(0, -6, -1);
+        MutableList<IntInterval> expected4 = Lists.mutable.with(
+                IntInterval.fromToBy(0, -1, -1),
+                IntInterval.fromToBy(-2, -3, -1),
+                IntInterval.fromToBy(-4, -5, -1),
+                IntInterval.fromToBy(-6, -6, -1));
+        RichIterable<IntIterable> actual4 = interval4.chunk(2);
+        Assert.assertEquals(expected4, actual4);
+
+        IntInterval interval5 = IntInterval.fromToBy(0, 6, 1);
+        MutableList<IntInterval> expected5 = Lists.mutable.with(IntInterval.fromToBy(0, 6, 1));
+        Assert.assertEquals(expected5, interval5.chunk(7));
+
+        IntInterval interval6 = IntInterval.fromToBy(0, -6, -1);
+        MutableList<IntInterval> expected6 = Lists.mutable.with(IntInterval.fromToBy(0, -6, -1));
+        Assert.assertEquals(expected6, interval6.chunk(7));
+
+        IntInterval interval7 = IntInterval.fromToBy(0, 6, 1);
+        MutableList<IntInterval> expected7 = Lists.mutable.with(IntInterval.fromToBy(0, 6, 1));
+        Assert.assertEquals(expected7, interval7.chunk(8));
+
+        IntInterval interval8 = IntInterval.fromToBy(0, -6, -1);
+        MutableList<IntInterval> expected8 = Lists.mutable.with(IntInterval.fromToBy(0, -6, -1));
+        Assert.assertEquals(expected8, interval8.chunk(8));
+
+        IntInterval interval9 = IntInterval.fromToBy(0, 9, 4);
+        MutableList<IntIterable> expected9 = Lists.mutable.with(
+                IntLists.mutable.with(0, 4),
+                IntLists.mutable.with(8));
+        Assert.assertEquals(expected9, interval9.chunk(2));
+
+        IntInterval interval10 = IntInterval.fromToBy(0, -9, -4);
+        MutableList<IntIterable> expected10 = Lists.mutable.with(
+                IntLists.mutable.with(0, -4),
+                IntLists.mutable.with(-8));
+        Assert.assertEquals(expected10, interval10.chunk(2));
+
+        IntInterval interval11 = IntInterval.fromToBy(0, 5, 3);
+        MutableList<IntIterable> expected11 = Lists.mutable.with(IntLists.mutable.with(0, 3));
+        Assert.assertEquals(expected11, interval11.chunk(3));
+
+        IntInterval interval12 = IntInterval.fromToBy(0, -5, -3);
+        MutableList<IntIterable> expected12 = Lists.mutable.with(IntLists.mutable.with(0, -3));
+        Assert.assertEquals(expected12, interval12.chunk(3));
+
+        Verify.assertThrows(IllegalArgumentException.class, () -> interval12.chunk(0));
+        Verify.assertThrows(IllegalArgumentException.class, () -> interval12.chunk(-1));
     }
 
     @Test
@@ -802,5 +892,69 @@ public class IntIntervalTest
         Assert.assertEquals(expected, zippedLazy);
         Verify.assertEmpty(interval.zipInt(IntLists.mutable.empty()));
         Assert.assertEquals(Lists.immutable.with(PrimitiveTuples.pair(1, 3)), interval.zipInt(IntLists.mutable.with(3)));
+    }
+
+    @Test
+    public void primitiveStream()
+    {
+        Assert.assertEquals(Lists.mutable.of(1, 2, 3, 4), IntInterval.oneTo(4).primitiveStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(0, 2, 4), IntInterval.fromToBy(0, 5, 2).primitiveStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(5, 3, 1), IntInterval.fromToBy(5, 0, -2).primitiveStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(10, 15, 20, 25, 30), IntInterval.fromToBy(10, 30, 5).primitiveStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(30, 25, 20, 15, 10), IntInterval.fromToBy(30, 10, -5).primitiveStream().boxed().collect(Collectors.toList()));
+    }
+
+    @Test
+    public void primitiveParallelStream()
+    {
+        Assert.assertEquals(Lists.mutable.of(1, 2, 3, 4), IntInterval.oneTo(4).primitiveParallelStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(0, 2, 4), IntInterval.fromToBy(0, 5, 2).primitiveParallelStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(5, 3, 1, -1, -3), IntInterval.fromToBy(5, -4, -2).primitiveParallelStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(10, 15, 20, 25, 30), IntInterval.fromToBy(10, 30, 5).primitiveParallelStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(30, 25, 20, 15, 10), IntInterval.fromToBy(30, 10, -5).primitiveParallelStream().boxed().collect(Collectors.toList()));
+        Assert.assertEquals(Lists.mutable.of(-1, 10, 21, 32, 43, 54, 65, 76, 87, 98), IntInterval.fromToBy(-1, 100, 11).primitiveParallelStream().boxed().collect(Collectors.toList()));
+    }
+
+    @Test
+    public void toImmutable()
+    {
+        IntInterval interval = IntInterval.oneTo(5);
+        Assert.assertSame(interval, interval.toImmutable());
+    }
+
+    @Test
+    public void newWith()
+    {
+        IntInterval interval = IntInterval.oneTo(4);
+        ImmutableIntList list = interval.newWith(5);
+        Assert.assertNotSame(interval, list);
+        Assert.assertEquals(IntInterval.oneTo(5), list);
+    }
+
+    @Test
+    public void newWithout()
+    {
+        IntInterval interval = IntInterval.oneTo(5);
+        ImmutableIntList list = interval.newWithout(5);
+        Assert.assertNotSame(interval, list);
+        Assert.assertEquals(IntInterval.oneTo(4), list);
+    }
+
+    @Test
+    public void newWithAll()
+    {
+        IntInterval interval = IntInterval.oneTo(2);
+        ImmutableIntList list = interval.newWithAll(IntInterval.fromTo(3, 5));
+        Assert.assertNotSame(interval, list);
+        Assert.assertEquals(IntInterval.oneTo(5), list);
+    }
+
+    @Test
+    public void newWithoutAll()
+    {
+        IntInterval interval = IntInterval.oneTo(5);
+        ImmutableIntList list = interval.newWithoutAll(IntInterval.fromTo(3, 5));
+        Assert.assertNotSame(interval, list);
+        Assert.assertEquals(IntInterval.oneTo(2), list);
     }
 }

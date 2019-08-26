@@ -47,10 +47,9 @@ public class KolobokeMapPutTest extends AbstractJMHTestRunner
     @Setup
     public void setUp()
     {
-        Random random = new Random(123456789012345L);
-
         this.elements = new String[this.size];
 
+        Random random = new Random(123456789012345L);
         for (int i = 0; i < this.size; i++)
         {
             this.elements[i] = RandomStringUtils.random(RANDOM_COUNT, 0, 0, false, true, null, random);
@@ -63,7 +62,9 @@ public class KolobokeMapPutTest extends AbstractJMHTestRunner
         int localSize = this.size;
         String[] localElements = this.elements;
 
-        ObjObjMap<String, String> koloboke = this.isPresized ? HashObjObjMaps.newMutableMap(localSize) : HashObjObjMaps.newMutableMap();
+        ObjObjMap<String, String> koloboke = this.isPresized
+                ? HashObjObjMaps.newMutableMap(localSize)
+                : HashObjObjMaps.newMutableMap();
 
         for (int i = 0; i < localSize; i++)
         {

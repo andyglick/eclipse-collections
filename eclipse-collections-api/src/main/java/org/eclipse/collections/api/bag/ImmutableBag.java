@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -27,16 +27,19 @@ import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
 import org.eclipse.collections.api.block.function.primitive.FloatFunction;
 import org.eclipse.collections.api.block.function.primitive.IntFunction;
 import org.eclipse.collections.api.block.function.primitive.LongFunction;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.multimap.bag.ImmutableBagMultimap;
 import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.partition.bag.PartitionImmutableBag;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 
@@ -59,6 +62,32 @@ public interface ImmutableBag<T> extends UnsortedBag<T>, ImmutableBagIterable<T>
 
     @Override
     ImmutableBag<T> selectByOccurrences(IntPredicate predicate);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default ImmutableBag<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default ImmutableSet<T> selectUnique()
+    {
+        MutableSet<T> result = Sets.mutable.empty();
+        this.forEachWithOccurrences((each, occurrences) ->
+        {
+            if (occurrences == 1)
+            {
+                result.add(each);
+            }
+        });
+        return result.toImmutable();
+    }
 
     @Override
     ImmutableBag<T> tap(Procedure<? super T> procedure);
@@ -118,7 +147,19 @@ public interface ImmutableBag<T> extends UnsortedBag<T>, ImmutableBagIterable<T>
     <V> ImmutableBag<V> collectIf(Predicate<? super T> predicate, Function<? super T, ? extends V> function);
 
     @Override
+    <V> ImmutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
+
+    @Override
     <V> ImmutableBag<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> ImmutableBag<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     /**
      * @since 9.0
@@ -136,6 +177,15 @@ public interface ImmutableBag<T> extends UnsortedBag<T>, ImmutableBagIterable<T>
     default <V, P> ImmutableBag<V> countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
         return this.collectWith(function, parameter);
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    default <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.flatCollect(function);
     }
 
     @Override

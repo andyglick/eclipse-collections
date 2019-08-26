@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,13 +10,15 @@
 
 package org.eclipse.collections.impl.list.fixed;
 
+import java.util.stream.Stream;
+
 import org.eclipse.collections.api.factory.list.FixedSizeListFactory;
 import org.eclipse.collections.api.list.FixedSizeList;
 import org.eclipse.collections.impl.utility.Iterate;
 
-public enum FixedSizeListFactoryImpl implements FixedSizeListFactory
+public class FixedSizeListFactoryImpl implements FixedSizeListFactory
 {
-    INSTANCE;
+    public static final FixedSizeListFactory INSTANCE = new FixedSizeListFactoryImpl();
 
     private static final FixedSizeList<?> EMPTY_LIST = new EmptyList<>();
 
@@ -150,5 +152,11 @@ public enum FixedSizeListFactoryImpl implements FixedSizeListFactory
     public <T> FixedSizeList<T> withAll(Iterable<? extends T> items)
     {
         return this.of((T[]) Iterate.toArray(items));
+    }
+
+    @Override
+    public <T> FixedSizeList<T> fromStream(Stream<? extends T> stream)
+    {
+        return this.of((T[]) stream.toArray());
     }
 }

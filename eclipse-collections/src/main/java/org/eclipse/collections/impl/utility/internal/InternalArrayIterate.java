@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -25,6 +25,7 @@ import java.util.RandomAccess;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 
 import org.eclipse.collections.api.RichIterable;
@@ -42,7 +43,7 @@ import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -285,7 +286,7 @@ public final class InternalArrayIterate
         return target;
     }
 
-    public static <T, K, R extends MutableMap<K, T>> R groupByUniqueKey(
+    public static <T, K, R extends MutableMapIterable<K, T>> R groupByUniqueKey(
             T[] array,
             int size,
             Function<? super T, ? extends K> function,
@@ -310,7 +311,9 @@ public final class InternalArrayIterate
         for (int i = 0; i < size; i++)
         {
             T each = array[i];
-            MutableList<T> bucket = predicate.accept(each) ? partitionFastList.getSelected() : partitionFastList.getRejected();
+            MutableList<T> bucket = predicate.accept(each)
+                    ? partitionFastList.getSelected()
+                    : partitionFastList.getRejected();
             bucket.add(each);
         }
         return partitionFastList;
@@ -323,7 +326,9 @@ public final class InternalArrayIterate
         for (int i = 0; i < size; i++)
         {
             T each = array[i];
-            MutableList<T> bucket = predicate.accept(each, parameter) ? partitionFastList.getSelected() : partitionFastList.getRejected();
+            MutableList<T> bucket = predicate.accept(each, parameter)
+                    ? partitionFastList.getSelected()
+                    : partitionFastList.getRejected();
             bucket.add(each);
         }
         return partitionFastList;
@@ -478,15 +483,15 @@ public final class InternalArrayIterate
         return target;
     }
 
-    private static void ensureCapacityForAdditionalSize(int size, Collection target)
+    private static void ensureCapacityForAdditionalSize(int size, Collection<?> target)
     {
-        if (target instanceof FastList)
+        if (target instanceof FastList<?>)
         {
-            ((FastList) target).ensureCapacity(target.size() + size);
+            ((FastList<?>) target).ensureCapacity(target.size() + size);
         }
         else if (target instanceof ArrayList)
         {
-            ((ArrayList) target).ensureCapacity(target.size() + size);
+            ((ArrayList<?>) target).ensureCapacity(target.size() + size);
         }
     }
 
@@ -1149,5 +1154,17 @@ public final class InternalArrayIterate
             accumulator.accept(mutableResult, item);
         }
         return mutableResult;
+    }
+
+    /**
+     * @since 10.0 - Provided for convenience for array based containers
+     */
+    public static <T> void replaceAll(T[] items, int size, UnaryOperator<T> operator)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            T item = items[i];
+            items[i] = operator.apply(item);
+        }
     }
 }

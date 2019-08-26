@@ -34,7 +34,7 @@ public interface Mutable<name>ObjectMap\<V> extends <name>ObjectMap\<V>, Mutable
     V put(<type> key, V value);
 
     /**
-     * This method allows Mutable<name>ObjectMap the ability to add an element in the form of <name>ObjectPair\<V>.
+     * This method allows Mutable<name>ObjectMap the ability to add an element in the form of {@code <name>ObjectPair\<V>}.
      *
      * @see #put(<type>, Object)
      * @since 9.1.0
@@ -90,6 +90,15 @@ public interface Mutable<name>ObjectMap\<V> extends <name>ObjectMap\<V>, Mutable
     Mutable<name>ObjectMap\<V> withoutKey(<type> key);
 
     Mutable<name>ObjectMap\<V> withoutAllKeys(<name>Iterable keys);
+
+    default Mutable<name>ObjectMap\<V> withAllKeyValues(Iterable\<<name>ObjectPair\<V>\> keyValuePairs)
+    {
+        for (<name>ObjectPair\<V> keyValuePair : keyValuePairs)
+        {
+            this.putPair(keyValuePair);
+        }
+        return this;
+    }
 
     Mutable<name>ObjectMap\<V> asUnmodifiable();
 

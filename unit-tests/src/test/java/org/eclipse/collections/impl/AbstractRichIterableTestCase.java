@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,12 +14,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IntSummaryStatistics;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LongSummaryStatistics;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -50,6 +53,7 @@ import org.eclipse.collections.api.collection.primitive.MutableFloatCollection;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -102,6 +106,7 @@ import org.eclipse.collections.impl.list.mutable.primitive.FloatArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.LongArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.ShortArrayList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.map.sorted.mutable.TreeSortedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -556,6 +561,20 @@ public abstract class AbstractRichIterableTestCase
     }
 
     @Test
+    public void flatCollectWith()
+    {
+        RichIterable<Integer> collection = this.newWith(4, 5, 6, 7);
+
+        Verify.assertSetsEqual(
+                Sets.mutable.with(1, 2, 3, 4, 5, 6, 7),
+                collection.flatCollectWith(Interval::fromTo, 1).toSet());
+
+        Verify.assertBagsEqual(
+                Bags.mutable.with(4, 3, 2, 1, 5, 4, 3, 2, 1, 6, 5, 4, 3, 2, 1, 7, 6, 5, 4, 3, 2, 1),
+                collection.flatCollectWith(Interval::fromTo, 1, Bags.mutable.empty()));
+    }
+
+    @Test
     public void detect()
     {
         Assert.assertEquals(Integer.valueOf(3), this.newWith(1, 2, 3, 4, 5).detect(Integer.valueOf(3)::equals));
@@ -601,9 +620,39 @@ public abstract class AbstractRichIterableTestCase
     }
 
     @Test
+    public void minOptional()
+    {
+        Assert.assertEquals(
+                Integer.valueOf(1),
+                this.newWith(1, 3, 2).minOptional().get());
+        Assert.assertEquals(
+                Integer.valueOf(1),
+                this.newWith(1, 3, 2).minOptional(Integer::compareTo).get());
+        Assert.assertFalse(
+                this.<Integer>newWith().minOptional().isPresent());
+        Assert.assertFalse(
+                this.<Integer>newWith().minOptional(Integer::compareTo).isPresent());
+    }
+
+    @Test
     public void max()
     {
         Assert.assertEquals(Integer.valueOf(3), this.newWith(1, 3, 2).max(Integer::compareTo));
+    }
+
+    @Test
+    public void maxOptional()
+    {
+        Assert.assertEquals(
+                Integer.valueOf(3),
+                this.newWith(1, 3, 2).maxOptional().get());
+        Assert.assertEquals(
+                Integer.valueOf(3),
+                this.newWith(1, 3, 2).maxOptional(Integer::compareTo).get());
+        Assert.assertFalse(
+                this.<Integer>newWith().maxOptional().isPresent());
+        Assert.assertFalse(
+                this.<Integer>newWith().maxOptional(Integer::compareTo).isPresent());
     }
 
     @Test(expected = NullPointerException.class)
@@ -827,6 +876,15 @@ public abstract class AbstractRichIterableTestCase
         Assert.assertEquals(
                 Sets.mutable.of(2, 3, 4),
                 this.newWith(1, 2, 3).collectWith(AddFunction.INTEGER, 1, new CopyOnWriteArraySet<>()));
+    }
+
+    @Test
+    public void getAny()
+    {
+        RichIterable<Integer> distinctElements = this.newWith(1, 2, 3);
+        Assert.assertTrue(distinctElements.contains(distinctElements.getAny()));
+        RichIterable<String> duplicateElements = this.newWith("a", "a", "b");
+        Assert.assertTrue(duplicateElements.contains(duplicateElements.getAny()));
     }
 
     @Test
@@ -1311,6 +1369,21 @@ public abstract class AbstractRichIterableTestCase
     }
 
     @Test
+    public void toMapTarget()
+    {
+        RichIterable<Integer> integers = this.newWith(1, 2, 3, 4);
+        Map<String, String> jdkMap = new HashMap<>();
+        jdkMap.put("1", "1");
+        jdkMap.put("2", "2");
+        jdkMap.put("3", "3");
+        jdkMap.put("4", "4");
+        Map<String, String> targetMap =
+                integers.toMap(Object::toString, Object::toString, new HashMap<>());
+        Assert.assertEquals(jdkMap, targetMap);
+        Assert.assertTrue(targetMap instanceof HashMap);
+    }
+
+    @Test
     public void toSortedMap()
     {
         RichIterable<Integer> integers = this.newWith(1, 2, 3);
@@ -1327,6 +1400,36 @@ public abstract class AbstractRichIterableTestCase
                 Functions.getIntegerPassThru(), Object::toString);
         Verify.assertMapsEqual(TreeSortedMap.newMapWith(Comparators.reverseNaturalOrder(), 1, "1", 2, "2", 3, "3"), map);
         Verify.assertListsEqual(Lists.mutable.with(3, 2, 1), map.keySet().toList());
+    }
+
+    @Test
+    public void toSortedMapBy()
+    {
+        RichIterable<Integer> integers = this.newWith(1, 2, 3);
+        MutableSortedMap<Integer, String> map = integers.toSortedMapBy(key -> -key,
+                Functions.getIntegerPassThru(), Object::toString);
+        Verify.assertMapsEqual(TreeSortedMap.newMapWith(Comparators.reverseNaturalOrder(), 1, "1", 2, "2", 3, "3"), map);
+        Verify.assertListsEqual(Lists.mutable.with(3, 2, 1), map.keySet().toList());
+    }
+
+    @Test
+    public void toBiMap()
+    {
+        RichIterable<Integer> integers = this.newWith(1, 2, 3);
+
+        Assert.assertEquals(
+                Maps.mutable.with("1", "1", "2", "2", "3", "3"),
+                integers.toBiMap(Object::toString, Object::toString));
+
+        Verify.assertThrows(
+                IllegalArgumentException.class,
+                () -> integers.toBiMap(i -> "Constant Key", Objects::toString));
+        Verify.assertThrows(
+                IllegalArgumentException.class,
+                () -> integers.toBiMap(Object::toString, i -> "Constant Value"));
+        Verify.assertThrows(
+                IllegalArgumentException.class,
+                () -> integers.toBiMap(i -> "Constant Key", i -> "Constant Value"));
     }
 
     @Test
@@ -1412,6 +1515,27 @@ public abstract class AbstractRichIterableTestCase
         Bag<Integer> evensAndOdds2 = integers.countByWith((each, parm) -> Integer.valueOf(each % parm), 2, Bags.mutable.empty());
         Assert.assertEquals(3, evensAndOdds2.occurrencesOf(1));
         Assert.assertEquals(3, evensAndOdds2.occurrencesOf(0));
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Test
+    public void countByEach()
+    {
+        RichIterable<Integer> integerList = this.newWith(1, 2, 4);
+        Bag<Integer> integerBag1 = integerList.countByEach(each -> IntInterval.oneTo(5).collect(i -> each * i));
+        Assert.assertEquals(1, integerBag1.occurrencesOf(1));
+        Assert.assertEquals(2, integerBag1.occurrencesOf(2));
+        Assert.assertEquals(3, integerBag1.occurrencesOf(4));
+        Assert.assertEquals(2, integerBag1.occurrencesOf(8));
+        Assert.assertEquals(1, integerBag1.occurrencesOf(12));
+        Bag<Integer> integerBag2 = integerList.countByEach(each -> IntInterval.oneTo(5).collect(i -> each * i), Bags.mutable.empty());
+        Assert.assertEquals(1, integerBag2.occurrencesOf(1));
+        Assert.assertEquals(2, integerBag2.occurrencesOf(2));
+        Assert.assertEquals(3, integerBag2.occurrencesOf(4));
+        Assert.assertEquals(2, integerBag2.occurrencesOf(8));
+        Assert.assertEquals(1, integerBag2.occurrencesOf(12));
     }
 
     @Test

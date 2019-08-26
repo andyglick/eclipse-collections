@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -127,6 +128,12 @@ final class ImmutableEmptyBag<T>
     @Override
     public void forEachWithOccurrences(ObjectIntProcedure<? super T> objectIntProcedure)
     {
+    }
+
+    @Override
+    public <V> ImmutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        return Bags.immutable.empty();
     }
 
     /**
@@ -408,6 +415,24 @@ final class ImmutableEmptyBag<T>
         return target;
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return Bags.immutable.empty();
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V, R extends MutableBagIterable<V>> R countByEach(Function<? super T, ? extends Iterable<V>> function, R target)
+    {
+        return target;
+    }
+
     @Override
     public <V> ImmutableBagMultimap<V, T> groupBy(Function<? super T, ? extends V> function)
     {
@@ -581,6 +606,15 @@ final class ImmutableEmptyBag<T>
     }
 
     @Override
+    public <NK, NV, R extends Map<NK, NV>> R toMap(
+            Function<? super T, ? extends NK> keyFunction,
+            Function<? super T, ? extends NV> valueFunction,
+            R target)
+    {
+        return target;
+    }
+
+    @Override
     public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(
             Function<? super T, ? extends NK> keyFunction,
             Function<? super T, ? extends NV> valueFunction)
@@ -589,11 +623,18 @@ final class ImmutableEmptyBag<T>
     }
 
     @Override
-    public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(Comparator<? super NK> comparator,
+    public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(
+            Comparator<? super NK> comparator,
             Function<? super T, ? extends NK> keyFunction,
             Function<? super T, ? extends NV> valueFunction)
     {
         return TreeSortedMap.newMap(comparator);
+    }
+
+    @Override
+    public <KK extends Comparable<? super KK>, K, V> MutableSortedMap<K, V> toSortedMapBy(Function<? super K, KK> sortBy, Function<? super T, ? extends K> keyFunction, Function<? super T, ? extends V> valueFunction)
+    {
+        return TreeSortedMap.newMap(Comparators.byFunction(sortBy));
     }
 
     @Override
@@ -735,5 +776,11 @@ final class ImmutableEmptyBag<T>
     private Object writeReplace()
     {
         return new ImmutableBagSerializationProxy<>(this);
+    }
+
+    @Override
+    public ImmutableSet<T> selectUnique()
+    {
+        return Sets.immutable.empty();
     }
 }

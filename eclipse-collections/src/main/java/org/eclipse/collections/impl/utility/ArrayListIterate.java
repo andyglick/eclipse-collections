@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -12,14 +12,13 @@ package org.eclipse.collections.impl.utility;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.HashingStrategy;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
@@ -60,6 +59,7 @@ import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.list.primitive.MutableShortList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.partition.list.PartitionMutableList;
 import org.eclipse.collections.api.set.MutableSet;
@@ -445,8 +445,11 @@ public final class ArrayListIterate
         return RandomAccessListIterate.collectByte(list, byteFunction, target);
     }
 
-    private static <T, R extends MutableByteCollection> R collectByteFromInternalArray(ArrayList<T> source, ByteFunction<?
-            super T> byteFunction, int elementsToCollect, R target)
+    private static <T, R extends MutableByteCollection> R collectByteFromInternalArray(
+            ArrayList<T> source,
+            ByteFunction<? super T> byteFunction,
+            int elementsToCollect,
+            R target)
     {
         T[] elements = ArrayListIterate.getInternalArray(source);
         for (int i = 0; i < elementsToCollect; i++)
@@ -485,8 +488,11 @@ public final class ArrayListIterate
         return RandomAccessListIterate.collectChar(list, charFunction, target);
     }
 
-    private static <T, R extends MutableCharCollection> R collectCharFromInternalArray(ArrayList<T> source, CharFunction<?
-            super T> charFunction, int elementsToCollect, R target)
+    private static <T, R extends MutableCharCollection> R collectCharFromInternalArray(
+            ArrayList<T> source,
+            CharFunction<? super T> charFunction,
+            int elementsToCollect,
+            R target)
     {
         T[] elements = ArrayListIterate.getInternalArray(source);
         for (int i = 0; i < elementsToCollect; i++)
@@ -525,8 +531,11 @@ public final class ArrayListIterate
         return RandomAccessListIterate.collectDouble(list, doubleFunction, target);
     }
 
-    private static <T, R extends MutableDoubleCollection> R collectDoubleFromInternalArray(ArrayList<T> source, DoubleFunction<?
-            super T> doubleFunction, int elementsToCollect, R target)
+    private static <T, R extends MutableDoubleCollection> R collectDoubleFromInternalArray(
+            ArrayList<T> source,
+            DoubleFunction<? super T> doubleFunction,
+            int elementsToCollect,
+            R target)
     {
         T[] elements = ArrayListIterate.getInternalArray(source);
         for (int i = 0; i < elementsToCollect; i++)
@@ -565,8 +574,11 @@ public final class ArrayListIterate
         return RandomAccessListIterate.collectFloat(list, floatFunction, target);
     }
 
-    private static <T, R extends MutableFloatCollection> R collectFloatFromInternalArray(ArrayList<T> source, FloatFunction<?
-            super T> floatFunction, int elementsToCollect, R target)
+    private static <T, R extends MutableFloatCollection> R collectFloatFromInternalArray(
+            ArrayList<T> source,
+            FloatFunction<? super T> floatFunction,
+            int elementsToCollect,
+            R target)
     {
         T[] elements = ArrayListIterate.getInternalArray(source);
         for (int i = 0; i < elementsToCollect; i++)
@@ -644,8 +656,11 @@ public final class ArrayListIterate
         return RandomAccessListIterate.collectLong(list, longFunction, target);
     }
 
-    private static <T, R extends MutableLongCollection> R collectLongFromInternalArray(ArrayList<T> source, LongFunction<?
-            super T> longFunction, int elementsToCollect, R target)
+    private static <T, R extends MutableLongCollection> R collectLongFromInternalArray(
+            ArrayList<T> source,
+            LongFunction<? super T> longFunction,
+            int elementsToCollect,
+            R target)
     {
         T[] elements = ArrayListIterate.getInternalArray(source);
         for (int i = 0; i < elementsToCollect; i++)
@@ -684,8 +699,11 @@ public final class ArrayListIterate
         return RandomAccessListIterate.collectShort(list, shortFunction, target);
     }
 
-    private static <T, R extends MutableShortCollection> R collectShortFromInternalArray(ArrayList<T> source, ShortFunction<?
-            super T> shortFunction, int elementsToCollect, R target)
+    private static <T, R extends MutableShortCollection> R collectShortFromInternalArray(
+            ArrayList<T> source,
+            ShortFunction<? super T> shortFunction,
+            int elementsToCollect,
+            R target)
     {
         T[] elements = ArrayListIterate.getInternalArray(source);
         for (int i = 0; i < elementsToCollect; i++)
@@ -790,12 +808,12 @@ public final class ArrayListIterate
     }
 
     /**
-     * Iterates over the section of the list covered by the specified indexes.  The indexes are both inclusive.  If the
+     * Iterates over the section of the list covered by the specified indexes. The indexes are both inclusive. If the
      * from is less than the to, the list is iterated in forward order. If the from is greater than the to, then the
      * list is iterated in the reverse order.
      * <p>
      * <pre>e.g.
-     * ArrayList<People> people = new ArrayList&lt;People&gt;(FastList.newListWith(ted, mary, bob, sally));
+     * ArrayList&lt;People&gt; people = new ArrayList&lt;People&gt;(FastList.newListWith(ted, mary, bob, sally));
      * ArrayListIterate.forEach(people, 0, 1, new Procedure&lt;Person&gt;()
      * {
      *     public void value(Person person)
@@ -823,13 +841,13 @@ public final class ArrayListIterate
     }
 
     /**
-     * Iterates over the section of the list covered by the specified indexes.  The indexes are both inclusive.  If the
+     * Iterates over the section of the list covered by the specified indexes. The indexes are both inclusive. If the
      * from is less than the to, the list is iterated in forward order. If the from is greater than the to, then the
      * list is iterated in the reverse order. The index passed into the ObjectIntProcedure is the actual index of the
      * range.
      * <p>
      * <pre>e.g.
-     * ArrayList<People> people = new ArrayList&lt;People&gt;(FastList.newListWith(ted, mary, bob, sally));
+     * ArrayList&lt;People&gt; people = new ArrayList&lt;People&gt;(FastList.newListWith(ted, mary, bob, sally));
      * ArrayListIterate.forEachWithIndex(people, 0, 1, new ObjectIntProcedure&lt;Person&gt;()
      * {
      *     public void value(Person person, int index)
@@ -1638,15 +1656,7 @@ public final class ArrayListIterate
      */
     public static <T> ArrayList<T> sortThis(ArrayList<T> list, Comparator<? super T> comparator)
     {
-        int size = list.size();
-        if (ArrayListIterate.canAccessInternalArray(list))
-        {
-            Arrays.sort(ArrayListIterate.getInternalArray(list), 0, size, comparator);
-        }
-        else
-        {
-            Collections.sort(list, comparator);
-        }
+        list.sort(comparator);
         return list;
     }
 
@@ -1815,9 +1825,9 @@ public final class ArrayListIterate
     }
 
     /**
-     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMap)
+     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMapIterable)
      */
-    public static <T, V, R extends MutableMap<V, T>> R groupByUniqueKey(
+    public static <T, V, R extends MutableMapIterable<V, T>> R groupByUniqueKey(
             ArrayList<T> list,
             Function<? super T, ? extends V> function,
             R target)
@@ -1849,6 +1859,13 @@ public final class ArrayListIterate
      */
     public static <X, Y> MutableList<Pair<X, Y>> zip(ArrayList<X> xs, Iterable<Y> ys)
     {
+        if (ys instanceof Collection || ys instanceof RichIterable)
+        {
+            int xSize = xs.size();
+            int ySize = Iterate.sizeOf(ys);
+            FastList<Pair<X, Y>> target = FastList.newList(Math.min(xSize, ySize));
+            return ArrayListIterate.zip(xs, ys, target);
+        }
         return ArrayListIterate.zip(xs, ys, FastList.newList());
     }
 
@@ -1876,7 +1893,7 @@ public final class ArrayListIterate
      */
     public static <T> MutableList<Pair<T, Integer>> zipWithIndex(ArrayList<T> list)
     {
-        return ArrayListIterate.zipWithIndex(list, FastList.newList());
+        return ArrayListIterate.zipWithIndex(list, FastList.newList(list.size()));
     }
 
     /**

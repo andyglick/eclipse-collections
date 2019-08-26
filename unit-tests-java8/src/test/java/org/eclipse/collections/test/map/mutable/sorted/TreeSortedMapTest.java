@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -17,6 +17,7 @@ import org.eclipse.collections.impl.test.junit.Java8Runner;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 @RunWith(Java8Runner.class)
 public class TreeSortedMapTest implements MutableSortedMapIterableTestCase
@@ -30,6 +31,22 @@ public class TreeSortedMapTest implements MutableSortedMapIterableTestCase
         {
             assertNull(result.put(i, each));
             i--;
+        }
+        return result;
+    }
+
+    @Override
+    public <K, V> MutableSortedMap<K, V> newWithKeysValues(Object... elements)
+    {
+        if (elements.length % 2 != 0)
+        {
+            fail(String.valueOf(elements.length));
+        }
+
+        MutableSortedMap<K, V> result = new TreeSortedMap<>(Comparators.reverseNaturalOrder());
+        for (int i = 0; i < elements.length; i += 2)
+        {
+            assertNull(result.put((K) elements[i], (V) elements[i + 1]));
         }
         return result;
     }

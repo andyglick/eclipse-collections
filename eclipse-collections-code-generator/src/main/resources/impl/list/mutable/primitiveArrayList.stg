@@ -20,7 +20,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.lang.Iterable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -28,6 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.collections.api.<name>Iterable;
 import org.eclipse.collections.api.Lazy<name>Iterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.primitive.Object<name>IntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.Object<name>ToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
@@ -37,7 +37,6 @@ import org.eclipse.collections.api.block.procedure.primitive.<name>Procedure;
 import org.eclipse.collections.api.collection.primitive.Mutable<name>Collection;
 import org.eclipse.collections.api.iterator.Mutable<name>Iterator;
 import org.eclipse.collections.api.iterator.<name>Iterator;
-import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.<name>List;
 import org.eclipse.collections.api.list.primitive.Immutable<name>List;
@@ -54,6 +53,10 @@ import org.eclipse.collections.impl.primitive.Abstract<name>Iterable;
 import org.eclipse.collections.impl.set.mutable.primitive.<name>HashSet;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.eclipse.collections.impl.utility.Iterate;
+<if(primitive.specializedStream)>
+import java.util.Spliterator;
+import java.util.Spliterators;<endif>
+
 
 /**
  * <name>ArrayList is similar to {@link FastList}, and is memory-optimized for <type> primitives.
@@ -606,6 +609,37 @@ public class <name>ArrayList extends Abstract<name>Iterable
     }
 
     @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        if (size \<= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList\<<name>Iterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            if (this.size() \<= size)
+            {
+                result.add(<name>Lists.mutable.withAll(this));
+            }
+            else
+            {
+                <name>Iterator iterator = this.<type>Iterator();
+                while (iterator.hasNext())
+                {
+                    Mutable<name>List batch = <name>Lists.mutable.empty();
+                    for (int i = 0; i \< size && iterator.hasNext(); i++)
+                    {
+                        batch.add(iterator.next());
+                    }
+                    result.add(batch);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public int count(<name>Predicate predicate)
     {
         int count = 0;
@@ -1009,6 +1043,16 @@ public class <name>ArrayList extends Abstract<name>Iterable
     }
 
     /**
+     * Creates a new empty <name>ArrayList.
+     *
+     * @since 9.2.
+     */
+    public <name>ArrayList newEmpty()
+    {
+        return new <name>ArrayList();
+    }
+
+    /**
      * @since 9.1.
      */
     @Override
@@ -1063,6 +1107,15 @@ public class <name>ArrayList extends Abstract<name>Iterable
             this.lastIndex = -1;
         }
     }
+<if(primitive.specializedStream)>
+
+    @Override
+    public Spliterator.Of<name> spliterator()
+    {
+        int characteristics = Spliterator.ORDERED;
+        return Spliterators.spliterator(this.items, 0, size, characteristics);
+    }
+<endif>
 }
 
 >>

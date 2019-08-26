@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,52 +10,31 @@
 
 package org.eclipse.collections.impl.list.mutable;
 
-import org.eclipse.collections.api.block.function.Function0;
-import org.eclipse.collections.api.factory.list.MutableListFactory;
-import org.eclipse.collections.api.list.MutableList;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public enum MultiReaderMutableListFactory implements MutableListFactory
+import org.eclipse.collections.api.block.function.Function0;
+import org.eclipse.collections.api.factory.list.MultiReaderListFactory;
+import org.eclipse.collections.api.list.MultiReaderList;
+
+public enum MultiReaderMutableListFactory implements MultiReaderListFactory
 {
     INSTANCE;
 
     @Override
-    public <T> MutableList<T> empty()
+    public <T> MultiReaderList<T> empty()
     {
         return MultiReaderFastList.newList();
     }
 
     @Override
-    public <T> MutableList<T> of()
-    {
-        return this.empty();
-    }
-
-    @Override
-    public <T> MutableList<T> with()
-    {
-        return this.empty();
-    }
-
-    @Override
-    public <T> MutableList<T> of(T... items)
-    {
-        return this.with(items);
-    }
-
-    @Override
-    public <T> MutableList<T> with(T... items)
+    public <T> MultiReaderList<T> with(T... items)
     {
         return MultiReaderFastList.newListWith(items);
     }
 
     @Override
-    public <T> MutableList<T> ofInitialCapacity(int capacity)
-    {
-        return this.withInitialCapacity(capacity);
-    }
-
-    @Override
-    public <T> MutableList<T> withInitialCapacity(int capacity)
+    public <T> MultiReaderList<T> withInitialCapacity(int capacity)
     {
         if (capacity < 0)
         {
@@ -66,19 +45,19 @@ public enum MultiReaderMutableListFactory implements MutableListFactory
     }
 
     @Override
-    public <T> MutableList<T> ofAll(Iterable<? extends T> iterable)
+    public <T> MultiReaderList<T> withAll(Iterable<? extends T> iterable)
     {
-        return this.withAll(iterable);
+        return MultiReaderFastList.newList(iterable);
     }
 
     @Override
-    public <T> MutableList<T> withAll(Iterable<? extends T> iterable)
+    public <T> MultiReaderList<T> fromStream(Stream<? extends T> stream)
     {
-        return MultiReaderFastList.newList((Iterable<T>) iterable);
+        return stream.collect(Collectors.toCollection(MultiReaderFastList::newList));
     }
 
     @Override
-    public <T> MutableList<T> withNValues(int size, Function0<T> factory)
+    public <T> MultiReaderList<T> withNValues(int size, Function0<? extends T> factory)
     {
         MultiReaderFastList<T> newFastList = MultiReaderFastList.newList(size);
         for (int i = 0; i < size; i++)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -20,6 +20,7 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.collections.api.BooleanIterable;
 import org.eclipse.collections.api.LazyBooleanIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.MutableBooleanBag;
 import org.eclipse.collections.api.block.function.primitive.BooleanToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ObjectBooleanIntToObjectFunction;
@@ -29,11 +30,13 @@ import org.eclipse.collections.api.block.procedure.primitive.BooleanIntProcedure
 import org.eclipse.collections.api.block.procedure.primitive.BooleanProcedure;
 import org.eclipse.collections.api.iterator.BooleanIterator;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.BooleanList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.set.primitive.MutableBooleanSet;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.BooleanLists;
 import org.eclipse.collections.impl.lazy.primitive.LazyBooleanIterableAdapter;
 import org.eclipse.collections.impl.lazy.primitive.ReverseBooleanIterable;
@@ -514,6 +517,37 @@ final class ImmutableBooleanArrayList
     }
 
     @Override
+    public RichIterable<BooleanIterable> chunk(int size)
+    {
+        if (size <= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList<BooleanIterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            if (this.size() <= size)
+            {
+                result.add(this);
+            }
+            else
+            {
+                BooleanIterator iterator = this.booleanIterator();
+                while (iterator.hasNext())
+                {
+                    MutableBooleanList batch = BooleanLists.mutable.empty();
+                    for (int i = 0; i < size && iterator.hasNext(); i++)
+                    {
+                        batch.add(iterator.next());
+                    }
+                    result.add(batch.toImmutable());
+                }
+            }
+        }
+        return result.toImmutable();
+    }
+
+    @Override
     public <T> T injectIntoWithIndex(T injectedValue, ObjectBooleanIntToObjectFunction<? super T, ? extends T> function)
     {
         T result = injectedValue;
@@ -626,7 +660,7 @@ final class ImmutableBooleanArrayList
         }
 
         @Override
-        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
+        public void readExternal(ObjectInput in) throws IOException
         {
             int inputSize = in.readInt();
             BitSet newItems = new BitSet(inputSize);

@@ -25,6 +25,7 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.collections.api.<name>Iterable;
 import org.eclipse.collections.api.Lazy<name>Iterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.Mutable<name>Bag;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.Object<name>ToObjectFunction;
@@ -35,7 +36,6 @@ import org.eclipse.collections.api.block.procedure.primitive.<name>IntProcedure;
 import org.eclipse.collections.api.collection.primitive.Mutable<name>Collection;
 import org.eclipse.collections.api.iterator.<name>Iterator;
 import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.Immutable<name>List;
 import org.eclipse.collections.api.list.primitive.<name>List;
@@ -53,6 +53,10 @@ import org.eclipse.collections.impl.list.mutable.primitive.<name>ArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.<name>HashSet;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.eclipse.collections.impl.utility.Iterate;
+<if(primitive.specializedStream)>
+import java.util.Spliterator;
+import java.util.Spliterators;<endif>
+
 
 /**
  * Immutable<name>ArrayList is the non-modifiable equivalent of {@link <name>ArrayList}.
@@ -585,6 +589,37 @@ final class Immutable<name>ArrayList
     }
 
     @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        if (size \<= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList\<<name>Iterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            if (this.size() \<= size)
+            {
+                result.add(this);
+            }
+            else
+            {
+                <name>Iterator iterator = this.<type>Iterator();
+                while (iterator.hasNext())
+                {
+                    Mutable<name>List batch = <name>Lists.mutable.empty();
+                    for (int i = 0; i \< size && iterator.hasNext(); i++)
+                    {
+                        batch.add(iterator.next());
+                    }
+                    result.add(batch.toImmutable());
+                }
+            }
+        }
+        return result.toImmutable();
+    }
+
+    @Override
     public boolean equals(Object otherList)
     {
         if (otherList == this)
@@ -766,6 +801,15 @@ final class Immutable<name>ArrayList
             return next;
         }
     }
+    <if(primitive.specializedStream)>
+
+    @Override
+    public Spliterator.Of<name> spliterator()
+    {
+        int characteristics = Spliterator.ORDERED | Spliterator.IMMUTABLE;
+        return Spliterators.spliterator(this.items, characteristics);
+    }
+    <endif>
 }
 
 >>

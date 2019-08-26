@@ -1,5 +1,4 @@
-import "copyright.stg"
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -30,7 +29,7 @@ public \<R extends Mutable<name>Collection> R collect<name>(<name>Function\<? su
 >>
 
 body(type, name) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.map.immutable.primitive;
 
@@ -38,6 +37,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.collections.api.<name>Iterable;
@@ -55,6 +55,7 @@ import org.eclipse.collections.api.bag.primitive.ImmutableIntBag;
 import org.eclipse.collections.api.bag.primitive.ImmutableLongBag;
 import org.eclipse.collections.api.bag.primitive.ImmutableShortBag;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
@@ -90,6 +91,7 @@ import org.eclipse.collections.api.iterator.<name>Iterator;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.<name>ObjectMap;
 import org.eclipse.collections.api.map.primitive.Immutable<name>ObjectMap;
 import org.eclipse.collections.api.map.primitive.ImmutableObject<name>Map;
@@ -543,6 +545,12 @@ final class Immutable<name>ObjectHashMap\<V> extends AbstractImmutable<name>Obje
     }
 
     @Override
+    public \<NK, NV, R extends Map\<NK, NV>\> R toMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction, R target)
+    {
+        return this.delegate.toMap(keyFunction, valueFunction, target);
+    }
+
+    @Override
     public \<NK, NV> MutableSortedMap\<NK, NV> toSortedMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
     {
         return this.delegate.toSortedMap(keyFunction, valueFunction);
@@ -552,6 +560,18 @@ final class Immutable<name>ObjectHashMap\<V> extends AbstractImmutable<name>Obje
     public \<NK, NV> MutableSortedMap\<NK, NV> toSortedMap(Comparator\<? super NK> comparator, Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
     {
         return this.delegate.toSortedMap(comparator, keyFunction, valueFunction);
+    }
+
+    @Override
+    public \<KK extends Comparable\<? super KK>, NK, NV> MutableSortedMap\<NK, NV> toSortedMapBy(Function\<? super NK, KK> sortBy, Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
+    {
+        return this.delegate.toSortedMapBy(sortBy, keyFunction, valueFunction);
+    }
+
+    @Override
+    public \<NK, NV> MutableBiMap\<NK, NV> toBiMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
+    {
+        return this.delegate.toBiMap(keyFunction, valueFunction);
     }
 
     @Override
@@ -689,7 +709,7 @@ final class Immutable<name>ObjectHashMap\<V> extends AbstractImmutable<name>Obje
     }
 
     @Override
-    public \<VV, R extends MutableMap\<VV, V>\> R groupByUniqueKey(Function\<? super V, ? extends VV> function, R target)
+    public \<VV, R extends MutableMapIterable\<VV, V>\> R groupByUniqueKey(Function\<? super V, ? extends VV> function, R target)
     {
         return this.delegate.groupByUniqueKey(function, target);
     }
@@ -872,7 +892,8 @@ final class Immutable<name>ObjectHashMap\<V> extends AbstractImmutable<name>Obje
     public ImmutableObject<name>Map\<V> flipUniqueValues()
     {
         MutableObject<name>Map\<V> result = Object<name>Maps.mutable.empty();
-        this.forEachKeyValue((key, value) -> {
+        this.forEachKeyValue((key, value) ->
+        {
             if (result.containsKey(value))
             {
                 throw new IllegalStateException("Duplicate value: " + value + " found at key: " + result.get(value) + " and key: " + key);

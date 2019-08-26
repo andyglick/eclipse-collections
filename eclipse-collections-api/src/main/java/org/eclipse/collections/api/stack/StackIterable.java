@@ -189,14 +189,24 @@ public interface StackIterable<T> extends OrderedIterable<T>
     /**
      * @since 9.1.
      */
+    @Override
     default <V> StackIterable<V> collectWithIndex(ObjectIntToObjectFunction<? super T, ? extends V> function)
     {
-        int[] index = { 0 };
+        int[] index = {0};
         return this.collect(each -> function.valueOf(each, index[0]++));
     }
 
     @Override
     <V> StackIterable<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> StackIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     @Override
     <V> ListMultimap<V, T> groupBy(Function<? super T, ? extends V> function);

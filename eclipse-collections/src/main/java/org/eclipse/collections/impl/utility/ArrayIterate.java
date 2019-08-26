@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -59,6 +59,7 @@ import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.list.primitive.MutableShortList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.ObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.ObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -721,7 +722,7 @@ public final class ArrayIterate
     }
 
     /**
-     * Returns the first element of an array.  This method is null safe.
+     * Returns the first element of an array. This method is null safe.
      */
     public static <T> T getFirst(T[] objectArray)
     {
@@ -733,7 +734,7 @@ public final class ArrayIterate
     }
 
     /**
-     * Returns the last element of an Array.  This method is null safe.
+     * Returns the last element of an Array. This method is null safe.
      */
     public static <T> T getLast(T[] objectArray)
     {
@@ -763,7 +764,7 @@ public final class ArrayIterate
     }
 
     /**
-     * Iterates over the section of the list covered by the specified inclusive indexes.  The indexes are
+     * Iterates over the section of the list covered by the specified inclusive indexes. The indexes are
      * both inclusive.
      */
     public static <T> void forEach(T[] objectArray, int from, int to, Procedure<? super T> procedure)
@@ -783,7 +784,7 @@ public final class ArrayIterate
     public static <T1, T2> void forEachInBoth(
             T1[] objectArray1,
             T2[] objectArray2,
-            Procedure2<T1, T2> procedure)
+            Procedure2<? super T1, ? super T2> procedure)
     {
         if (objectArray1 != null && objectArray2 != null)
         {
@@ -817,7 +818,7 @@ public final class ArrayIterate
     }
 
     /**
-     * Iterates over the section of the list covered by the specified inclusive indexes.  The indexes are
+     * Iterates over the section of the list covered by the specified inclusive indexes. The indexes are
      * both inclusive.
      */
     public static <T> void forEachWithIndex(
@@ -905,7 +906,7 @@ public final class ArrayIterate
      */
     public static <T, P> T detectWithIfNone(
             T[] objectArray,
-            Predicate2<? super T, P> predicate,
+            Predicate2<? super T, ? super P> predicate,
             P parameter,
             T ifNone)
     {
@@ -1119,7 +1120,7 @@ public final class ArrayIterate
     }
 
     /**
-     * Returns the first index where the predicate evaluates to {@code true}.  Returns -1 for no matches.
+     * Returns the first index where the predicate evaluates to {@code true}. Returns -1 for no matches.
      */
     public static <T> int detectIndex(T[] objectArray, Predicate<? super T> predicate)
     {
@@ -1131,11 +1132,11 @@ public final class ArrayIterate
     }
 
     /**
-     * Searches for the first index where the predicate evaluates to {@code true}.  Returns -1 for no matches.
+     * Searches for the first index where the predicate evaluates to {@code true}. Returns -1 for no matches.
      */
     public static <T, IV> int detectIndexWith(
             T[] objectArray,
-            Predicate2<? super T, IV> predicate,
+            Predicate2<? super T, ? super IV> predicate,
             IV injectedValue)
     {
         if (objectArray == null)
@@ -1166,7 +1167,7 @@ public final class ArrayIterate
     }
 
     /**
-     * A null safe form of isEmpty.  Null or length of zero returns {@code true}.
+     * A null safe form of isEmpty. Null or length of zero returns {@code true}.
      */
     public static boolean isEmpty(Object[] array)
     {
@@ -1174,7 +1175,7 @@ public final class ArrayIterate
     }
 
     /**
-     * A null safe form of notEmpty.  The opposite of isEmpty is returned.
+     * A null safe form of notEmpty. The opposite of isEmpty is returned.
      */
     public static boolean notEmpty(Object[] array)
     {
@@ -1477,7 +1478,7 @@ public final class ArrayIterate
     /**
      * @see Iterate#groupByUniqueKey(Iterable, Function)
      */
-    public static <T, V> MutableMap<V, T> groupByUniqueKey(
+    public static <T, V> MutableMapIterable<V, T> groupByUniqueKey(
             T[] array,
             Function<? super T, ? extends V> function)
     {
@@ -1485,9 +1486,9 @@ public final class ArrayIterate
     }
 
     /**
-     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMap)
+     * @see Iterate#groupByUniqueKey(Iterable, Function, MutableMapIterable)
      */
-    public static <T, V, R extends MutableMap<V, T>> R groupByUniqueKey(
+    public static <T, V, R extends MutableMapIterable<V, T>> R groupByUniqueKey(
             T[] array,
             Function<? super T, ? extends V> function,
             R target)
@@ -1708,7 +1709,7 @@ public final class ArrayIterate
      * @see Iterate#sumByBigDecimal(Iterable, Function, Function)
      * @since 6.0
      */
-    public static <V, T> MutableMap<V, BigDecimal> sumByBigDecimal(T[] array, Function<T, V> groupBy, Function<? super T, BigDecimal> function)
+    public static <V, T> MutableMap<V, BigDecimal> sumByBigDecimal(T[] array, Function<? super T, ? extends V> groupBy, Function<? super T, BigDecimal> function)
     {
         MutableMap<V, BigDecimal> result = UnifiedMap.newMap();
         for (T each : array)
@@ -1722,7 +1723,7 @@ public final class ArrayIterate
      * @see Iterate#sumByBigInteger(Iterable, Function, Function)
      * @since 6.0
      */
-    public static <V, T> MutableMap<V, BigInteger> sumByBigInteger(T[] array, Function<T, V> groupBy, Function<? super T, BigInteger> function)
+    public static <V, T> MutableMap<V, BigInteger> sumByBigInteger(T[] array, Function<? super T, ? extends V> groupBy, Function<? super T, BigInteger> function)
     {
         MutableMap<V, BigInteger> result = UnifiedMap.newMap();
         for (T each : array)
@@ -1736,7 +1737,7 @@ public final class ArrayIterate
      * @see Iterate#sumByInt(Iterable, Function, IntFunction)
      * @since 6.0
      */
-    public static <V, T> ObjectLongMap<V> sumByInt(T[] array, Function<T, V> groupBy, IntFunction<? super T> function)
+    public static <V, T> ObjectLongMap<V> sumByInt(T[] array, Function<? super T, ? extends V> groupBy, IntFunction<? super T> function)
     {
         return InternalArrayIterate.sumByInt(array, array.length, groupBy, function);
     }
@@ -1745,7 +1746,7 @@ public final class ArrayIterate
      * @see Iterate#sumByLong(Iterable, Function, LongFunction)
      * @since 6.0
      */
-    public static <V, T> ObjectLongMap<V> sumByLong(T[] array, Function<T, V> groupBy, LongFunction<? super T> function)
+    public static <V, T> ObjectLongMap<V> sumByLong(T[] array, Function<? super T, ? extends V> groupBy, LongFunction<? super T> function)
     {
         return InternalArrayIterate.sumByLong(array, array.length, groupBy, function);
     }
@@ -1754,7 +1755,7 @@ public final class ArrayIterate
      * @see Iterate#sumByFloat(Iterable, Function, FloatFunction)
      * @since 6.0
      */
-    public static <V, T> ObjectDoubleMap<V> sumByFloat(T[] array, Function<T, V> groupBy, FloatFunction<? super T> function)
+    public static <V, T> ObjectDoubleMap<V> sumByFloat(T[] array, Function<? super T, ? extends V> groupBy, FloatFunction<? super T> function)
     {
         return InternalArrayIterate.sumByFloat(array, array.length, groupBy, function);
     }
@@ -1763,7 +1764,7 @@ public final class ArrayIterate
      * @see Iterate#sumByDouble(Iterable, Function, DoubleFunction)
      * @since 6.0
      */
-    public static <V, T> ObjectDoubleMap<V> sumByDouble(T[] array, Function<T, V> groupBy, DoubleFunction<? super T> function)
+    public static <V, T> ObjectDoubleMap<V> sumByDouble(T[] array, Function<? super T, ? extends V> groupBy, DoubleFunction<? super T> function)
     {
         return InternalArrayIterate.sumByDouble(array, array.length, groupBy, function);
     }

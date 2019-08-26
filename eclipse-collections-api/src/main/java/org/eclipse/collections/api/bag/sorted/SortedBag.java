@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -60,11 +60,26 @@ public interface SortedBag<T>
     @Override
     SortedBag<T> selectByOccurrences(IntPredicate predicate);
 
+    /**
+     * @since 9.2
+     */
+    @Override
+    default SortedBag<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    SortedSetIterable<T> selectUnique();
+
     @Override
     SortedMapIterable<T, Integer> toMapOfItemToCount();
 
     /**
-     * Convert the SortedBag to an ImmutableSortedBag.  If the bag is immutable, it returns itself.
+     * Convert the SortedBag to an ImmutableSortedBag. If the bag is immutable, it returns itself.
      * Not yet supported.
      */
     @Override
@@ -128,7 +143,7 @@ public interface SortedBag<T>
     @Override
     default <V> ListIterable<V> collectWithIndex(ObjectIntToObjectFunction<? super T, ? extends V> function)
     {
-        int[] index = { 0 };
+        int[] index = {0};
         return this.collect(each -> function.valueOf(each, index[0]++));
     }
 
@@ -163,7 +178,19 @@ public interface SortedBag<T>
     <V> ListIterable<V> collectIf(Predicate<? super T> predicate, Function<? super T, ? extends V> function);
 
     @Override
+    <V> ListIterable<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
+
+    @Override
     <V> ListIterable<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> ListIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     @Override
     SortedSetIterable<T> distinct();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -111,7 +111,7 @@ public abstract class AbstractMutableMapIterable<K, V> extends AbstractMapIterab
     @Override
     public <VV> MutableMapIterable<VV, V> groupByUniqueKey(Function<? super V, ? extends VV> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.newMap());
+        return this.groupByUniqueKey(function, UnifiedMap.newMap(this.size()));
     }
 
     @Override
@@ -154,12 +154,14 @@ public abstract class AbstractMutableMapIterable<K, V> extends AbstractMapIterab
         return LazyIterate.adapt(this.entrySet()).collect(AbstractImmutableEntry.getPairFunction());
     }
 
+    // TODO: push down in next major release. Return type of MutableMap prevents this from being a superclass of MutableOrderedMaps.
     @Override
     public <K2, V2> MutableMap<K2, V2> collect(Function2<? super K, ? super V, Pair<K2, V2>> function)
     {
         return MapIterate.collect(this, function, UnifiedMap.newMap(this.size()));
     }
 
+    // TODO: push down in next major release. Return type of MutableMap prevents this from being a superclass of MutableOrderedMaps.
     @Override
     public MutableMap<V, K> flipUniqueValues()
     {
@@ -222,5 +224,14 @@ public abstract class AbstractMutableMapIterable<K, V> extends AbstractMapIterab
     public <V1, P> MutableBag<V1> countByWith(Function2<? super V, ? super P, ? extends V1> function, P parameter)
     {
         return this.collectWith(function, parameter, Bags.mutable.empty());
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V1> MutableBag<V1> countByEach(Function<? super V, ? extends Iterable<V1>> function)
+    {
+        return this.flatCollect(function, Bags.mutable.empty());
     }
 }

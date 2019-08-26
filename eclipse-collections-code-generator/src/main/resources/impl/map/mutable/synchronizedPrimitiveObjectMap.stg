@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -31,11 +31,10 @@ public \<R extends Mutable<name>Collection> R collect<name>(<name>Function\<? su
         return this.map.collect<name>(<type>Function, target);
     }
 }
-
 >>
 
 body(type, name) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.map.mutable.primitive;
 
@@ -44,6 +43,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.collections.api.<name>Iterable;
@@ -60,6 +60,7 @@ import org.eclipse.collections.api.bag.primitive.MutableIntBag;
 import org.eclipse.collections.api.bag.primitive.MutableLongBag;
 import org.eclipse.collections.api.bag.primitive.MutableShortBag;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
@@ -94,14 +95,13 @@ import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.<name>ObjectMap;
 import org.eclipse.collections.api.map.primitive.Mutable<name>ObjectMap;
-import org.eclipse.collections.api.map.primitive.MutableObject<name>Map;
+<if(!primitive.longPrimitive)><if(!primitive.doublePrimitive)>import org.eclipse.collections.api.map.primitive.MutableObject<name>Map;<endif><endif>
 import org.eclipse.collections.api.map.primitive.Immutable<name>ObjectMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
-import org.eclipse.collections.api.map.primitive.ObjectDoubleMap;
-import org.eclipse.collections.api.map.primitive.ObjectLongMap;
 import org.eclipse.collections.api.map.sorted.MutableSortedMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.multimap.bag.MutableBagMultimap;
@@ -118,7 +118,6 @@ import org.eclipse.collections.impl.collection.mutable.SynchronizedMutableCollec
 import org.eclipse.collections.impl.factory.primitive.<name>ObjectMaps;
 import org.eclipse.collections.impl.primitive.Synchronized<name>Iterable;
 import org.eclipse.collections.impl.set.mutable.primitive.Synchronized<name>Set;
-import org.eclipse.collections.api.tuple.primitive.<name>ObjectPair;
 
 /**
  * A synchronized view of a {@link Mutable<name>ObjectMap}. It is imperative that the user manually synchronize on the collection when iterating over it using the
@@ -130,7 +129,7 @@ import org.eclipse.collections.api.tuple.primitive.<name>ObjectPair;
  * @see MutableMap#asSynchronized()
  * @since 3.1.
  */
-public final class Synchronized<name>ObjectMap\<V>
+public class Synchronized<name>ObjectMap\<V>
         implements Mutable<name>ObjectMap\<V>, Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -144,7 +143,7 @@ public final class Synchronized<name>ObjectMap\<V>
 
     public Synchronized<name>ObjectMap(Mutable<name>ObjectMap\<V> map, Object newLock)
     {
-        if(map == null)
+        if (map == null)
         {
             throw new IllegalArgumentException("Cannot create a Synchronized<name>ObjectMap on a null map");
         }
@@ -600,12 +599,19 @@ public final class Synchronized<name>ObjectMap\<V>
     }
 
     <collectPrimitive("Boolean", "boolean")>
+
     <collectPrimitive("Byte", "byte")>
+
     <collectPrimitive("Char", "char")>
+
     <collectPrimitive("Double", "double")>
+
     <collectPrimitive("Float", "float")>
+
     <collectPrimitive("Int", "int")>
+
     <collectPrimitive("Long", "long")>
+
     <collectPrimitive("Short", "short")>
 
     @Override
@@ -969,6 +975,15 @@ public final class Synchronized<name>ObjectMap\<V>
     }
 
     @Override
+    public \<NK, NV, R extends Map\<NK, NV>\> R toMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction, R target)
+    {
+        synchronized (this.lock)
+        {
+            return this.map.toMap(keyFunction, valueFunction, target);
+        }
+    }
+
+    @Override
     public \<NK, NV> MutableSortedMap\<NK, NV> toSortedMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
     {
         synchronized (this.lock)
@@ -983,6 +998,24 @@ public final class Synchronized<name>ObjectMap\<V>
         synchronized (this.lock)
         {
             return this.map.toSortedMap(comparator, keyFunction, valueFunction);
+        }
+    }
+
+    @Override
+    public \<KK extends Comparable\<? super KK>, NK, NV> MutableSortedMap\<NK, NV> toSortedMapBy(Function\<? super NK, KK> sortBy, Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
+    {
+        synchronized (this.lock)
+        {
+            return this.map.toSortedMapBy(sortBy, keyFunction, valueFunction);
+        }
+    }
+
+    @Override
+    public \<NK, NV> MutableBiMap\<NK, NV> toBiMap(Function\<? super V, ? extends NK> keyFunction, Function\<? super V, ? extends NV> valueFunction)
+    {
+        synchronized (this.lock)
+        {
+            return this.map.toBiMap(keyFunction, valueFunction);
         }
     }
 
@@ -1311,7 +1344,7 @@ public final class Synchronized<name>ObjectMap\<V>
     }
 
     @Override
-    public \<VV, R extends MutableMap\<VV, V>\> R groupByUniqueKey(Function\<? super V, ? extends VV> function, R target)
+    public \<VV, R extends MutableMapIterable\<VV, V>\> R groupByUniqueKey(Function\<? super V, ? extends VV> function, R target)
     {
         synchronized (this.lock)
         {
@@ -1374,7 +1407,10 @@ public final class Synchronized<name>ObjectMap\<V>
     @Override
     public Mutable<name>ObjectMap\<V> asUnmodifiable()
     {
-        return new Unmodifiable<name>ObjectMap\<>(this);
+        synchronized (this.lock)
+        {
+            return new Unmodifiable<name>ObjectMap\<>(this);
+        }
     }
 
     @Override
@@ -1386,7 +1422,10 @@ public final class Synchronized<name>ObjectMap\<V>
     @Override
     public Immutable<name>ObjectMap\<V> toImmutable()
     {
-        return <name>ObjectMaps.immutable.withAll(this);
+        synchronized (this.lock)
+        {
+            return <name>ObjectMaps.immutable.withAll(this);
+        }
     }
 
     @Override

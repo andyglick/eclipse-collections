@@ -51,7 +51,8 @@ public interface Mutable<name>Collection extends <name>Iterable
     default boolean removeIf(<name>Predicate predicate)
     {
         boolean changed = false;
-        for (Mutable<name>Iterator iterator = this.<type>Iterator(); iterator.hasNext();)
+        Mutable<name>Iterator iterator = this.<type>Iterator();
+        while (iterator.hasNext())
         {
             if (predicate.accept(iterator.next()))
             {
@@ -96,6 +97,16 @@ public interface Mutable<name>Collection extends <name>Iterable
     {
         this.forEach(procedure);
         return this;
+    }
+
+    /**
+     * Creates a new empty mutable version of the same collection type.
+
+     * @since 9.2.
+     */
+    default Mutable<name>Collection newEmpty()
+    {
+        throw new UnsupportedOperationException("Implement in concrete classes.");
     }
 }
 

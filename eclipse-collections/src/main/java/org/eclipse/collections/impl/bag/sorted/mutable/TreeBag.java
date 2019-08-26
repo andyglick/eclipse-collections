@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -50,7 +50,7 @@ import org.eclipse.collections.impl.utility.internal.IterableIterate;
 import org.eclipse.collections.impl.utility.internal.SortedBagIterables;
 
 /**
- * A TreeBag is a MutableSortedBag which uses a SortedMap as its underlying data store.  Each key in the SortedMap represents some item,
+ * A TreeBag is a MutableSortedBag which uses a SortedMap as its underlying data store. Each key in the SortedMap represents some item,
  * and the value in the map represents the current number of occurrences of that item.
  *
  * @since 4.2
@@ -604,7 +604,9 @@ public class TreeBag<T>
         Comparator<? super T> comparator = this.items.comparator();
         return this.zipWithIndex(TreeSortedSet.newSet((o1, o2) ->
         {
-            int compare = comparator == null ? Comparators.nullSafeCompare(o1, o2) : comparator.compare(o1.getOne(), o2.getOne());
+            int compare = comparator == null
+                    ? Comparators.nullSafeCompare(o1, o2)
+                    : comparator.compare(o1.getOne(), o2.getOne());
             if (compare != 0)
             {
                 return compare;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -13,8 +13,10 @@ package org.eclipse.collections.impl.bag.immutable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -74,6 +76,7 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.Interval;
 import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.multimap.bag.HashBagMultimap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -337,6 +340,14 @@ public abstract class ImmutableBagTestCase extends AbstractRichIterableTestCase
         ImmutableBag<String> strings = this.newBag().selectByOccurrences(IntPredicates.isEven());
         ImmutableBag<Integer> collect = strings.collect(Integer::valueOf);
         Verify.assertAllSatisfy(collect, IntegerPredicates.isEven());
+    }
+
+    @Test
+    public void selectDuplicates()
+    {
+        Verify.assertBagsEqual(
+                Bags.immutable.with("2", "2", "3", "3", "3", "4", "4", "4", "4"),
+                this.newBag().selectDuplicates());
     }
 
     @Override
@@ -1331,6 +1342,21 @@ public abstract class ImmutableBagTestCase extends AbstractRichIterableTestCase
         Verify.assertSize(integers.size(), results2);
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    @Test
+    public void countByEach()
+    {
+        super.countByEach();
+        ImmutableBag<String> integers = this.newBag();
+        ImmutableBag<String> results = integers.countByEach(each -> IntInterval.oneTo(5).collect(i -> each + i));
+        Verify.assertSize(integers.size() * 5, results);
+        MutableBag<String> results2 = integers.countByEach(each -> IntInterval.oneTo(5).collect(i -> each + i), Bags.mutable.empty());
+        Verify.assertSize(integers.size() * 5, results2);
+    }
+
     @Override
     @Test
     public void groupBy()
@@ -1457,6 +1483,26 @@ public abstract class ImmutableBagTestCase extends AbstractRichIterableTestCase
 
     @Override
     @Test
+    public void toMapTarget()
+    {
+        super.toMapTarget();
+
+        Map<String, String> map = this.newBag().toMap(Functions.getPassThru(), Functions.getPassThru(), new HashMap<>());
+
+        for (int i = 1; i <= this.numKeys(); i++)
+        {
+            String key = String.valueOf(i);
+            Assert.assertTrue(map.containsKey(key));
+            Assert.assertEquals(key, map.get(key));
+        }
+
+        String missingKey = "0";
+        Assert.assertFalse(map.containsKey(missingKey));
+        Assert.assertNull(map.get(missingKey));
+    }
+
+    @Override
+    @Test
     public void toSortedMap()
     {
         super.toSortedMap();
@@ -1474,6 +1520,19 @@ public abstract class ImmutableBagTestCase extends AbstractRichIterableTestCase
         super.toSortedMap_with_comparator();
 
         MutableSortedMap<Integer, String> map = this.newBag().toSortedMap(Comparators.reverseNaturalOrder(),
+                Integer::valueOf, Functions.getPassThru());
+
+        Verify.assertMapsEqual(this.newBag().toMap(Integer::valueOf, Functions.getPassThru()), map);
+        Verify.assertListsEqual(Interval.fromTo(this.numKeys(), 1), map.keySet().toList());
+    }
+
+    @Override
+    @Test
+    public void toSortedMapBy()
+    {
+        super.toSortedMapBy();
+
+        MutableSortedMap<Integer, String> map = this.newBag().toSortedMapBy(key -> -key,
                 Integer::valueOf, Functions.getPassThru());
 
         Verify.assertMapsEqual(this.newBag().toMap(Integer::valueOf, Functions.getPassThru()), map);
@@ -1564,5 +1623,14 @@ public abstract class ImmutableBagTestCase extends AbstractRichIterableTestCase
         MutableSortedBag<String> sortedBag = immutableBag.toSortedBagBy(String::valueOf);
 
         Verify.assertSortedBagsEqual(TreeBag.newBagWith("1", "2", "2", "3", "3", "3", "4", "4", "4", "4"), sortedBag);
+    }
+
+    @Test
+    public void selectUnique()
+    {
+        ImmutableBag<String> bag = Bags.immutable.with("1", "2", "2", "3", "3", "3", "3", "4", "5", "5", "6");
+        ImmutableSet<String> expected = Sets.immutable.with("1", "4", "6");
+        ImmutableSet<String> actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
     }
 }

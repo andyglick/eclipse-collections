@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
+import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.sorted.ImmutableSortedBag;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.list.ImmutableList;
@@ -40,6 +41,7 @@ import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.factory.Predicates2;
 import org.eclipse.collections.impl.block.factory.PrimitiveFunctions;
+import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Iterables;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Maps;
@@ -56,6 +58,7 @@ import org.eclipse.collections.impl.list.mutable.primitive.FloatArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.LongArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.ShortArrayList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.map.sorted.mutable.TreeSortedMap;
 import org.eclipse.collections.impl.test.Verify;
@@ -119,6 +122,13 @@ public class ImmutableEmptySortedBagTest extends AbstractImmutableSortedBagTestC
         Assert.assertEquals(-5, this.classUnderTest().compareTo(TreeBag.newBagWith(1, 2, 2, 3, 4)));
         Assert.assertEquals(0, this.classUnderTest().compareTo(TreeBag.newBag()));
         Assert.assertEquals(0, this.classUnderTest().compareTo(TreeBag.newBag(Comparator.reverseOrder())));
+    }
+
+    @Override
+    @Test
+    public void selectDuplicates()
+    {
+        Assert.assertEquals(Bags.immutable.empty(), this.classUnderTest().selectDuplicates());
     }
 
     @Override
@@ -277,6 +287,16 @@ public class ImmutableEmptySortedBagTest extends AbstractImmutableSortedBagTestC
 
     @Override
     @Test
+    public void toSortedMapBy()
+    {
+        MutableSortedMap<Integer, Integer> map = this.classUnderTest().toSortedMapBy(key -> -key,
+                Functions.getIntegerPassThru(), Functions.getIntegerPassThru());
+        Verify.assertEmpty(map);
+        Verify.assertInstanceOf(TreeSortedMap.class, map);
+    }
+
+    @Override
+    @Test
     public void toStack()
     {
         Assert.assertEquals(Stacks.immutable.empty(), this.classUnderTest().toStack());
@@ -307,6 +327,19 @@ public class ImmutableEmptySortedBagTest extends AbstractImmutableSortedBagTestC
         Assert.assertEquals(
                 UnifiedMap.newWithKeysValues(0, 0),
                 bag.groupByUniqueKey(id -> id, UnifiedMap.newWithKeysValues(0, 0)));
+    }
+
+    @Test
+    public void countByEach()
+    {
+        Assert.assertEquals(Bags.immutable.empty(), this.classUnderTest().countByEach(each -> IntInterval.oneTo(5).collect(i -> each + i)));
+    }
+
+    @Test
+    public void countByEach_target()
+    {
+        MutableBag<Integer> target = Bags.mutable.empty();
+        Assert.assertEquals(target, this.classUnderTest().countByEach(each -> IntInterval.oneTo(5).collect(i -> each + i), target));
     }
 
     @Override
@@ -449,7 +482,8 @@ public class ImmutableEmptySortedBagTest extends AbstractImmutableSortedBagTestC
         ImmutableSortedBag<Integer> integers = this.classUnderTest();
         Verify.assertEmpty(
                 integers.reject(Predicates.lessThan(integers.size() + 1), FastList.newList()));
-        Verify.assertListsEqual(integers.toList(),
+        Verify.assertListsEqual(
+                integers.toList(),
                 integers.reject(Predicates.greaterThan(integers.size()), FastList.newList()));
 
         ImmutableSortedBag<Integer> integers2 = this.classUnderTest();
@@ -858,5 +892,19 @@ public class ImmutableEmptySortedBagTest extends AbstractImmutableSortedBagTestC
     public void drop()
     {
         Assert.assertEquals(this.classUnderTest(), this.classUnderTest().drop(2));
+    }
+
+    @Override
+    @Test
+    public void selectUnique()
+    {
+        super.selectUnique();
+
+        Comparator<Integer> comparator = Collections.reverseOrder();
+        ImmutableSortedBag<Integer> bag = this.classUnderTest(comparator);
+        ImmutableSortedSet<Integer> expected = SortedSets.immutable.empty(comparator);
+        ImmutableSortedSet<Integer> actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
+        Assert.assertEquals(expected.comparator(), actual.comparator());
     }
 }

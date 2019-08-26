@@ -101,7 +101,8 @@ public abstract class ImmutableMapIterableTestCase
     public void flipUniqueValues()
     {
         ImmutableMapIterable<Integer, String> immutableMap = this.classUnderTest();
-        Assert.assertEquals(Interval.oneTo(this.size()).toMap(String::valueOf, Functions.getIntegerPassThru()),
+        Assert.assertEquals(
+                Interval.oneTo(this.size()).toMap(String::valueOf, Functions.getIntegerPassThru()),
                 immutableMap.flipUniqueValues());
     }
 
@@ -136,12 +137,13 @@ public abstract class ImmutableMapIterableTestCase
     @Test
     public void get()
     {
-        Integer absentKey = this.size() + 1;
-        String absentValue = String.valueOf(absentKey);
-
         // Absent key behavior
         ImmutableMapIterable<Integer, String> classUnderTest = this.classUnderTest();
+
+        Integer absentKey = this.size() + 1;
         Assert.assertNull(classUnderTest.get(absentKey));
+
+        String absentValue = String.valueOf(absentKey);
         Assert.assertFalse(classUnderTest.containsValue(absentValue));
 
         // Present key behavior

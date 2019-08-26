@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -16,27 +16,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.factory.set.FixedSizeSetFactory;
 import org.eclipse.collections.api.factory.set.ImmutableSetFactory;
+import org.eclipse.collections.api.factory.set.MultiReaderSetFactory;
 import org.eclipse.collections.api.factory.set.MutableSetFactory;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.FixedSizeSet;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MultiReaderSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.list.Interval;
 import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.set.mutable.MultiReaderUnifiedSet;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.test.Verify;
 import org.eclipse.collections.impl.test.domain.Key;
 import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import static org.eclipse.collections.impl.factory.Iterables.mSet;
@@ -44,47 +48,56 @@ import static org.eclipse.collections.impl.factory.Iterables.mSet;
 public class SetsTest
 {
     private final MutableList<UnifiedSet<String>> uniqueSets =
-            Lists.mutable.with(this.newUnsortedSet("Tom", "Dick", "Harry", null),
+            Lists.mutable.with(
+                    this.newUnsortedSet("Tom", "Dick", "Harry", null),
                     this.newUnsortedSet("Jane", "Sarah", "Mary"),
                     this.newUnsortedSet("Fido", "Spike", "Spuds"));
 
     private final MutableList<UnifiedSet<String>> overlappingSets =
-            Lists.mutable.with(this.newUnsortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newUnsortedSet("Tom", "Dick", "Harry"),
                     this.newUnsortedSet("Larry", "Tom", "Dick"),
                     this.newUnsortedSet("Dick", "Larry", "Paul", null));
 
     private final MutableList<UnifiedSet<String>> identicalSets =
-            Lists.mutable.with(this.newUnsortedSet("Tom", null, "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newUnsortedSet("Tom", null, "Dick", "Harry"),
                     this.newUnsortedSet(null, "Harry", "Tom", "Dick"),
                     this.newUnsortedSet("Dick", "Harry", "Tom", null));
 
     private final MutableList<TreeSet<String>> uniqueSortedSets =
-            Lists.mutable.with(this.newSortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newSortedSet("Tom", "Dick", "Harry"),
                     this.newSortedSet("Jane", "Sarah", "Mary"),
                     this.newSortedSet("Fido", "Spike", "Spuds"));
 
     private final MutableList<TreeSet<String>> overlappingSortedSets =
-            Lists.mutable.with(this.newSortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newSortedSet("Tom", "Dick", "Harry"),
                     this.newSortedSet("Larry", "Tom", "Dick"),
                     this.newSortedSet("Dick", "Larry", "Paul"));
 
     private final MutableList<TreeSet<String>> identicalSortedSets =
-            Lists.mutable.with(this.newSortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newSortedSet("Tom", "Dick", "Harry"),
                     this.newSortedSet("Harry", "Tom", "Dick"),
                     this.newSortedSet("Dick", "Harry", "Tom"));
 
     private final MutableList<TreeSet<String>> uniqueReverseSortedSets =
-            Lists.mutable.with(this.newReverseSortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newReverseSortedSet("Tom", "Dick", "Harry"),
                     this.newReverseSortedSet("Jane", "Sarah", "Mary"),
                     this.newReverseSortedSet("Fido", "Spike", "Spuds"));
 
     private final MutableList<TreeSet<String>> overlappingReverseSortedSets =
-            Lists.mutable.with(this.newReverseSortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newReverseSortedSet("Tom", "Dick", "Harry"),
                     this.newReverseSortedSet("Larry", "Tom", "Dick"),
                     this.newReverseSortedSet("Dick", "Larry", "Paul"));
 
     private final MutableList<TreeSet<String>> identicalReverseSortedSets =
-            Lists.mutable.with(this.newReverseSortedSet("Tom", "Dick", "Harry"),
+            Lists.mutable.with(
+                    this.newReverseSortedSet("Tom", "Dick", "Harry"),
                     this.newReverseSortedSet("Harry", "Tom", "Dick"),
                     this.newReverseSortedSet("Dick", "Harry", "Tom"));
 
@@ -127,13 +140,14 @@ public class SetsTest
                 this.uniqueSortedSets.get(2),
                 "Dick", "Fido", "Harry", "Jane", "Mary", "Sarah", "Spike", "Spuds", "Tom");
 
-        //TODO: union operations on sorted sets will not pass identity test until SortedSetAdapter is implemented
-//        this.assertUnionProperties(this.<String>containsExactlyInOrderBlock(),
-//                                   this.<String>setsEqualAndSortedBlock(),
-//                                   this.uniqueReverseSortedSets.get(0),
-//                                   this.uniqueReverseSortedSets.get(1),
-//                                   this.uniqueReverseSortedSets.get(2),
-//                                   "Tom", "Spuds", "Spike", "Sarah", "Mary", "Jane", "Harry", "Fido", "Dick");
+        // TODO: union operations on sorted sets will not pass identity test until SortedSetAdapter is implemented
+        // this.assertUnionProperties(
+        //         this.<String>containsExactlyInOrderBlock(),
+        //         this.<String>setsEqualAndSortedBlock(),
+        //         this.uniqueReverseSortedSets.get(0),
+        //         this.uniqueReverseSortedSets.get(1),
+        //         this.uniqueReverseSortedSets.get(2),
+        //         "Tom", "Spuds", "Spike", "Sarah", "Mary", "Jane", "Harry", "Fido", "Dick");
     }
 
     @Test
@@ -157,13 +171,14 @@ public class SetsTest
                 this.overlappingSortedSets.get(2),
                 "Dick", "Harry", "Larry", "Paul", "Tom");
 
-        //TODO: union operations on sorted sets will not pass identity test until SortedSetAdapter is implemented
-//        this.assertUnionProperties(this.<String>containsExactlyInOrderBlock(),
-//                                   this.<String>setsEqualAndSortedBlock(),
-//                                   this.overlappingReverseSortedSets.get(0),
-//                                   this.overlappingReverseSortedSets.get(1),
-//                                   this.overlappingReverseSortedSets.get(2),
-//                                   "Tom", "Paul", "Larry", "Harry", "Dick");
+        // TODO: union operations on sorted sets will not pass identity test until SortedSetAdapter is implemented
+        // this.assertUnionProperties(
+        //         this.<String>containsExactlyInOrderBlock(),
+        //         this.<String>setsEqualAndSortedBlock(),
+        //         this.overlappingReverseSortedSets.get(0),
+        //         this.overlappingReverseSortedSets.get(1),
+        //         this.overlappingReverseSortedSets.get(2),
+        //         "Tom", "Paul", "Larry", "Harry", "Dick");
     }
 
     @Test
@@ -187,13 +202,14 @@ public class SetsTest
                 this.identicalSortedSets.get(2),
                 "Dick", "Harry", "Tom");
 
-        //TODO: union operations on sorted sets will not pass identity test until SortedSetAdapter is implemented
-//        this.assertUnionProperties(this.<String>containsExactlyInOrderBlock(),
-//                                   this.<String>setsEqualAndSortedBlock(),
-//                                   this.identicalReverseSortedSets.get(0),
-//                                   this.identicalReverseSortedSets.get(1),
-//                                   this.identicalReverseSortedSets.get(2),
-//                                   "Tom", "Harry", "Dick");
+        // TODO: union operations on sorted sets will not pass identity test until SortedSetAdapter is implemented
+        // this.assertUnionProperties(
+        //         this.<String>containsExactlyInOrderBlock(),
+        //         this.<String>setsEqualAndSortedBlock(),
+        //         this.identicalReverseSortedSets.get(0),
+        //         this.identicalReverseSortedSets.get(1),
+        //         this.identicalReverseSortedSets.get(2),
+        //         "Tom", "Harry", "Dick");
     }
 
     @Test
@@ -220,7 +236,8 @@ public class SetsTest
     @Test
     public void intersectUnique()
     {
-        this.assertIntersectionProperties(this.containsExactlyProcedure(),
+        this.assertIntersectionProperties(
+                this.containsExactlyProcedure(),
                 Verify::assertSetsEqual,
                 this.uniqueSets.get(0),
                 this.uniqueSets.get(1),
@@ -230,13 +247,15 @@ public class SetsTest
     @Test
     public void intersectUniqueSorted()
     {
-        this.assertIntersectionProperties(this.containsExactlyInOrderProcedure(),
+        this.assertIntersectionProperties(
+                this.containsExactlyInOrderProcedure(),
                 this::assertSetsEqualAndSorted,
                 this.uniqueSortedSets.get(0),
                 this.uniqueSortedSets.get(1),
                 this.uniqueSortedSets.get(2));
 
-        this.assertIntersectionProperties(this.containsExactlyInOrderProcedure(),
+        this.assertIntersectionProperties(
+                this.containsExactlyInOrderProcedure(),
                 this::assertSetsEqualAndSorted,
                 this.uniqueReverseSortedSets.get(0),
                 this.uniqueReverseSortedSets.get(1),
@@ -246,7 +265,8 @@ public class SetsTest
     @Test
     public void intersectOverlapping()
     {
-        this.assertIntersectionProperties(this.containsExactlyProcedure(),
+        this.assertIntersectionProperties(
+                this.containsExactlyProcedure(),
                 Verify::assertSetsEqual,
                 this.overlappingSets.get(0),
                 this.overlappingSets.get(1),
@@ -257,14 +277,16 @@ public class SetsTest
     @Test
     public void intersectOverlappingSorted()
     {
-        this.assertIntersectionProperties(this.containsExactlyInOrderProcedure(),
+        this.assertIntersectionProperties(
+                this.containsExactlyInOrderProcedure(),
                 this::assertSetsEqualAndSorted,
                 this.overlappingSortedSets.get(0),
                 this.overlappingSortedSets.get(1),
                 this.overlappingSortedSets.get(2),
                 "Dick");
 
-        this.assertIntersectionProperties(this.containsExactlyInOrderProcedure(),
+        this.assertIntersectionProperties(
+                this.containsExactlyInOrderProcedure(),
                 this::assertSetsEqualAndSorted,
                 this.overlappingReverseSortedSets.get(0),
                 this.overlappingReverseSortedSets.get(1),
@@ -325,7 +347,8 @@ public class SetsTest
     @Test
     public void differenceUnique()
     {
-        this.assertForwardAndBackward(this.containsExactlyProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyProcedure(),
                 Sets::difference,
                 this.uniqueSets.get(0),
                 this.uniqueSets.get(1),
@@ -336,7 +359,8 @@ public class SetsTest
     @Test
     public void differenceUniqueSorted()
     {
-        this.assertForwardAndBackward(this.containsExactlyInOrderProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyInOrderProcedure(),
                 Sets::difference,
                 this.uniqueSortedSets.get(0),
                 this.uniqueSortedSets.get(1),
@@ -347,7 +371,8 @@ public class SetsTest
     @Test
     public void differenceOverlapping()
     {
-        this.assertForwardAndBackward(this.containsExactlyProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyProcedure(),
                 Sets::difference,
                 this.overlappingSets.get(0),
                 this.overlappingSets.get(1),
@@ -358,7 +383,8 @@ public class SetsTest
     @Test
     public void differenceOverlappingSorted()
     {
-        this.assertForwardAndBackward(this.containsExactlyInOrderProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyInOrderProcedure(),
                 Sets::difference,
                 this.overlappingSortedSets.get(0),
                 this.overlappingSortedSets.get(1),
@@ -369,7 +395,8 @@ public class SetsTest
     @Test
     public void differenceIdentical()
     {
-        this.assertForwardAndBackward(this.containsExactlyProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyProcedure(),
                 Sets::difference,
                 this.identicalSets.get(0),
                 this.identicalSets.get(1),
@@ -380,7 +407,8 @@ public class SetsTest
     @Test
     public void differenceIdenticalSorted()
     {
-        this.assertForwardAndBackward(this.containsExactlyInOrderProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyInOrderProcedure(),
                 Sets::difference,
                 this.identicalSortedSets.get(0),
                 this.identicalSortedSets.get(1),
@@ -421,7 +449,8 @@ public class SetsTest
     @Test
     public void symmetricDifferenceUnique()
     {
-        this.assertForwardAndBackward(this.containsExactlyProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyProcedure(),
                 Sets::symmetricDifference,
                 this.uniqueSets.get(0),
                 this.uniqueSets.get(1),
@@ -432,7 +461,8 @@ public class SetsTest
     @Test
     public void symmetricDifferenceUniqueSorted()
     {
-        this.assertForwardAndBackward(this.containsExactlyInOrderProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyInOrderProcedure(),
                 Sets::symmetricDifference,
                 this.uniqueSortedSets.get(0),
                 this.uniqueSortedSets.get(1),
@@ -443,7 +473,8 @@ public class SetsTest
     @Test
     public void symmetricDifferenceOverlapping()
     {
-        this.assertForwardAndBackward(this.containsExactlyProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyProcedure(),
                 Sets::symmetricDifference,
                 this.overlappingSets.get(0),
                 this.overlappingSets.get(1),
@@ -454,7 +485,8 @@ public class SetsTest
     @Test
     public void symmetricDifferenceOverlappingSorted()
     {
-        this.assertForwardAndBackward(this.containsExactlyInOrderProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyInOrderProcedure(),
                 Sets::symmetricDifference,
                 this.overlappingSortedSets.get(0),
                 this.overlappingSortedSets.get(1),
@@ -465,7 +497,8 @@ public class SetsTest
     @Test
     public void symmetricDifferenceIdentical()
     {
-        this.assertForwardAndBackward(this.containsExactlyProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyProcedure(),
                 Sets::symmetricDifference,
                 this.identicalSets.get(0),
                 this.identicalSets.get(1),
@@ -476,7 +509,8 @@ public class SetsTest
     @Test
     public void symmetricDifferenceIdenticalSorted()
     {
-        this.assertForwardAndBackward(this.containsExactlyInOrderProcedure(),
+        this.assertForwardAndBackward(
+                this.containsExactlyInOrderProcedure(),
                 Sets::symmetricDifference,
                 this.identicalSortedSets.get(0),
                 this.identicalSortedSets.get(1),
@@ -608,7 +642,7 @@ public class SetsTest
     {
         Set<E> set1 = function1.value(setA, function2.value(setB, setC));
         Set<E> set2 = function2.value(function1.value(setA, setB), function1.value(setA, setC));
-        //TODO: setsEqual will fail on some sorted sets until SortableSetAdapter is implemented
+        // TODO: setsEqual will fail on some sorted sets until SortableSetAdapter is implemented
         //setsEqualProcedure.value(set1, set2);
     }
 
@@ -688,6 +722,8 @@ public class SetsTest
         Verify.assertInstanceOf(ImmutableSet.class, setFactory.of(1, 2, 3, 4, 5));
         Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4, 5), setFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3, 4, 5)));
         Verify.assertInstanceOf(ImmutableSet.class, setFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3, 4, 5)));
+        Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4, 5), setFactory.fromStream(Stream.of(1, 2, 3, 4, 5)));
+        Verify.assertInstanceOf(ImmutableSet.class, setFactory.fromStream(Stream.of(1, 2, 3, 4, 5)));
     }
 
     @Test
@@ -710,6 +746,8 @@ public class SetsTest
         Verify.assertInstanceOf(MutableSet.class, setFactory.of(1, 2, 3, 4, 5));
         Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4, 5), setFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3, 4, 5)));
         Verify.assertInstanceOf(MutableSet.class, setFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3, 4, 5)));
+        Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4, 5), setFactory.fromStream(Stream.of(1, 2, 3, 4, 5)));
+        Verify.assertInstanceOf(MutableSet.class, setFactory.fromStream(Stream.of(1, 2, 3, 4, 5)));
     }
 
     @Test
@@ -717,7 +755,11 @@ public class SetsTest
     {
         FixedSizeSetFactory setFactory = Sets.fixedSize;
         Assert.assertEquals(UnifiedSet.newSet(), setFactory.of());
+        Assert.assertEquals(UnifiedSet.newSet(), setFactory.with());
+        Assert.assertEquals(UnifiedSet.newSet(), setFactory.empty());
         Verify.assertInstanceOf(FixedSizeSet.class, setFactory.of());
+        Verify.assertInstanceOf(FixedSizeSet.class, setFactory.with());
+        Verify.assertInstanceOf(FixedSizeSet.class, setFactory.empty());
         Assert.assertEquals(UnifiedSet.newSetWith(1), setFactory.of(1));
         Verify.assertInstanceOf(FixedSizeSet.class, setFactory.of(1));
         Assert.assertEquals(UnifiedSet.newSetWith(1, 2), setFactory.of(1, 2));
@@ -726,6 +768,29 @@ public class SetsTest
         Verify.assertInstanceOf(FixedSizeSet.class, setFactory.of(1, 2, 3));
         Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4), setFactory.of(1, 2, 3, 4));
         Verify.assertInstanceOf(FixedSizeSet.class, setFactory.of(1, 2, 3, 4));
+        Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4), setFactory.ofAll(Sets.mutable.of(1, 2, 3, 4)));
+        Verify.assertInstanceOf(FixedSizeSet.class, setFactory.ofAll(Sets.mutable.of(1, 2, 3, 4)));
+        Assert.assertEquals(UnifiedSet.newSetWith(1, 2, 3, 4), setFactory.fromStream(Stream.of(1, 2, 3, 4)));
+        Verify.assertInstanceOf(FixedSizeSet.class, setFactory.fromStream(Stream.of(1, 2, 3, 4)));
+    }
+
+    @Test
+    public void multiReader()
+    {
+        MultiReaderSetFactory setFactory = Sets.multiReader;
+        Assert.assertEquals(MultiReaderUnifiedSet.newSet(), setFactory.of());
+        Verify.assertInstanceOf(MultiReaderSet.class, setFactory.of());
+        Assert.assertEquals(MultiReaderUnifiedSet.newSet(), setFactory.with());
+        Verify.assertInstanceOf(MultiReaderSet.class, setFactory.with());
+        Assert.assertEquals(MultiReaderUnifiedSet.newSet(), setFactory.ofInitialCapacity(1));
+        Verify.assertInstanceOf(MultiReaderSet.class, setFactory.ofInitialCapacity(1));
+        Verify.assertThrows(IllegalArgumentException.class, () -> setFactory.ofInitialCapacity(-1));
+        Assert.assertEquals(MultiReaderUnifiedSet.newSetWith(1), setFactory.of(1));
+        Verify.assertInstanceOf(MultiReaderSet.class, setFactory.of(1));
+        Assert.assertEquals(MultiReaderUnifiedSet.newSetWith(1, 2, 3), setFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3)));
+        Verify.assertInstanceOf(MultiReaderSet.class, setFactory.ofAll(UnifiedSet.newSetWith(1, 2, 3)));
+        Assert.assertEquals(MultiReaderUnifiedSet.newSetWith(1, 2, 3), setFactory.fromStream(Stream.of(1, 2, 3)));
+        Verify.assertInstanceOf(MultiReaderSet.class, setFactory.fromStream(Stream.of(1, 2, 3)));
     }
 
     @Test
@@ -784,8 +849,7 @@ public class SetsTest
                 Tuples.pair(1, 1),
                 Tuples.pair(1, 2),
                 Tuples.pair(2, 1),
-                Tuples.pair(2, 2)
-        );
+                Tuples.pair(2, 2));
         Assert.assertEquals(expectedCartesianProduct, Sets.cartesianProduct(set1, set2).toBag());
     }
 
@@ -844,12 +908,36 @@ public class SetsTest
     }
 
     @Test
-    public void newSet()
+    public void ofAllImmutableSet()
     {
         for (int i = 1; i <= 5; i++)
         {
             Interval interval = Interval.oneTo(i);
             Verify.assertEqualsAndHashCode(UnifiedSet.newSet(interval), Sets.immutable.ofAll(interval));
+        }
+    }
+
+    @Test
+    public void ofAllMutableSet()
+    {
+        for (int i = 1; i <= 5; i++)
+        {
+            Interval interval = Interval.oneTo(i);
+            Verify.assertEqualsAndHashCode(UnifiedSet.newSet(interval), Sets.mutable.ofAll(interval));
+            Stream<Integer> stream = IntStream.rangeClosed(1, i).boxed();
+            Verify.assertEqualsAndHashCode(UnifiedSet.newSet(interval), Sets.mutable.fromStream(stream));
+        }
+    }
+
+    @Test
+    public void ofAllFixedSizeSet()
+    {
+        for (int i = 1; i <= 5; i++)
+        {
+            Interval interval = Interval.oneTo(i);
+            Verify.assertEqualsAndHashCode(UnifiedSet.newSet(interval), Sets.fixedSize.ofAll(interval));
+            Stream<Integer> stream = IntStream.rangeClosed(1, i).boxed();
+            Verify.assertEqualsAndHashCode(UnifiedSet.newSet(interval), Sets.fixedSize.fromStream(stream));
         }
     }
 
@@ -986,7 +1074,6 @@ public class SetsTest
 
     private void assertPresizedSetSizeEquals(int initialCapacity, UnifiedSet<String> set)
     {
-        Assume.assumeTrue(System.getProperty("java.version").startsWith("1.8."));
         try
         {
             Field tableField = UnifiedSet.class.getDeclaredField("table");

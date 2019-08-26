@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -11,8 +11,17 @@
 package org.eclipse.collections.impl.block.factory;
 
 import java.util.Collection;
+import java.util.DoubleSummaryStatistics;
+import java.util.IntSummaryStatistics;
+import java.util.LongSummaryStatistics;
 
+import org.eclipse.collections.api.block.function.Function;
+import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function3;
+import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
+import org.eclipse.collections.api.block.function.primitive.FloatFunction;
+import org.eclipse.collections.api.block.function.primitive.IntFunction;
+import org.eclipse.collections.api.block.function.primitive.LongFunction;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.impl.block.procedure.checked.CheckedProcedure2;
@@ -79,6 +88,46 @@ public final class Procedures2
     public static <T> Procedure2<T, Collection<T>> removeFromCollection()
     {
         return (Procedure2<T, Collection<T>>) REMOVE_FROM_COLLECTION;
+    }
+
+    /**
+     * Use with {@link org.eclipse.collections.api.RichIterable#aggregateInPlaceBy(Function, Function0, Procedure2)}
+     *
+     * @since 9.2.
+     */
+    public static <T> Procedure2<DoubleSummaryStatistics, T> summarizeDouble(DoubleFunction<? super T> function)
+    {
+        return (DoubleSummaryStatistics dss, T value) -> dss.accept(function.doubleValueOf(value));
+    }
+
+    /**
+     * Use with {@link org.eclipse.collections.api.RichIterable#aggregateInPlaceBy(Function, Function0, Procedure2)}
+     *
+     * @since 9.2.
+     */
+    public static <T> Procedure2<DoubleSummaryStatistics, T> summarizeFloat(FloatFunction<? super T> function)
+    {
+        return (DoubleSummaryStatistics dss, T value) -> dss.accept((double) function.floatValueOf(value));
+    }
+
+    /**
+     * Use with {@link org.eclipse.collections.api.RichIterable#aggregateInPlaceBy(Function, Function0, Procedure2)}
+     *
+     * @since 9.2.
+     */
+    public static <T> Procedure2<IntSummaryStatistics, T> summarizeInt(IntFunction<? super T> function)
+    {
+        return (IntSummaryStatistics iss, T value) -> iss.accept(function.intValueOf(value));
+    }
+
+    /**
+     * Use with {@link org.eclipse.collections.api.RichIterable#aggregateInPlaceBy(Function, Function0, Procedure2)}
+     *
+     * @since 9.2.
+     */
+    public static <T> Procedure2<LongSummaryStatistics, T> summarizeLong(LongFunction<? super T> function)
+    {
+        return (LongSummaryStatistics lss, T value) -> lss.accept(function.longValueOf(value));
     }
 
     private static final class ProcedureAdapter<T, P> implements Procedure2<T, P>

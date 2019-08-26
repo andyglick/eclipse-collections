@@ -16,10 +16,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -577,12 +579,14 @@ public class IterateTest
     {
         MutableList<Integer> list = Lists.mutable.of(1, 2, 2, 3, 3, 3);
 
-        Pair[] expectedPairs = {Tuples.pair("Key1", "1"),
+        Pair<String, String>[] expectedPairs = new Pair[]{
+                Tuples.pair("Key1", "1"),
                 Tuples.pair("Key2", "2"),
                 Tuples.pair("Key2", "2"),
                 Tuples.pair("Key3", "3"),
                 Tuples.pair("Key3", "3"),
-                Tuples.pair("Key3", "3")};
+                Tuples.pair("Key3", "3")
+        };
         Function<Integer, String> keyFunction = each -> "Key" + each;
         Function<Integer, String> valueFunction = String::valueOf;
         MutableListMultimap<String, String> actualMultimap1 = Iterate.groupByAndCollect(list, keyFunction, valueFunction, Multimaps.mutable.list.empty());
@@ -787,6 +791,21 @@ public class IterateTest
     }
 
     @Test
+    public void toMapTarget()
+    {
+        MutableSet<Integer> set = UnifiedSet.newSet(this.getIntegerSet());
+        Map<String, Integer> map =  Iterate.toMap(set, String::valueOf, object -> 10 * object, new HashMap<>());
+        Verify.assertSize(5, map);
+        Object expectedValue = 10;
+        Object expectedKey = "1";
+        Verify.assertContainsKeyValue(expectedKey, expectedValue, map);
+        Verify.assertContainsKeyValue("2", 20, map);
+        Verify.assertContainsKeyValue("3", 30, map);
+        Verify.assertContainsKeyValue("4", 40, map);
+        Verify.assertContainsKeyValue("5", 50, map);
+    }
+
+    @Test
     public void addToMap()
     {
         MutableSet<Integer> set = this.getIntegerSet();
@@ -824,7 +843,8 @@ public class IterateTest
     {
         MutableList<Integer> list = Lists.mutable.of(1, 2, 2, 3, 3, 3);
 
-        Pair[] expectedPairs = {Tuples.pair("Key1", "1"),
+        Pair<String, String>[] expectedPairs = new Pair[]{
+                Tuples.pair("Key1", "1"),
                 Tuples.pair("Key1", "1"),
                 Tuples.pair("Key2", "1"),
                 Tuples.pair("Key2", "2"),
@@ -835,7 +855,8 @@ public class IterateTest
                 Tuples.pair("Key3", "1"),
                 Tuples.pair("Key3", "3"),
                 Tuples.pair("Key3", "1"),
-                Tuples.pair("Key3", "3")};
+                Tuples.pair("Key3", "3")
+        };
 
         Function<Integer, String> keyFunction = each -> "Key" + each;
         Function<Integer, Iterable<String>> valuesFunction = each -> Lists.mutable.of("1", String.valueOf(each));
@@ -873,7 +894,8 @@ public class IterateTest
         Assert.assertSame(expectedMultimap7.comparator(), actualMultimap7.comparator());
 
         // Below tests are for examples only. They do not add any coverage.
-        BagMultimap<String, String> expectedMultimap8 = HashBagMultimap.newMultimap(Tuples.pair("Key1", "1"),
+        BagMultimap<String, String> expectedMultimap8 = HashBagMultimap.newMultimap(
+                Tuples.pair("Key1", "1"),
                 Tuples.pair("Key2", "1"),
                 Tuples.pair("Key2", "2"),
                 Tuples.pair("Key2", "1"),
@@ -887,7 +909,8 @@ public class IterateTest
         MutableBagMultimap<String, String> actualMultimap8 = Iterate.toMultimap(list, keyFunction, each -> Sets.mutable.of("1", "1", String.valueOf(each)), Multimaps.mutable.bag.empty());
         Verify.assertBagMultimapsEqual(expectedMultimap8, actualMultimap8);
 
-        MutableBagMultimap<String, String> expectedMultimap9 = HashBagMultimap.newMultimap(Tuples.pair("Key1", "1"),
+        MutableBagMultimap<String, String> expectedMultimap9 = HashBagMultimap.newMultimap(
+                Tuples.pair("Key1", "1"),
                 Tuples.pair("Key1", "1"),
                 Tuples.pair("Key1", "1"),
                 Tuples.pair("Key2", "1"),

@@ -17,6 +17,7 @@ import org.eclipse.collections.api.bag.ImmutableBag;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
@@ -159,12 +160,21 @@ public class UnmodifiableBagTest
         Assert.assertEquals(iBag(1, 1, 1, 1, 3, 3), integers.selectByOccurrences(IntPredicates.isEven()));
     }
 
+    @Test
+    public void selectDuplicates()
+    {
+        Assert.assertEquals(
+                UnmodifiableBag.of(HashBag.newBagWith(1, 1, 1, 1, 2, 2, 2, 3, 3)),
+                UnmodifiableBag.of(HashBag.newBagWith(0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5)).selectDuplicates());
+    }
+
     @Override
     @Test
     public void collectBoolean()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(0, 1, 2, 2));
-        Assert.assertEquals(BooleanHashBag.newBagWith(false, true, true, true),
+        Assert.assertEquals(
+                BooleanHashBag.newBagWith(false, true, true, true),
                 integers.collectBoolean(PrimitiveFunctions.integerIsPositive()));
     }
 
@@ -173,7 +183,8 @@ public class UnmodifiableBagTest
     public void collectByte()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(ByteHashBag.newBagWith((byte) 1, (byte) 2, (byte) 2, (byte) 3, (byte) 3, (byte) 3),
+        Assert.assertEquals(
+                ByteHashBag.newBagWith((byte) 1, (byte) 2, (byte) 2, (byte) 3, (byte) 3, (byte) 3),
                 integers.collectByte(PrimitiveFunctions.unboxIntegerToByte()));
     }
 
@@ -182,7 +193,8 @@ public class UnmodifiableBagTest
     public void collectChar()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(CharHashBag.newBagWith('A', 'B', 'B', 'C', 'C', 'C'),
+        Assert.assertEquals(
+                CharHashBag.newBagWith('A', 'B', 'B', 'C', 'C', 'C'),
                 integers.collectChar(integer -> (char) (integer.intValue() + 64)));
     }
 
@@ -191,7 +203,8 @@ public class UnmodifiableBagTest
     public void collectDouble()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(DoubleHashBag.newBagWith(1.0d, 2.0d, 2.0d, 3.0d, 3.0d, 3.0d),
+        Assert.assertEquals(
+                DoubleHashBag.newBagWith(1.0d, 2.0d, 2.0d, 3.0d, 3.0d, 3.0d),
                 integers.collectDouble(PrimitiveFunctions.unboxIntegerToDouble()));
     }
 
@@ -200,7 +213,8 @@ public class UnmodifiableBagTest
     public void collectFloat()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(FloatHashBag.newBagWith(1.0f, 2.0f, 2.0f, 3.0f, 3.0f, 3.0f),
+        Assert.assertEquals(
+                FloatHashBag.newBagWith(1.0f, 2.0f, 2.0f, 3.0f, 3.0f, 3.0f),
                 integers.collectFloat(PrimitiveFunctions.unboxIntegerToFloat()));
     }
 
@@ -209,7 +223,8 @@ public class UnmodifiableBagTest
     public void collectInt()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(IntHashBag.newBagWith(1, 2, 2, 3, 3, 3),
+        Assert.assertEquals(
+                IntHashBag.newBagWith(1, 2, 2, 3, 3, 3),
                 integers.collectInt(PrimitiveFunctions.unboxIntegerToInt()));
     }
 
@@ -218,7 +233,8 @@ public class UnmodifiableBagTest
     public void collectLong()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(LongHashBag.newBagWith(1L, 2L, 2L, 3L, 3L, 3L),
+        Assert.assertEquals(
+                LongHashBag.newBagWith(1L, 2L, 2L, 3L, 3L, 3L),
                 integers.collectLong(PrimitiveFunctions.unboxIntegerToLong()));
     }
 
@@ -227,7 +243,8 @@ public class UnmodifiableBagTest
     public void collectShort()
     {
         MutableBag<Integer> integers = UnmodifiableBag.of(HashBag.newBagWith(1, 2, 2, 3, 3, 3));
-        Assert.assertEquals(ShortHashBag.newBagWith((short) 1, (short) 2, (short) 2, (short) 3, (short) 3, (short) 3),
+        Assert.assertEquals(
+                ShortHashBag.newBagWith((short) 1, (short) 2, (short) 2, (short) 3, (short) 3, (short) 3),
                 integers.collectShort(PrimitiveFunctions.unboxIntegerToShort()));
     }
 
@@ -275,5 +292,14 @@ public class UnmodifiableBagTest
         Assert.assertEquals(1, bottom5.getFirst().getTwo());
         Assert.assertEquals("five", bottom5.getLast().getOne());
         Assert.assertEquals(5, bottom5.getLast().getTwo());
+    }
+
+    @Test
+    public void selectUnique()
+    {
+        MutableBag<String> bag = Bags.mutable.with("0", "1", "1", "1", "1", "2", "2", "2", "3", "3", "4", "5").asUnmodifiable();
+        MutableSet<String> expected = Sets.mutable.with("0", "4", "5");
+        MutableSet<String> actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
     }
 }

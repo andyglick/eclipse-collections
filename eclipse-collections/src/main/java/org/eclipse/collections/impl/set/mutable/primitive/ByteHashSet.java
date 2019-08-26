@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -20,6 +20,7 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.collections.api.ByteIterable;
 import org.eclipse.collections.api.LazyByteIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.MutableByteBag;
 import org.eclipse.collections.api.block.function.primitive.ByteToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ObjectByteToObjectFunction;
@@ -27,6 +28,7 @@ import org.eclipse.collections.api.block.predicate.primitive.BytePredicate;
 import org.eclipse.collections.api.block.procedure.primitive.ByteProcedure;
 import org.eclipse.collections.api.iterator.ByteIterator;
 import org.eclipse.collections.api.iterator.MutableByteIterator;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableByteList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
@@ -35,6 +37,7 @@ import org.eclipse.collections.api.set.primitive.ImmutableByteSet;
 import org.eclipse.collections.api.set.primitive.MutableByteSet;
 import org.eclipse.collections.impl.bag.mutable.primitive.ByteHashBag;
 import org.eclipse.collections.impl.block.procedure.checked.primitive.CheckedByteProcedure;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.ByteSets;
 import org.eclipse.collections.impl.lazy.primitive.LazyByteIterableAdapter;
 import org.eclipse.collections.impl.list.mutable.primitive.ByteArrayList;
@@ -522,6 +525,15 @@ public final class ByteHashSet implements MutableByteSet, Externalizable
                 mutableSet.bitGroup1, mutableSet.bitGroup2, mutableSet.size);
     }
 
+    /**
+     * @since 9.2.
+     */
+    @Override
+    public ByteHashSet newEmpty()
+    {
+        return new ByteHashSet();
+    }
+
     @Override
     public MutableByteIterator byteIterator()
     {
@@ -959,6 +971,37 @@ public final class ByteHashSet implements MutableByteSet, Externalizable
         return result;
     }
 
+    @Override
+    public RichIterable<ByteIterable> chunk(int size)
+    {
+        if (size <= 0)
+        {
+            throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+        }
+        MutableList<ByteIterable> result = Lists.mutable.empty();
+        if (this.notEmpty())
+        {
+            if (this.size() <= size)
+            {
+                result.add(ByteSets.mutable.withAll(this));
+            }
+            else
+            {
+                ByteIterator iterator = this.byteIterator();
+                while (iterator.hasNext())
+                {
+                    MutableByteSet batch = ByteSets.mutable.empty();
+                    for (int i = 0; i < size && iterator.hasNext(); i++)
+                    {
+                        batch.add(iterator.next());
+                    }
+                    result.add(batch);
+                }
+            }
+        }
+        return result;
+    }
+
     private static final class ImmutableByteHashSet implements ImmutableByteSet, Serializable
     {
         private static final long serialVersionUID = 1L;
@@ -968,8 +1011,12 @@ public final class ByteHashSet implements MutableByteSet, Externalizable
         private final long bitGroup4; // 64 to 127
         private final short size;
 
-        private ImmutableByteHashSet(long bitGroup3, long bitGroup4,
-                long bitGroup1, long bitGroup2, short size)
+        private ImmutableByteHashSet(
+                long bitGroup3,
+                long bitGroup4,
+                long bitGroup1,
+                long bitGroup2,
+                short size)
         {
             this.bitGroup3 = bitGroup3;
             this.bitGroup4 = bitGroup4;
@@ -1495,6 +1542,32 @@ public final class ByteHashSet implements MutableByteSet, Externalizable
                 result = function.valueOf(result, iterator.next());
             }
 
+            return result;
+        }
+
+        @Override
+        public RichIterable<ByteIterable> chunk(int size)
+        {
+            if (size <= 0)
+            {
+                throw new IllegalArgumentException("Size for groups must be positive but was: " + size);
+            }
+            if (this.isEmpty())
+            {
+                return Lists.mutable.empty();
+            }
+
+            ByteIterator iterator = this.byteIterator();
+            MutableList<ByteIterable> result = Lists.mutable.empty();
+            while (iterator.hasNext())
+            {
+                MutableByteSet batch = ByteSets.mutable.empty();
+                for (int i = 0; i < size && iterator.hasNext(); i++)
+                {
+                    batch.add(iterator.next());
+                }
+                result.add(batch);
+            }
             return result;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.DoubleSummaryStatistics;
 import java.util.IntSummaryStatistics;
 import java.util.LongSummaryStatistics;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -27,6 +28,7 @@ import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.MutableBagIterable;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
@@ -54,9 +56,11 @@ import org.eclipse.collections.api.collection.primitive.MutableFloatCollection;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
+import org.eclipse.collections.api.factory.Bags;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.ObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.ObjectLongMap;
 import org.eclipse.collections.api.map.sorted.MutableSortedMap;
@@ -70,7 +74,7 @@ import org.eclipse.collections.api.tuple.Pair;
 
 /**
  * RichIterable is an interface which extends the InternalIterable interface with several internal iterator methods, from
- * the Smalltalk Collection protocol.  These include select, reject, detect, collect, injectInto, anySatisfy,
+ * the Smalltalk Collection protocol. These include select, reject, detect, collect, injectInto, anySatisfy,
  * allSatisfy. The API also includes converter methods to convert a RichIterable to a List (toList), to a sorted
  * List (toSortedList), to a Set (toSet), and to a Map (toMap).
  *
@@ -79,6 +83,12 @@ import org.eclipse.collections.api.tuple.Pair;
 public interface RichIterable<T>
         extends InternalIterable<T>
 {
+    @Override
+    default void forEach(Procedure<? super T> procedure)
+    {
+        this.each(procedure);
+    }
+
     /**
      * Returns the number of items in this iterable.
      *
@@ -104,9 +114,20 @@ public interface RichIterable<T>
     }
 
     /**
-     * Returns the first element of an iterable.  In the case of a List it is the element at the first index.  In the
-     * case of any other Collection, it is the first element that would be returned during an iteration.  If the
-     * iterable is empty, null is returned.  If null is a valid element of the container, then a developer would need to
+     * Returns any element of an iterable.
+     *
+     * @return an element of an iterable.
+     * @since 10.0
+     */
+    default T getAny()
+    {
+        return this.getFirst();
+    }
+
+    /**
+     * Returns the first element of an iterable. In the case of a List it is the element at the first index. In the
+     * case of any other Collection, it is the first element that would be returned during an iteration. If the
+     * iterable is empty, null is returned. If null is a valid element of the container, then a developer would need to
      * check to see if the iterable is empty to validate that a null result was not due to the container being empty.
      * <p>
      * The order of Sets are not guaranteed (except for TreeSets and other Ordered Set implementations), so if you use
@@ -119,9 +140,9 @@ public interface RichIterable<T>
     T getFirst();
 
     /**
-     * Returns the last element of an iterable.  In the case of a List it is the element at the last index.  In the case
-     * of any other Collection, it is the last element that would be returned during an iteration.  If the iterable is
-     * empty, null is returned.  If null is a valid element of the container, then a developer would need to check to
+     * Returns the last element of an iterable. In the case of a List it is the element at the last index. In the case
+     * of any other Collection, it is the last element that would be returned during an iteration. If the iterable is
+     * empty, null is returned. If null is a valid element of the container, then a developer would need to check to
      * see if the iterable is empty to validate that a null result was not due to the container being empty.
      * <p>
      * The order of Sets are not guaranteed (except for TreeSets and other Ordered Set implementations), so if you use
@@ -185,7 +206,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;Person&gt; tapped =
-     *     people.<b>tap</b>(person -> LOGGER.info(person.getName()));
+     *     people.<b>tap</b>(person -&gt; LOGGER.info(person.getName()));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -211,7 +232,7 @@ public interface RichIterable<T>
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * people.each(person -> LOGGER.info(person.getName()));
+     * people.each(person -&gt; LOGGER.info(person.getName()));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -235,13 +256,13 @@ public interface RichIterable<T>
     void each(Procedure<? super T> procedure);
 
     /**
-     * Returns all elements of the source collection that return true when evaluating the predicate.  This method is also
+     * Returns all elements of the source collection that return true when evaluating the predicate. This method is also
      * commonly called filter.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;Person&gt; selected =
-     *     people.<b>select</b>(person -> person.getAddress().getCity().equals("London"));
+     *     people.<b>select</b>(person -&gt; person.getAddress().getCity().equals("London"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -254,6 +275,7 @@ public interface RichIterable<T>
      *             return person.getAddress().getCity().equals("London");
      *         }
      *     });
+     * </pre>
      *
      * @since 1.0
      */
@@ -265,7 +287,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableList&lt;Person&gt; selected =
-     *     people.select(person -> person.person.getLastName().equals("Smith"), Lists.mutable.empty());
+     *     people.select(person -&gt; person.person.getLastName().equals("Smith"), Lists.mutable.empty());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -297,7 +319,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;Person&gt; selected =
-     *     people.selectWith((Person person, Integer age) -> person.getAge() >= age, Integer.valueOf(18));
+     *     people.selectWith((Person person, Integer age) -&gt; person.getAge()&gt;= age, Integer.valueOf(18));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -307,7 +329,7 @@ public interface RichIterable<T>
      *     {
      *         public boolean accept(Person person, Integer age)
      *         {
-     *             return person.getAge() >= age;
+     *             return person.getAge()&gt;= age;
      *         }
      *     }, Integer.valueOf(18));
      * </pre>
@@ -327,7 +349,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableList&lt;Person&gt; selected =
-     *     people.selectWith((Person person, Integer age) -> person.getAge() >= age, Integer.valueOf(18), Lists.mutable.empty());
+     *     people.selectWith((Person person, Integer age) -&gt; person.getAge()&gt;= age, Integer.valueOf(18), Lists.mutable.empty());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -337,7 +359,7 @@ public interface RichIterable<T>
      *     {
      *         public boolean accept(Person person, Integer age)
      *         {
-     *             return person.getAge() >= age;
+     *             return person.getAge()&gt;= age;
      *         }
      *     }, Integer.valueOf(18), Lists.mutable.empty());
      * </pre>
@@ -356,13 +378,13 @@ public interface RichIterable<T>
             R targetCollection);
 
     /**
-     * Returns all elements of the source collection that return false when evaluating of the predicate.  This method is also
+     * Returns all elements of the source collection that return false when evaluating of the predicate. This method is also
      * sometimes called filterNot and is the equivalent of calling iterable.select(Predicates.not(predicate)).
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;Person&gt; rejected =
-     *     people.reject(person -> person.person.getLastName().equals("Smith"));
+     *     people.reject(person -&gt; person.person.getLastName().equals("Smith"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -391,7 +413,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;Person&gt; rejected =
-     *     people.rejectWith((Person person, Integer age) -> person.getAge() < age, Integer.valueOf(18));
+     *     people.rejectWith((Person person, Integer age) -&gt; person.getAge() &lt; age, Integer.valueOf(18));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -401,7 +423,7 @@ public interface RichIterable<T>
      *     {
      *         public boolean accept(Person person, Integer age)
      *         {
-     *             return person.getAge() < age;
+     *             return person.getAge() &lt; age;
      *         }
      *     }, Integer.valueOf(18));
      * </pre>
@@ -419,7 +441,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableList&lt;Person&gt; rejected =
-     *     people.reject(person -> person.person.getLastName().equals("Smith"), Lists.mutable.empty());
+     *     people.reject(person -&gt; person.person.getLastName().equals("Smith"), Lists.mutable.empty());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -449,7 +471,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableList&lt;Person&gt; rejected =
-     *     people.rejectWith((Person person, Integer age) -> person.getAge() < age, Integer.valueOf(18), Lists.mutable.empty());
+     *     people.rejectWith((Person person, Integer age) -&gt; person.getAge() &lt; age, Integer.valueOf(18), Lists.mutable.empty());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -459,7 +481,7 @@ public interface RichIterable<T>
      *     {
      *         public boolean accept(Person person, Integer age)
      *         {
-     *             return person.getAge() < age;
+     *             return person.getAge() &lt; age;
      *         }
      *     }, Integer.valueOf(18), Lists.mutable.empty());
      * </pre>
@@ -483,7 +505,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * PartitionIterable&lt;Person&gt; newYorkersAndNonNewYorkers =
-     *     people.<b>partition</b>(person -> person.getAddress().getState().getName().equals("New York"));
+     *     people.<b>partition</b>(person -&gt; person.getAddress().getState().getName().equals("New York"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -507,13 +529,13 @@ public interface RichIterable<T>
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
-     * PartitionIterable&lt;Person>&gt newYorkersAndNonNewYorkers =
-     *     people.<b>partitionWith</b>((Person person, String state) -> person.getAddress().getState().getName().equals(state), "New York");
+     * PartitionIterable&lt;Person&gt; newYorkersAndNonNewYorkers =
+     *     people.<b>partitionWith</b>((Person person, String state) -&gt; person.getAddress().getState().getName().equals(state), "New York");
      * </pre>
      * <p>
      * Example using an anonymous inner class:
      * <pre>
-     * PartitionIterable&lt;Person>&gt newYorkersAndNonNewYorkers =
+     * PartitionIterable&lt;Person&gt; newYorkersAndNonNewYorkers =
      *     people.<b>partitionWith</b>(new Predicate2&lt;Person, String&gt;()
      *     {
      *         public boolean accept(Person person, String state)
@@ -534,18 +556,19 @@ public interface RichIterable<T>
      * RichIterable&lt;Integer&gt; integers =
      *     List.mutable.with(new Integer(0), new Long(0L), new Double(0.0)).selectInstancesOf(Integer.class);
      * </pre>
+     *
      * @since 2.0
      */
     <S> RichIterable<S> selectInstancesOf(Class<S> clazz);
 
     /**
      * Returns a new collection with the results of applying the specified function on each element of the source
-     * collection.  This method is also commonly called transform or map.
+     * collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;String&gt; names =
-     *     people.collect(person -> person.getFirstName() + " " + person.getLastName());
+     *     people.collect(person -&gt; person.getFirstName() + " " + person.getLastName());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -571,7 +594,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableList&lt;String&gt; names =
-     *     people.collect(person -> person.getFirstName() + " " + person.getLastName(), Lists.mutable.empty());
+     *     people.collect(person -&gt; person.getFirstName() + " " + person.getLastName(), Lists.mutable.empty());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -596,12 +619,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code boolean} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * BooleanIterable licenses =
-     *     people.collectBoolean(person -> person.hasDrivingLicense());
+     *     people.collectBoolean(person -&gt; person.hasDrivingLicense());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -627,7 +650,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * BooleanArrayList licenses =
-     *     people.collectBoolean(person -> person.hasDrivingLicense(), new BooleanArrayList());
+     *     people.collectBoolean(person -&gt; person.hasDrivingLicense(), new BooleanArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -651,12 +674,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code byte} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * ByteIterable bytes =
-     *     people.collectByte(person -> person.getCode());
+     *     people.collectByte(person -&gt; person.getCode());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -682,7 +705,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * ByteArrayList bytes =
-     *     people.collectByte(person -> person.getCode(), new ByteArrayList());
+     *     people.collectByte(person -&gt; person.getCode(), new ByteArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -706,12 +729,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code char} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * CharIterable chars =
-     *     people.collectChar(person -> person.getMiddleInitial());
+     *     people.collectChar(person -&gt; person.getMiddleInitial());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -737,7 +760,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * CharArrayList chars =
-     *     people.collectChar(person -> person.getMiddleInitial(), new CharArrayList());
+     *     people.collectChar(person -&gt; person.getMiddleInitial(), new CharArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -761,12 +784,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code double} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * DoubleIterable doubles =
-     *     people.collectDouble(person -> person.getMilesFromNorthPole());
+     *     people.collectDouble(person -&gt; person.getMilesFromNorthPole());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -792,7 +815,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * DoubleArrayList doubles =
-     *     people.collectDouble(person -> person.getMilesFromNorthPole(), new DoubleArrayList());
+     *     people.collectDouble(person -&gt; person.getMilesFromNorthPole(), new DoubleArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -816,12 +839,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code float} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * FloatIterable floats =
-     *     people.collectFloat(person -> person.getHeightInInches());
+     *     people.collectFloat(person -&gt; person.getHeightInInches());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -847,7 +870,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * FloatArrayList floats =
-     *     people.collectFloat(person -> person.getHeightInInches(), new FloatArrayList());
+     *     people.collectFloat(person -&gt; person.getHeightInInches(), new FloatArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -871,12 +894,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code int} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * IntIterable ints =
-     *     people.collectInt(person -> person.getAge());
+     *     people.collectInt(person -&gt; person.getAge());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -902,7 +925,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * IntArrayList ints =
-     *     people.collectInt(person -> person.getAge(), new IntArrayList());
+     *     people.collectInt(person -&gt; person.getAge(), new IntArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -926,12 +949,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code long} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * LongIterable longs =
-     *     people.collectLong(person -> person.getGuid());
+     *     people.collectLong(person -&gt; person.getGuid());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -957,7 +980,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * LongArrayList longs =
-     *     people.collectLong(person -> person.getGuid(), new LongArrayList());
+     *     people.collectLong(person -&gt; person.getGuid(), new LongArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -981,12 +1004,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new primitive {@code short} iterable with the results of applying the specified function on each element
-     * of the source collection.  This method is also commonly called transform or map.
+     * of the source collection. This method is also commonly called transform or map.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * ShortIterable shorts =
-     *     people.collectShort(person -> person.getNumberOfJunkMailItemsReceivedPerMonth());
+     *     people.collectShort(person -&gt; person.getNumberOfJunkMailItemsReceivedPerMonth());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1012,7 +1035,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * ShortArrayList shorts =
-     *     people.collectShort(person -> person.getNumberOfJunkMailItemsReceivedPerMonth, new ShortArrayList());
+     *     people.collectShort(person -&gt; person.getNumberOfJunkMailItemsReceivedPerMonth, new ShortArrayList());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1040,7 +1063,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * RichIterable&lt;Integer&gt; integers =
-     *     Lists.mutable.with(1, 2, 3).collectWith((each, parameter) -> each + parameter, Integer.valueOf(1));
+     *     Lists.mutable.with(1, 2, 3).collectWith((each, parameter) -&gt; each + parameter, Integer.valueOf(1));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1071,7 +1094,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * MutableSet&lt;Integer&gt; integers =
-     *     Lists.mutable.with(1, 2, 3).collectWith((each, parameter) -> each + parameter, Integer.valueOf(1), Sets.mutable.empty());
+     *     Lists.mutable.with(1, 2, 3).collectWith((each, parameter) -&gt; each + parameter, Integer.valueOf(1), Sets.mutable.empty());
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1101,12 +1124,12 @@ public interface RichIterable<T>
 
     /**
      * Returns a new collection with the results of applying the specified function on each element of the source
-     * collection, but only for those elements which return true upon evaluation of the predicate.  This is the
+     * collection, but only for those elements which return true upon evaluation of the predicate. This is the
      * the optimized equivalent of calling iterable.select(predicate).collect(function).
      * <p>
      * Example using a Java 8 lambda and method reference:
      * <pre>
-     * RichIterable&lt;String&gt; strings = Lists.mutable.with(1, 2, 3).collectIf(e -> e != null, Object::toString);
+     * RichIterable&lt;String&gt; strings = Lists.mutable.with(1, 2, 3).collectIf(e -&gt; e != null, Object::toString);
      * </pre>
      * <p>
      * Example using Predicates factory:
@@ -1136,9 +1159,9 @@ public interface RichIterable<T>
     /**
      * {@code flatCollect} is a special case of {@link #collect(Function)}. With {@code collect}, when the {@link Function} returns
      * a collection, the result is a collection of collections. {@code flatCollect} outputs a single "flattened" collection
-     * instead.  This method is commonly called flatMap.
+     * instead. This method is commonly called flatMap.
      * <p>
-     * Consider the following example where we have a {@code Person} class, and each {@code Person} has a list of {@code Address} objects.  Take the following {@link Function}:
+     * Consider the following example where we have a {@code Person} class, and each {@code Person} has a list of {@code Address} objects. Take the following {@link Function}:
      * <pre>
      * Function&lt;Person, List&lt;Address&gt;&gt; addressFunction = Person::getAddresses;
      * RichIterable&lt;Person&gt; people = ...;
@@ -1159,6 +1182,14 @@ public interface RichIterable<T>
     <V> RichIterable<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
 
     /**
+     * @since 9.2
+     */
+    default <P, V> RichIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
+
+    /**
      * Same as flatCollect, only the results are collected into the target collection.
      *
      * @param function The {@link Function} to apply
@@ -1169,13 +1200,21 @@ public interface RichIterable<T>
     <V, R extends Collection<V>> R flatCollect(Function<? super T, ? extends Iterable<V>> function, R target);
 
     /**
+     * @since 9.2
+     */
+    default <P, V, R extends Collection<V>> R flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter, R target)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter), target);
+    }
+
+    /**
      * Returns the first element of the iterable for which the predicate evaluates to true or null in the case where no
-     * element returns true.  This method is commonly called find.
+     * element returns true. This method is commonly called find.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * Person person =
-     *     people.detect(person -> person.getFirstName().equals("John") && person.getLastName().equals("Smith"));
+     *     people.detect(person -&gt; person.getFirstName().equals("John") &amp;&amp; person.getLastName().equals("Smith"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1185,7 +1224,7 @@ public interface RichIterable<T>
      *     {
      *         public boolean accept(Person person)
      *         {
-     *             return person.getFirstName().equals("John") && person.getLastName().equals("Smith");
+     *             return person.getFirstName().equals("John") &amp;&amp; person.getLastName().equals("Smith");
      *         }
      *     });
      * </pre>
@@ -1201,7 +1240,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * Person person =
-     *     people.detectWith((person, fullName) -> person.getFullName().equals(fullName), "John Smith");
+     *     people.detectWith((person, fullName) -&gt; person.getFullName().equals(fullName), "John Smith");
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1221,12 +1260,12 @@ public interface RichIterable<T>
     <P> T detectWith(Predicate2<? super T, ? super P> predicate, P parameter);
 
     /**
-     * Returns the first element of the iterable for which the predicate evaluates to true as an Optional.  This method is commonly called find.
+     * Returns the first element of the iterable for which the predicate evaluates to true as an Optional. This method is commonly called find.
      * <p>
      * Example using a Java 8 lambda expression:
      * <pre>
      * Person person =
-     *     people.detectOptional(person -> person.getFirstName().equals("John") && person.getLastName().equals("Smith"));
+     *     people.detectOptional(person -&gt; person.getFirstName().equals("John") &amp;&amp; person.getLastName().equals("Smith"));
      * </pre>
      * <p>
      *
@@ -1241,7 +1280,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * Optional&lt;Person&gt; person =
-     *     people.detectWithOptional((person, fullName) -> person.getFullName().equals(fullName), "John Smith");
+     *     people.detectWithOptional((person, fullName) -&gt; person.getFullName().equals(fullName), "John Smith");
      * </pre>
      * <p>
      *
@@ -1251,7 +1290,7 @@ public interface RichIterable<T>
     <P> Optional<T> detectWithOptional(Predicate2<? super T, ? super P> predicate, P parameter);
 
     /**
-     * Returns the first element of the iterable for which the predicate evaluates to true.  If no element matches
+     * Returns the first element of the iterable for which the predicate evaluates to true. If no element matches
      * the predicate, then returns the value of applying the specified function.
      *
      * @since 1.0
@@ -1279,7 +1318,7 @@ public interface RichIterable<T>
      * Example using a Java 8 lambda expression:
      * <pre>
      * int count =
-     *     people.<b>count</b>(person -> person.getAddress().getState().getName().equals("New York"));
+     *     people.<b>count</b>(person -&gt; person.getAddress().getState().getName().equals("New York"));
      * </pre>
      * <p>
      * Example using an anonymous inner class:
@@ -1357,7 +1396,7 @@ public interface RichIterable<T>
     /**
      * Returns the final result of evaluating function using each element of the iterable and the previous evaluation
      * result as the parameters. The injected value is used for the first parameter of the first evaluation, and the current
-     * item in the iterable is used as the second parameter.  This method is commonly called fold or sometimes reduce.
+     * item in the iterable is used as the second parameter. This method is commonly called fold or sometimes reduce.
      *
      * @since 1.0
      */
@@ -1439,7 +1478,10 @@ public interface RichIterable<T>
      *
      * @since 1.0
      */
-    <V extends Comparable<? super V>> MutableList<T> toSortedListBy(Function<? super T, ? extends V> function);
+    default <V extends Comparable<? super V>> MutableList<T> toSortedListBy(Function<? super T, ? extends V> function)
+    {
+        return this.toSortedList(Comparator.comparing(function));
+    }
 
     /**
      * Converts the collection to a MutableSet implementation.
@@ -1469,7 +1511,10 @@ public interface RichIterable<T>
      *
      * @since 1.0
      */
-    <V extends Comparable<? super V>> MutableSortedSet<T> toSortedSetBy(Function<? super T, ? extends V> function);
+    default <V extends Comparable<? super V>> MutableSortedSet<T> toSortedSetBy(Function<? super T, ? extends V> function)
+    {
+        return this.toSortedSet(Comparator.comparing(function));
+    }
 
     /**
      * Converts the collection to the default MutableBag implementation.
@@ -1499,7 +1544,10 @@ public interface RichIterable<T>
      *
      * @since 6.0
      */
-    <V extends Comparable<? super V>> MutableSortedBag<T> toSortedBagBy(Function<? super T, ? extends V> function);
+    default <V extends Comparable<? super V>> MutableSortedBag<T> toSortedBagBy(Function<? super T, ? extends V> function)
+    {
+        return this.toSortedBag(Comparator.comparing(function));
+    }
 
     /**
      * Converts the collection to a MutableMap implementation using the specified key and value functions.
@@ -1509,6 +1557,21 @@ public interface RichIterable<T>
     <NK, NV> MutableMap<NK, NV> toMap(
             Function<? super T, ? extends NK> keyFunction,
             Function<? super T, ? extends NV> valueFunction);
+
+    /**
+     * Same as {@link #toMap(Function, Function)}, except that the results are gathered into the specified {@code target}
+     * map.
+     *
+     * @since 10.0
+     */
+    default <NK, NV, R extends Map<NK, NV>> R toMap(
+            Function<? super T, ? extends NK> keyFunction,
+            Function<? super T, ? extends NV> valueFunction,
+            R target)
+    {
+        this.forEach(each -> target.put(keyFunction.apply(each), valueFunction.apply(each)));
+        return target;
+    }
 
     /**
      * Converts the collection to a MutableSortedMap implementation using the specified key and value functions
@@ -1528,6 +1591,27 @@ public interface RichIterable<T>
      */
     <NK, NV> MutableSortedMap<NK, NV> toSortedMap(
             Comparator<? super NK> comparator,
+            Function<? super T, ? extends NK> keyFunction,
+            Function<? super T, ? extends NV> valueFunction);
+
+    /**
+     * Converts the collection to a MutableSortedMap implementation using the specified key and value functions
+     * and sorts it based on the natural order of the attribute returned by {@code sortBy} function.
+     */
+    default <KK extends Comparable<? super KK>, NK, NV> MutableSortedMap<NK, NV> toSortedMapBy(
+            Function<? super NK, KK> sortBy,
+            Function<? super T, ? extends NK> keyFunction,
+            Function<? super T, ? extends NV> valueFunction)
+    {
+        return this.toSortedMap(Comparator.comparing(sortBy), keyFunction, valueFunction);
+    }
+
+    /**
+     * Converts the collection to a BiMap implementation using the specified key and value functions.
+     *
+     * @since 10.0
+     */
+    <NK, NV> MutableBiMap<NK, NV> toBiMap(
             Function<? super T, ? extends NK> keyFunction,
             Function<? super T, ? extends NV> valueFunction);
 
@@ -1553,7 +1637,7 @@ public interface RichIterable<T>
      * @see Collection#toArray(Object[])
      * @since 1.0
      */
-    <T> T[] toArray(T[] target);
+    <E> E[] toArray(E[] array);
 
     /**
      * Returns the minimum element out of this container based on the comparator.
@@ -1812,8 +1896,9 @@ public interface RichIterable<T>
      * <p>
      * <pre>
      * MutableObjectLongMap&lt;Integer&gt; map2 =
-     *     Lists.mutable.with(1, 2, 3, 4, 5).reduceInPlace(Collectors2.sumByInt(i -> Integer.valueOf(i % 2), Integer::intValue));
+     *     Lists.mutable.with(1, 2, 3, 4, 5).reduceInPlace(Collectors2.sumByInt(i -&gt; Integer.valueOf(i % 2), Integer::intValue));
      * </pre>
+     *
      * @since 8.0
      */
     default <R, A> R reduceInPlace(Collector<? super T, A, R> collector)
@@ -1891,7 +1976,7 @@ public interface RichIterable<T>
 
     /**
      * Returns a string representation of this collection by delegating to {@link #makeString(String)} and defaulting
-     * the separator parameter to the characters <tt>", "</tt> (comma and space).
+     * the separator parameter to the characters {@code ", "} (comma and space).
      *
      * @return a string representation of this collection.
      * @since 1.0
@@ -1903,7 +1988,7 @@ public interface RichIterable<T>
 
     /**
      * Returns a string representation of this collection by delegating to {@link #makeString(String, String, String)}
-     * and defaulting the start and end parameters to <tt>""</tt> (the empty String).
+     * and defaulting the start and end parameters to {@code ""} (the empty String).
      *
      * @return a string representation of this collection.
      * @since 1.0
@@ -1928,7 +2013,7 @@ public interface RichIterable<T>
     }
 
     /**
-     * Prints a string representation of this collection onto the given {@code Appendable}.  Prints the string returned
+     * Prints a string representation of this collection onto the given {@code Appendable}. Prints the string returned
      * by {@link #makeString()}.
      *
      * @since 1.0
@@ -1939,7 +2024,7 @@ public interface RichIterable<T>
     }
 
     /**
-     * Prints a string representation of this collection onto the given {@code Appendable}.  Prints the string returned
+     * Prints a string representation of this collection onto the given {@code Appendable}. Prints the string returned
      * by {@link #makeString(String)}.
      *
      * @since 1.0
@@ -1950,7 +2035,7 @@ public interface RichIterable<T>
     }
 
     /**
-     * Prints a string representation of this collection onto the given {@code Appendable}.  Prints the string returned
+     * Prints a string representation of this collection onto the given {@code Appendable}. Prints the string returned
      * by {@link #makeString(String, String, String)}.
      *
      * @since 1.0
@@ -1992,7 +2077,7 @@ public interface RichIterable<T>
      */
     default <V> Bag<V> countBy(Function<? super T, ? extends V> function)
     {
-        return this.asLazy().<V>collect(function).toBag();
+        return this.countBy(function, Bags.mutable.empty());
     }
 
     /**
@@ -2014,7 +2099,7 @@ public interface RichIterable<T>
      */
     default <V, P> Bag<V> countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
-        return this.asLazy().<P, V>collectWith(function, parameter).toBag();
+        return this.countByWith(function, parameter, Bags.mutable.empty());
     }
 
     /**
@@ -2026,6 +2111,28 @@ public interface RichIterable<T>
     default <V, P, R extends MutableBagIterable<V>> R countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter, R target)
     {
         return this.collectWith(function, parameter, target);
+    }
+
+    /**
+     * This method will count the number of occurrences of each value calculated by applying the
+     * function to each element of the collection.
+     *
+     * @since 10.0.0
+     */
+    default <V> Bag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.asLazy().flatCollect(function).toBag();
+    }
+
+    /**
+     * This method will count the number of occurrences of each value calculated by applying the
+     * function to each element of the collection.
+     *
+     * @since 10.0.0
+     */
+    default <V, R extends MutableBagIterable<V>> R countByEach(Function<? super T, ? extends Iterable<V>> function, R target)
+    {
+        return this.flatCollect(function, target);
     }
 
     /**
@@ -2091,7 +2198,7 @@ public interface RichIterable<T>
      * @see #groupByUniqueKey(Function)
      * @since 6.0
      */
-    <V, R extends MutableMap<V, T>> R groupByUniqueKey(
+    <V, R extends MutableMapIterable<V, T>> R groupByUniqueKey(
             Function<? super T, ? extends V> function,
             R target);
 
@@ -2104,9 +2211,9 @@ public interface RichIterable<T>
      * Assert.assertEquals("[1]", Lists.mutable.with(1).toString());
      * Assert.assertEquals("[1, 2, 3]", Lists.mutable.with(1, 2, 3).toString());
      * </pre>
-     * @see java.util.AbstractCollection#toString()
      *
      * @return a string representation of this RichIterable
+     * @see java.util.AbstractCollection#toString()
      * @since 1.0
      */
     @Override
@@ -2170,7 +2277,7 @@ public interface RichIterable<T>
 
     /**
      * Applies an aggregate procedure over the iterable grouping results into a Map based on the specific groupBy function.
-     * Aggregate results are required to be mutable as they will be changed in place by the procedure.  A second function
+     * Aggregate results are required to be mutable as they will be changed in place by the procedure. A second function
      * specifies the initial "zero" aggregate value to work with (i.e. new AtomicInteger(0)).
      *
      * @since 3.0
@@ -2179,7 +2286,7 @@ public interface RichIterable<T>
 
     /**
      * Applies an aggregate function over the iterable grouping results into a map based on the specific groupBy function.
-     * Aggregate results are allowed to be immutable as they will be replaced in place in the map.  A second function
+     * Aggregate results are allowed to be immutable as they will be replaced in place in the map. A second function
      * specifies the initial "zero" aggregate value to work with (i.e. Integer.valueOf(0)).
      *
      * @since 3.0

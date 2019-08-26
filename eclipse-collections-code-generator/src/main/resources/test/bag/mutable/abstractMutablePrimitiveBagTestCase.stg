@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -14,7 +14,7 @@ class(primitive) ::= <<
 >>
 
 body(type, name, wrapperName) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.bag.mutable.primitive;
 
@@ -35,6 +35,8 @@ import org.eclipse.collections.impl.list.mutable.primitive.<name>ArrayList;
 import org.eclipse.collections.impl.test.Verify;
 import org.junit.Assert;
 import org.junit.Test;
+import org.eclipse.collections.impl.factory.primitive.<name>Sets;
+import org.eclipse.collections.api.set.primitive.Mutable<name>Set;
 
 /**
  * JUnit test for {@link Mutable<name>Bag}.
@@ -71,11 +73,25 @@ public abstract class AbstractMutable<name>BagTestCase extends AbstractMutable<n
     @Test
     public void selectByOccurrences()
     {
-        Mutable<name>Bag bag = this.newWith();
-        bag.addOccurrences(<(literal.(type))("100")>, 3);
-        bag.addOccurrences(<(literal.(type))("50")>, 2);
+        Mutable<name>Bag bag = this.newWith(<["100", "100", "100", "50", "50"]:(literal.(type))(); separator=", ">);
         Mutable<name>Bag filtered = bag.selectByOccurrences(i -> i > 2);
         Assert.assertEquals(<name>HashBag.newBagWith(<["100", "100", "100"]:(literal.(type))(); separator=", ">), filtered);
+    }
+
+    @Test
+    public void selectDuplicates()
+    {
+        Mutable<name>Bag bag = this.newWith(<["1", "2", "2", "3", "3", "3"]:(literal.(type))(); separator=", ">);
+        Assert.assertEquals(<name>HashBag.newBagWith(<["2", "2", "3", "3", "3"]:(literal.(type))(); separator=", ">), bag.selectDuplicates());
+    }
+
+    @Test
+    public void selectUnique()
+    {
+        Mutable<name>Bag bag = this.newWith(<["1", "2", "2", "3", "3", "3", "3", "4", "5", "5", "6"]:(literal.(type))(); separator=", ">);
+        Mutable<name>Set expected = <name>Sets.mutable.with(<["1", "4", "6"]:(literal.(type))(); separator=", ">);
+        Mutable<name>Set actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
     }
 
     protected Mutable<name>Bag newWithOccurrences(<name>IntPair... elementsWithOccurrences)
@@ -373,6 +389,16 @@ public abstract class AbstractMutable<name>BagTestCase extends AbstractMutable<n
         Assert.assertEquals(this.classUnderTest(), this.classUnderTest().toImmutable());
         Assert.assertNotSame(this.classUnderTest(), this.classUnderTest().toImmutable());
         Verify.assertInstanceOf(Immutable<name>Bag.class, this.classUnderTest().toImmutable());
+    }
+
+    @Test
+    public void toStringOfItemToCount()
+    {
+        Mutable<name>Bag empty = this.newWith();
+        Assert.assertEquals("{}", empty.toStringOfItemToCount());
+        Assert.assertEquals("{" + <(literal.(type))("100")> + "=3}", this.newWith(<["100", "100", "100"]:(literal.(type))(); separator=", ">).toStringOfItemToCount());
+        String actual = this.newWith(<["100", "101", "101"]:(literal.(type))(); separator=", ">).toStringOfItemToCount();
+        Assert.assertTrue(("{" + <(literal.(type))("100")> + "=1, " + <(literal.(type))("101")> + "=2}").equals(actual) || ("{" + <(literal.(type))("101")> + "=2, " + <(literal.(type))("100")> + "=1}").equals(actual));
     }
 }
 

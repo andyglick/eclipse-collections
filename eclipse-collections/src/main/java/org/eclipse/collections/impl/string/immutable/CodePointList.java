@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -13,9 +13,11 @@ package org.eclipse.collections.impl.string.immutable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Spliterator;
 
 import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.primitive.MutableIntBag;
 import org.eclipse.collections.api.block.function.primitive.IntToIntFunction;
 import org.eclipse.collections.api.block.function.primitive.IntToObjectFunction;
@@ -41,7 +43,7 @@ import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.eclipse.collections.impl.utility.Iterate;
 
 /**
- * Calculates and provides the code points stored in a String as an ImmutableIntList.  This is a cleaner more OO way of
+ * Calculates and provides the code points stored in a String as an ImmutableIntList. This is a cleaner more OO way of
  * providing many of the iterable protocols available in StringIterate for code points.
  *
  * @since 7.0
@@ -378,6 +380,12 @@ public class CodePointList extends AbstractIntIterable implements CharSequence, 
     }
 
     @Override
+    public RichIterable<IntIterable> chunk(int size)
+    {
+        return this.codePoints.chunk(size);
+    }
+
+    @Override
     public long sum()
     {
         return this.codePoints.sum();
@@ -484,5 +492,11 @@ public class CodePointList extends AbstractIntIterable implements CharSequence, 
             target.add(PrimitiveTuples.pair(this.get(i), iterator.next()));
         }
         return target.toImmutable();
+    }
+
+    @Override
+    public Spliterator.OfInt spliterator()
+    {
+        return this.codePoints.spliterator();
     }
 }

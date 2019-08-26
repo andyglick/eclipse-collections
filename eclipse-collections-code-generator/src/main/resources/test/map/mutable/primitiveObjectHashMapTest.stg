@@ -212,7 +212,7 @@ public class <name>ObjectHashMapTest extends AbstractMutable<name>ObjectMapTestC
         Assert.assertEquals(16L, ((<type>[]) keys.get(hashMap)).length);
         Assert.assertEquals(16L, ((Object[]) values.get(hashMap)).length);
         Assert.assertEquals(3, occupiedWithData.get(hashMap));
-        Assert.assertEquals(0, occupiedWithSentinels.get(hashMap));
+        Assert.assertEquals(5, occupiedWithSentinels.get(hashMap));
     }
 
     @Test
@@ -603,8 +603,7 @@ sumOfMethodsSmall() ::= <<
 @Test
 public void sumOfFloatConsistentRounding()
 {
-    MutableList\<Integer> randomIntegers
-        = Interval.fromTo(<wrapperName>.MIN_VALUE, <wrapperName>.MAX_VALUE)
+    MutableList\<Integer> randomIntegers = Interval.fromTo(<wrapperName>.MIN_VALUE, <wrapperName>.MAX_VALUE)
             .toList()
             .shuffleThis()
             .reject(i -> i == 0);
@@ -623,8 +622,7 @@ public void sumOfFloatConsistentRounding()
 @Test
 public void sumOfDoubleConsistentRounding()
 {
-    MutableList\<Integer> randomIntegers
-        = Interval.fromTo(<wrapperName>.MIN_VALUE, <wrapperName>.MAX_VALUE)
+    MutableList\<Integer> randomIntegers = Interval.fromTo(<wrapperName>.MIN_VALUE, <wrapperName>.MAX_VALUE)
             .toList()
             .shuffleThis()
             .reject(i -> i == 0);

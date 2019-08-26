@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -31,7 +31,6 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
-import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableByteList;
@@ -44,9 +43,7 @@ import org.eclipse.collections.api.list.primitive.MutableShortList;
 import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.partition.list.PartitionMutableList;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.block.procedure.CollectionAddProcedure;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.lazy.ReverseIterable;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
 import org.eclipse.collections.impl.list.mutable.primitive.ByteArrayList;
@@ -59,14 +56,13 @@ import org.eclipse.collections.impl.list.mutable.primitive.ShortArrayList;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.eclipse.collections.impl.utility.ArrayListIterate;
-import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.internal.RandomAccessListIterate;
 
 /**
- * This class provides a MutableList wrapper around a JDK Collections ArrayList instance.  All of the MutableList
+ * This class provides a MutableList wrapper around a JDK Collections ArrayList instance. All of the MutableList
  * interface methods are supported in addition to the JDK ArrayList methods.
  * <p>
- * To create a new wrapper around an existing ArrayList instance, use the {@link #adapt(ArrayList)} factory method.  To
+ * To create a new wrapper around an existing ArrayList instance, use the {@link #adapt(ArrayList)} factory method. To
  * create a new empty wrapper, use the {@link #newList()} or {@link #newList(int)} factory methods.
  */
 public final class ArrayListAdapter<T>
@@ -116,12 +112,6 @@ public final class ArrayListAdapter<T>
     public MutableList<T> asSynchronized()
     {
         return SynchronizedMutableList.of(this);
-    }
-
-    @Override
-    public ImmutableList<T> toImmutable()
-    {
-        return Lists.immutable.withAll(this);
     }
 
     @Override
@@ -227,17 +217,31 @@ public final class ArrayListAdapter<T>
         ArrayListIterate.forEach(this.delegate, fromIndex, toIndex, procedure);
     }
 
+    /**
+     * @since 10.0 - Override for correctness
+     */
+    @Override
+    public void sort(Comparator<? super T> comparator)
+    {
+        this.delegate.sort(comparator);
+    }
+
+    /**
+     * @since 10.0 - Override for backwards compatibility
+     */
     @Override
     public ArrayListAdapter<T> sortThis(Comparator<? super T> comparator)
     {
-        Iterate.sortThis(this.delegate, comparator);
-        return this;
+        return (ArrayListAdapter<T>) super.sortThis(comparator);
     }
 
+    /**
+     * @since 10.0 - Override for backwards compatibility
+     */
     @Override
     public ArrayListAdapter<T> sortThis()
     {
-        return this.sortThis(Comparators.naturalOrder());
+        return (ArrayListAdapter<T>) super.sortThis();
     }
 
     @Override

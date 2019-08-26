@@ -17,6 +17,7 @@ import org.eclipse.collections.api.block.function.primitive.<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name>To<name>Function;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
+import org.eclipse.collections.api.block.function.primitive.Object<name>To<name>Function;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.procedure.primitive.<name>Procedure;
 import org.eclipse.collections.api.block.predicate.primitive.Object<name>Predicate;
@@ -40,7 +41,7 @@ public interface MutableObject<name>Map\<K> extends Object<name>Map\<K>
     void put(K key, <type> value);
 
     /**
-     * This method allows MutableObject<name>Map the ability to add an element in the form of Object<name>Pair\<K>.
+     * This method allows MutableObject<name>Map the ability to add an element in the form of {@code Object<name>Pair\<K>}.
      *
      * @see #put(Object, <type>)
      * @since 9.1.0
@@ -51,6 +52,14 @@ public interface MutableObject<name>Map\<K> extends Object<name>Map\<K>
     }
 
     void putAll(Object<name>Map\<? extends K> map);
+
+    /**
+     * Updates the values in-place.
+     *
+     * @param function that takes a key and its value and that returns a new value for this key
+     * @since 10.0
+     */
+    void updateValues(Object<name>To<name>Function\<? super K> function);
 
     void removeKey(K key);
 
@@ -67,8 +76,7 @@ public interface MutableObject<name>Map\<K> extends Object<name>Map\<K>
     \<P> <type> getIfAbsentPutWith(K key, <name>Function\<? super P> function, P parameter);
 
     <type> updateValue(K key, <type> initialValueIfAbsent, <name>To<name>Function function);
-
-    <(flipUniqueValues.(name))(name)>
+    <if(!primitive.booleanPrimitive)><(flipUniqueValues.(name))(name)><endif>
 
     @Override
     MutableObject<name>Map\<K> select(Object<name>Predicate\<? super K> predicate);
@@ -100,6 +108,15 @@ public interface MutableObject<name>Map\<K> extends Object<name>Map\<K>
 
     MutableObject<name>Map\<K> withoutAllKeys(Iterable\<? extends K> keys);
 
+    default MutableObject<name>Map\<K> withAllKeyValues(Iterable\<Object<name>Pair\<K>\> keyValuePairs)
+    {
+        for (Object<name>Pair\<K> keyValuePair : keyValuePairs)
+        {
+            this.putPair(keyValuePair);
+        }
+        return this;
+    }
+
     MutableObject<name>Map\<K> asUnmodifiable();
 
     MutableObject<name>Map\<K> asSynchronized();
@@ -120,7 +137,8 @@ arithmeticMethods ::= [
     ]
 
 allMethods(type) ::= <<
-<\n>
+
+
 <type> addToValue(K key, <type> toBeAdded);
 >>
 
@@ -138,6 +156,8 @@ flipUniqueValues ::= [
     ]
 
 flipUniqueValues(name) ::= <<
+
+
 @Override
 Mutable<name>ObjectMap\<K> flipUniqueValues();
 >>

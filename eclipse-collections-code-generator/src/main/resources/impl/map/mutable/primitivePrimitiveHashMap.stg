@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -36,7 +36,7 @@ class(primitive1, primitive2, sameTwoPrimitives) ::= <<
 >>
 
 body(type1, type2, name1, name2, keyArray, valueArray, increment, valueIndex) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.map.mutable.primitive;
 
@@ -56,7 +56,7 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.primitive.<name2>Function;
 import org.eclipse.collections.api.block.function.primitive.<name2>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name2>To<name2>Function;
-<if(sameTwoPrimitives)>import org.eclipse.collections.api.block.function.primitive.<name2>ToObjectFunction;<endif>
+import org.eclipse.collections.api.block.function.primitive.<name1><name2>To<name2>Function;
 import org.eclipse.collections.api.block.function.primitive.Object<name2>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name1><name2>Predicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
@@ -64,7 +64,7 @@ import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.<name1>Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.<name1><name2>Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
-import org.eclipse.collections.impl.SpreadFunctions;
+<if(!primitive1.bytePrimitive)>import org.eclipse.collections.impl.SpreadFunctions;<endif>
 import org.eclipse.collections.api.collection.primitive.Mutable<name2>Collection;
 import org.eclipse.collections.api.iterator.<name1>Iterator;
 import org.eclipse.collections.api.iterator.Mutable<name1>Iterator;
@@ -72,13 +72,14 @@ import org.eclipse.collections.api.iterator.Mutable<name1>Iterator;
 import org.eclipse.collections.api.map.primitive.<name1><name2>Map;
 import org.eclipse.collections.api.map.primitive.Immutable<name1><name2>Map;
 import org.eclipse.collections.api.map.primitive.Mutable<name1><name2>Map;
-<if(!primitive2.booleanPrimitive)>import org.eclipse.collections.api.map.primitive.Mutable<name2><name1>Map;<endif>
+<if(!primitive2.booleanPrimitive)><if(!sameTwoPrimitives)>import org.eclipse.collections.api.map.primitive.Mutable<name2><name1>Map;<endif><endif>
 import org.eclipse.collections.api.set.primitive.<name1>Set;
 <if(!sameTwoPrimitives)>import org.eclipse.collections.api.set.primitive.<name2>Set;<endif>
 import org.eclipse.collections.api.set.primitive.Mutable<name1>Set;
 import org.eclipse.collections.api.tuple.primitive.<name1><name2>Pair;
+import org.eclipse.collections.impl.bag.mutable.primitive.<name2>HashBag;
 import org.eclipse.collections.impl.factory.primitive.<name1><name2>Maps;
-<if(!primitive2.booleanPrimitive)>import org.eclipse.collections.impl.factory.primitive.<name2><name1>Maps;<endif>
+<if(!primitive2.booleanPrimitive)><if(!sameTwoPrimitives)>import org.eclipse.collections.impl.factory.primitive.<name2><name1>Maps;<endif><endif>
 import org.eclipse.collections.impl.iterator.Unmodifiable<name1>Iterator;
 import org.eclipse.collections.impl.lazy.AbstractLazyIterable;
 import org.eclipse.collections.impl.lazy.primitive.AbstractLazy<name1>Iterable;
@@ -398,6 +399,12 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
     }
 
     @Override
+    public void updateValues(<name1><name2>To<name2>Function function)
+    {
+        <forEachKeyValue(template = {<value> = function.valueOf(<key>, <value>)})>
+    }
+
+    @Override
     public void removeKey(<type1> key)
     {
         if (isEmptyKey(key))
@@ -532,7 +539,7 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
             return this.<valueArray>[index<valueIndex>];
         }
         this.addKeyValueAtIndex(key, toBeAdded, index);
-        return this.<valueArray>[index<valueIndex>];
+        return toBeAdded;
     }
 
     private void addKeyValueAtIndex(<type1> key, <type2> value, int index)
@@ -748,7 +755,6 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
     }
 
 <endif>
-
     @Override
     public <type2> getOrThrow(<type1> key)
     {
@@ -819,7 +825,8 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
     public Mutable<name2><name1>Map flipUniqueValues()
     {
         Mutable<name2><name1>Map result = <name2><name1>Maps.mutable.empty();
-         this.forEachKeyValue((key, value) -> {
+        this.forEachKeyValue((key, value) ->
+        {
             if (result.containsKey(value))
             {
                 throw new IllegalStateException("Duplicate value: " + value + " found at key: " + result.get(value) + " and key: " + key);
@@ -913,7 +920,13 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
 
     private void rehashAndGrow()
     {
-        this.rehash(this.<keyArray>.length<if(!sameTwoPrimitives)> \<\< 1<endif>);
+        int max = this.maxOccupiedWithData();
+        int newCapacity = Math.max(max, smallestPowerOfTwoGreaterThan((this.occupiedWithData + 1) \<\< 1));
+        if (this.occupiedWithSentinels > 0 && (max >\> 1) + (max >\> 2) \< this.occupiedWithData)
+        {
+            newCapacity \<\<= 1;
+        }
+        this.rehash(newCapacity);
     }
 
     private void rehash(int newCapacity)
@@ -940,12 +953,10 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
 
     // exposed for testing
     <(spread.(type1))(type1)>
-
     <(spread2.(type1))(type1)>
-
     private int mask(int spread)
     {
-        return spread & (<if(sameTwoPrimitives)>(<endif>this.<keyArray>.length <if(sameTwoPrimitives)>\>> 1)<endif>- 1);
+        return spread & (<if(sameTwoPrimitives)>(<endif>this.<keyArray>.length<if(sameTwoPrimitives)> \>> 1)<endif> - 1);
     }
 
     private void allocateTable(int sizeToAllocate)
@@ -980,11 +991,6 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
     private int maxOccupiedWithData()
     {
         return this.<keyArray>.length >\> <if(!sameTwoPrimitives)>1<else>2<endif>;
-    }
-
-    private int maxOccupiedWithSentinels()
-    {
-        return this.<keyArray>.length >\> <if(!sameTwoPrimitives)>2<else>3<endif>;
     }
 
     private class Internal<name2>Iterator implements Mutable<name2>Iterator
@@ -1183,7 +1189,7 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
         public boolean retainAll(<name1>Iterable source)
         {
             int oldSize = <name1><name2>HashMap.this.size();
-            final <name1>Set sourceSet = source instanceof <name1>Set ? (<name1>Set) source : source.toSet();
+            <name1>Set sourceSet = source instanceof <name1>Set ? (<name1>Set) source : source.toSet();
             <name1><name2>HashMap retained = <name1><name2>HashMap.this.select((<type1> key, <type2> value) -> sourceSet.contains(key));
             if (retained.size() != oldSize)
             {
@@ -1221,6 +1227,15 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
             <else>
             return new Immutable<name1>MapKeySet(<name1><name2>HashMap.this.<keyArray>, <name1><name2>HashMap.this.occupiedWithData, containsZeroKey, containsOneKey);
             <endif>
+        }
+
+        /**
+         * @since 9.2.
+         */
+        @Override
+        public Mutable<name1>Set newEmpty()
+        {
+            return new <name1>HashSet();
         }
     }
 
@@ -1268,7 +1283,7 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
         public boolean retainAll(<name2>Iterable source)
         {
             int oldSize = <name1><name2>HashMap.this.size();
-            final <name2>Set sourceSet = source instanceof <name2>Set ? (<name2>Set) source : source.toSet();
+            <name2>Set sourceSet = source instanceof <name2>Set ? (<name2>Set) source : source.toSet();
             <name1><name2>HashMap retained = <name1><name2>HashMap.this.select((<type1> key, <type2> value) -> sourceSet.contains(value));
             if (retained.size() != oldSize)
             {
@@ -1282,6 +1297,15 @@ public class <name1><name2>HashMap extends AbstractMutable<name2>ValuesMap imple
                 return true;
             }
             return false;
+        }
+
+        /**
+         * @since 9.2.
+         */
+        @Override
+        public Mutable<name2>Collection newEmpty()
+        {
+            return new <name2>HashBag();
         }
     }
 

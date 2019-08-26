@@ -25,7 +25,10 @@ import org.eclipse.collections.api.block.function.primitive.<name>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name>To<name>Function;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.MutableObject<name>Map;
+import org.eclipse.collections.api.tuple.primitive.Object<name>Pair;
+import org.eclipse.collections.impl.factory.Iterables;
 import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.primitive.AbstractObject<name>MapTestCase;
 import org.eclipse.collections.impl.test.Verify;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
@@ -199,6 +202,25 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
     }
 
     @Test
+    public void updateValues()
+    {
+        MutableObject<name>Map\<String> map1 = this.newWithKeysValues("0", <(literal.(type))("11")>, "1", <(literal.(type))("12")>, "2", <(literal.(type))("13")>);
+        map1.updateValues((k, v) -> v);
+        MutableObject<name>Map\<String> expected1 = this.newWithKeysValues("0", <(literal.(type))("11")>, "1", <(literal.(type))("12")>, "2", <(literal.(type))("13")>);
+        Assert.assertEquals(expected1, map1);
+
+        MutableObject<name>Map\<String> map2 = this.newWithKeysValues("0", <(literal.(type))("11")>, "1", <(literal.(type))("12")>, "2", <(literal.(type))("13")>);
+        map2.updateValues((k, v) -> <(castIntToNarrowTypeWithParens.(type))({v + <(literal.(type))("1")>})>);
+        MutableObject<name>Map\<String> expected2 = this.newWithKeysValues("0", <(literal.(type))("12")>, "1", <(literal.(type))("13")>, "2", <(literal.(type))("14")>);
+        Assert.assertEquals(expected2, map2);
+
+        MutableObject<name>Map\<String> map3 = this.newWithKeysValues("0", <(literal.(type))("11")>, "1", <(literal.(type))("12")>, "2", <(literal.(type))("13")>);
+        map3.updateValues((k, v) -> k.equals("0") ? <(literal.(type))("10")> : v);
+        MutableObject<name>Map\<String> expected3 = this.newWithKeysValues("0", <(literal.(type))("10")>, "1", <(literal.(type))("12")>, "2", <(literal.(type))("13")>);
+        Assert.assertEquals(expected3, map3);
+    }
+
+    @Test
     public void putPair()
     {
         this.map.putPair(PrimitiveTuples.pair("0", <(literal.(type))("1")>));
@@ -348,7 +370,10 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
         MutableObject<name>Map\<Integer> map1 = this.getEmptyMap();
         Assert.assertEquals(<(literal.(type))("100")>, map1.getIfAbsentPut(0, factory)<delta.(type)>);
 
-        <name>Function0 factoryThrows = () -> { throw new AssertionError(); };
+        <name>Function0 factoryThrows = () ->
+        {
+            throw new AssertionError();
+        };
 
         Assert.assertEquals(<(literal.(type))("100")>, map1.getIfAbsentPut(0, factoryThrows)<delta.(type)>);
         Assert.assertEquals(Object<name>HashMap.newWithKeysValues(0, <(literal.(type))("100")>), map1);
@@ -377,7 +402,10 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
 
         MutableObject<name>Map\<Integer> map1 = this.getEmptyMap();
         Assert.assertEquals(<(literal.(type))("9")>, map1.getIfAbsentPutWith(0, functionLength, "123456789")<delta.(type)>);
-        <name>Function\<String> functionThrows = (String each) -> { throw new AssertionError(); };
+        <name>Function\<String> functionThrows = (String each) ->
+        {
+            throw new AssertionError();
+        };
         Assert.assertEquals(<(literal.(type))("9")>, map1.getIfAbsentPutWith(0, functionThrows, "unused")<delta.(type)>);
         Assert.assertEquals(Object<name>HashMap.newWithKeysValues(0, <(literal.(type))("9")>), map1);
         Assert.assertEquals(<(literal.(type))("9")>, map1.getIfAbsentPutWith(1, functionLength, "123456789")<delta.(type)>);
@@ -405,7 +433,10 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
 
         MutableObject<name>Map\<Integer> map1 = this.getEmptyMap();
         Assert.assertEquals(<(literal.(type))("0")>, map1.getIfAbsentPutWithKey(0, function)<delta.(type)>);
-        <name>Function\<Integer> functionThrows = (Integer <type>Parameter) -> { throw new AssertionError(); };
+        <name>Function\<Integer> functionThrows = (Integer <type>Parameter) ->
+        {
+            throw new AssertionError();
+        };
         Assert.assertEquals(<(literal.(type))("0")>, map1.getIfAbsentPutWithKey(0, functionThrows)<delta.(type)>);
         Assert.assertEquals(Object<name>HashMap.newWithKeysValues(0, <(literal.(type))("0")>), map1);
         Assert.assertEquals(<(literal.(type))("1")>, map1.getIfAbsentPutWithKey(1, function)<delta.(type)>);
@@ -476,6 +507,13 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
         Assert.assertEquals(Object<name>HashMap.newWithKeysValues(null, <(literal.(type))("1")>), map2);
         Assert.assertEquals(<(literal.(type))("5")>, map2.addToValue(null, <(literal.(type))("4")>)<delta.(type)>);
         Assert.assertEquals(Object<name>HashMap.newWithKeysValues(null, <(literal.(type))("5")>), map2);
+
+        MutableObject<name>Map\<String> map3 = this.getEmptyMap();
+        IntInterval.zeroTo(10).forEachWithIndex((each, index) ->
+        {
+            <type> v = <(castIntToNarrowTypeWithParens.(type))("each + index")>;
+            Assert.assertEquals("Key:" + each, v, map3.addToValue(String.valueOf(each), v)<delta.(type)>);
+        });
     }
 
     @Override
@@ -566,6 +604,26 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
         Assert.assertEquals(Object<name>HashMap.newWithKeysValues(1, <(literal.(type))("1")>, 2, <(literal.(type))("2")>), mapWithout);
     }
 
+    @Test
+    public void withAllKeyValues()
+    {
+        MutableObject<name>Map\<String> emptyMap = this.getEmptyMap();
+        MutableObject<name>Map\<String> partialMap = this.newWithKeysValues("one", <(literal.(type))("1")>, "three", <(literal.(type))("3")>);
+        MutableObject<name>Map\<String> completeMap = this.newWithKeysValues("one", <(literal.(type))("1")>, "two", <(literal.(type))("2")>, "three", <(literal.(type))("3")>);
+        Iterable\<Object<name>Pair\<String>\> emptyIterable = Iterables.iList();
+        Iterable\<Object<name>Pair\<String>\> partialIterable = Iterables.iList(PrimitiveTuples.pair("one", <(literal.(type))("1")>), PrimitiveTuples.pair("three", <(literal.(type))("3")>));
+        Iterable\<Object<name>Pair\<String>\> completeIterable = Iterables.iList(PrimitiveTuples.pair("one", <(literal.(type))("1")>), PrimitiveTuples.pair("two", <(literal.(type))("2")>), PrimitiveTuples.pair("three", <(literal.(type))("3")>));
+        Assert.assertEquals(emptyMap, emptyMap.withAllKeyValues(emptyIterable));
+        Assert.assertEquals(partialMap, emptyMap.withAllKeyValues(partialIterable));
+        Assert.assertEquals(completeMap, emptyMap.withAllKeyValues(completeIterable));
+        Assert.assertEquals(partialMap, partialMap.withAllKeyValues(emptyIterable));
+        Assert.assertEquals(partialMap, partialMap.withAllKeyValues(partialIterable));
+        Assert.assertEquals(completeMap, partialMap.withAllKeyValues(completeIterable));
+        Assert.assertEquals(completeMap, completeMap.withAllKeyValues(emptyIterable));
+        Assert.assertEquals(completeMap, completeMap.withAllKeyValues(partialIterable));
+        Assert.assertEquals(completeMap, completeMap.withAllKeyValues(completeIterable));
+    }
+
     @Override
     @Test
     public void contains()
@@ -603,7 +661,7 @@ public abstract class AbstractMutableObject<name>MapTestCase extends AbstractObj
         Assert.assertEquals(
                 <name>ObjectHashMap.newWithKeysValues(<(literal.(type))("2")>, "1", <(literal.(type))("3")>, "2"),
                 map.flipUniqueValues());
-         Verify.assertThrows(
+        Verify.assertThrows(
                 IllegalStateException.class,
                 () -> this.newWithKeysValues("1", <(literal.(type))("1")>, "2", <(literal.(type))("1")>).flipUniqueValues());
     }

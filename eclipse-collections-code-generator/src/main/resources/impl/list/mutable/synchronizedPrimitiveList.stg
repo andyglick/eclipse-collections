@@ -16,20 +16,17 @@ body(type, name) ::= <<
 
 package org.eclipse.collections.impl.list.mutable.primitive;
 
-import java.lang.Iterable;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.eclipse.collections.api.<name>Iterable;
 import org.eclipse.collections.api.Lazy<name>Iterable;
+import org.eclipse.collections.api.block.function.primitive.<name>IntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.Object<name>IntToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.procedure.primitive.<name>IntProcedure;
-import org.eclipse.collections.api.iterator.<name>Iterator;
-import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.list.primitive.<name>List;
+<if(!primitive.booleanPrimitive)>import org.eclipse.collections.api.list.primitive.<name>List;<endif>
 import org.eclipse.collections.api.list.primitive.Immutable<name>List;
 import org.eclipse.collections.api.list.primitive.Mutable<name>List;
 import org.eclipse.collections.api.tuple.primitive.<name><name>Pair;
@@ -38,10 +35,13 @@ import org.eclipse.collections.impl.collection.mutable.primitive.AbstractSynchro
 import org.eclipse.collections.impl.factory.primitive.<name>Lists;
 import org.eclipse.collections.impl.lazy.primitive.Lazy<name>IterableAdapter;
 import org.eclipse.collections.impl.lazy.primitive.Reverse<name>Iterable;
+<if(primitive.specializedStream)>
+import java.util.Spliterator;<endif>
+
 
 /**
- * A synchronized view of a {@link Mutable<name>List}. It is imperative that the user manually synchronize on the collection when iterating over it using the
- * {@link <name>Iterator}, as per {@link Collections#synchronizedCollection(Collection)}.
+ * A synchronized view of a {@link Mutable<name>List}. It is imperative that the user manually synchronize on the on the
+ * collection when iterating over it using an iterator or stream.
  * \<p>
  * This file was automatically generated from template file synchronizedPrimitiveList.stg.
  *
@@ -49,7 +49,7 @@ import org.eclipse.collections.impl.lazy.primitive.Reverse<name>Iterable;
  * @see MutableList#asSynchronized()
  * @since 3.1.
  */
-public final class Synchronized<name>List
+public class Synchronized<name>List
         extends AbstractSynchronized<name>Collection
         implements Mutable<name>List
 {
@@ -258,7 +258,10 @@ public final class Synchronized<name>List
     @Override
     public Mutable<name>List asUnmodifiable()
     {
-        return new Unmodifiable<name>List(this);
+        synchronized (this.getLock())
+        {
+            return new Unmodifiable<name>List(this);
+        }
     }
 
     @Override
@@ -282,6 +285,17 @@ public final class Synchronized<name>List
                 return <name>Lists.immutable.with(this.getFirst());
             }
             return <name>Lists.immutable.with(this.toArray());
+        }
+    }
+
+    /**
+     * @since 9.2.
+     */
+    public Mutable<name>List newEmpty()
+    {
+        synchronized (this.getLock())
+        {
+            return this.getMutable<name>List().newEmpty();
         }
     }
 
@@ -367,6 +381,46 @@ public final class Synchronized<name>List
             return this.getMutable<name>List().zip(iterable);
         }
     }
+
+    /**
+     * Returns a new MutableList using results obtained by applying the specified function to each element
+     * and its corresponding index.
+     *
+     * @since 9.1.
+     */
+    @Override
+    public \<V> MutableList\<V> collectWithIndex(<name>IntToObjectFunction\<? extends V> function)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getMutable<name>List().collectWithIndex(function);
+        }
+    }
+
+    /**
+     * Adds elements to the target Collection using results obtained by applying the specified function to each element
+     * and its corresponding index.
+     *
+     * @since 9.1.
+     */
+    public \<V, R extends Collection\<V\>> R collectWithIndex(<name>IntToObjectFunction\<? extends V> function, R target)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getMutable<name>List().collectWithIndex(function, target);
+        }
+    }
+<if(primitive.specializedStream)>
+
+    /**
+    * This function needs to be synchronized manually
+    */
+    @Override
+    public Spliterator.Of<name> spliterator()
+    {
+        return this.getMutable<name>List().spliterator();
+    }
+<endif>
 }
 
 >>

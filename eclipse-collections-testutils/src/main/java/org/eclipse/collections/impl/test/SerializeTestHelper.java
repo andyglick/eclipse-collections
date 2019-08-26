@@ -51,15 +51,10 @@ public final class SerializeTestHelper
 
     private static <T> void writeObjectToStream(Object sourceObject, ByteArrayOutputStream baos) throws IOException
     {
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(baos);
-        try
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(baos))
         {
             objectOutputStream.writeObject(sourceObject);
             objectOutputStream.flush();
-            objectOutputStream.close();
-        }
-        finally
-        {
             objectOutputStream.close();
         }
     }
@@ -67,14 +62,9 @@ public final class SerializeTestHelper
     private static Object readOneObject(ByteArrayInputStream bais)
             throws IOException, ClassNotFoundException
     {
-        ObjectInputStream objectStream = new ObjectInputStream(bais);
-        try
+        try (ObjectInputStream objectStream = new ObjectInputStream(bais))
         {
             return objectStream.readObject();
-        }
-        finally
-        {
-            objectStream.close();
         }
     }
 
@@ -85,11 +75,7 @@ public final class SerializeTestHelper
         {
             return readOneObject(bais);
         }
-        catch (ClassNotFoundException e)
-        {
-            Verify.fail("Failed to unmarshal an object", e);
-        }
-        catch (IOException e)
+        catch (ClassNotFoundException | IOException e)
         {
             Verify.fail("Failed to unmarshal an object", e);
         }

@@ -22,6 +22,7 @@ import org.eclipse.collections.api.<name1>Iterable;
 import org.eclipse.collections.api.block.function.primitive.<name2>Function;
 import org.eclipse.collections.api.block.function.primitive.<name2>Function0;
 import org.eclipse.collections.api.block.function.primitive.<name2>To<name2>Function;
+import org.eclipse.collections.api.block.function.primitive.<name1><name2>To<name2>Function;
 import org.eclipse.collections.api.block.predicate.primitive.<name1><name2>Predicate;
 import org.eclipse.collections.api.tuple.primitive.<name1><name2>Pair;
 
@@ -34,7 +35,7 @@ public interface Mutable<name1><name2>Map extends <name1><name2>Map, Mutable<nam
 {
     void put(<type1> key, <type2> value);
 
-   /**
+    /**
      * This method allows Mutable<name1><name2>Map the ability to add an element in the form of <name1><name2>Pair.
      *
      * @see #put(<type1>, <type2>)
@@ -46,6 +47,14 @@ public interface Mutable<name1><name2>Map extends <name1><name2>Map, Mutable<nam
     }
 
     void putAll(<name1><name2>Map map);
+
+    /**
+     * Updates the values in-place.
+     *
+     * @param function that takes a key and its value and that returns a new value for this key
+     * @since 10.0
+     */
+    void updateValues(<name1><name2>To<name2>Function function);
 
     void removeKey(<type1> key);
 
@@ -62,8 +71,7 @@ public interface Mutable<name1><name2>Map extends <name1><name2>Map, Mutable<nam
     \<P> <type2> getIfAbsentPutWith(<type1> key, <name2>Function\<? super P> function, P parameter);
 
     <type2> updateValue(<type1> key, <type2> initialValueIfAbsent, <name2>To<name2>Function function);
-
-    <(flipUniqueValues.(name2))(name1, name2)>
+    <if(!primitive2.booleanPrimitive)><(flipUniqueValues.(name2))(name1, name2)><endif>
 
     @Override
     Mutable<name1><name2>Map select(<name1><name2>Predicate predicate);
@@ -76,6 +84,15 @@ public interface Mutable<name1><name2>Map extends <name1><name2>Map, Mutable<nam
     Mutable<name1><name2>Map withoutKey(<type1> key);
 
     Mutable<name1><name2>Map withoutAllKeys(<name1>Iterable keys);
+
+    default Mutable<name1><name2>Map withAllKeyValues(Iterable\<<name1><name2>Pair> keyValuePairs)
+    {
+        for (<name1><name2>Pair keyValuePair : keyValuePairs)
+        {
+            this.putPair(keyValuePair);
+        }
+        return this;
+    }
 
     Mutable<name1><name2>Map asUnmodifiable();
 
@@ -97,7 +114,8 @@ arithmeticMethods ::= [
     ]
 
 allMethods(type1, type2) ::= <<
-<\n>
+
+
 <type2> addToValue(<type1> key, <type2> toBeAdded);
 >>
 
@@ -115,6 +133,8 @@ flipUniqueValues ::= [
     ]
 
 flipUniqueValues(name1, name2) ::= <<
+
+
 @Override
 Mutable<name2><name1>Map flipUniqueValues();
 >>

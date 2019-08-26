@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -18,8 +18,8 @@ import org.eclipse.collections.impl.block.predicate.checked.ThrowingPredicate2;
 import org.eclipse.collections.impl.utility.Iterate;
 
 /**
- * Predicates2 is a static version of Predicates.  All of its values are statically initialized, with the exception
- * of and, or, not and all of the attribute combination methods.  Predicates2 can only work with one parameter,
+ * Predicates2 is a static version of Predicates. All of its values are statically initialized, with the exception
+ * of and, or, not and all of the attribute combination methods. Predicates2 can only work with one parameter,
  * so it is limited to handling only conditions of a simple nature.
  */
 public abstract class Predicates2<T, P>
@@ -197,34 +197,34 @@ public abstract class Predicates2<T, P>
         return (Predicates2<T, T>) GREATER_THAN_OR_EQUAL;
     }
 
-    public static <T> Predicates2<T, Object> attributeNotEqual(Function<T, ?> function)
+    public static <T> Predicates2<T, Object> attributeNotEqual(Function<? super T, ?> function)
     {
         return new AttributePredicates2<>(function, Predicates2.notEqual());
     }
 
-    public static <T, P extends Comparable<? super P>> Predicates2<T, P> attributeLessThan(Function<T, P> function)
+    public static <T, P extends Comparable<? super P>> Predicates2<T, P> attributeLessThan(Function<? super T, ? extends P> function)
     {
         return new AttributePredicates2<>(function, (Predicate2<P, P>) LESS_THAN);
     }
 
     public static <T, P extends Comparable<? super P>> Predicates2<T, P> attributeLessThanOrEqualTo(
-            Function<T, P> function)
+            Function<? super T, ? extends P> function)
     {
         return new AttributePredicates2<>(function, (Predicate2<P, P>) LESS_THAN_OR_EQUAL);
     }
 
-    public static <T, P extends Comparable<? super P>> Predicates2<T, P> attributeGreaterThan(Function<T, P> function)
+    public static <T, P extends Comparable<? super P>> Predicates2<T, P> attributeGreaterThan(Function<? super T, ? extends P> function)
     {
         return new AttributePredicates2<>(function, (Predicate2<P, P>) GREATER_THAN);
     }
 
     public static <T, P extends Comparable<? super P>> Predicates2<T, P> attributeGreaterThanOrEqualTo(
-            Function<T, P> function)
+            Function<? super T, ? extends P> function)
     {
         return new AttributePredicates2<>(function, (Predicate2<P, P>) GREATER_THAN_OR_EQUAL);
     }
 
-    public static <T> Predicates2<T, Object> attributeEqual(Function<T, ?> function)
+    public static <T> Predicates2<T, Object> attributeEqual(Function<? super T, ?> function)
     {
         return new AttributePredicates2<>(function, Predicates2.equal());
     }

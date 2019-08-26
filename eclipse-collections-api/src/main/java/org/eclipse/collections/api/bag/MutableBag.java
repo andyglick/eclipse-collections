@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -27,11 +27,13 @@ import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
 import org.eclipse.collections.api.block.function.primitive.FloatFunction;
 import org.eclipse.collections.api.block.function.primitive.IntFunction;
 import org.eclipse.collections.api.block.function.primitive.LongFunction;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.multimap.bag.MutableBagMultimap;
 import org.eclipse.collections.api.ordered.OrderedIterable;
@@ -40,7 +42,7 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 
 /**
- * A MutableBag is a Collection whose elements are unordered and may contain duplicate entries.  It varies from
+ * A MutableBag is a Collection whose elements are unordered and may contain duplicate entries. It varies from
  * MutableCollection in that it adds a protocol for determining, adding, and removing the number of occurrences for an
  * item.
  *
@@ -54,6 +56,32 @@ public interface MutableBag<T>
 
     @Override
     MutableBag<T> selectByOccurrences(IntPredicate predicate);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default MutableBag<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default MutableSet<T> selectUnique()
+    {
+        MutableSet<T> result = Sets.mutable.empty();
+        this.forEachWithOccurrences((each, occurrences) ->
+        {
+            if (occurrences == 1)
+            {
+                result.add(each);
+            }
+        });
+        return result;
+    }
 
     @Override
     MutableBag<T> with(T element);
@@ -104,6 +132,15 @@ public interface MutableBag<T>
     default <V, P> MutableBag<V> countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
         return this.collectWith(function, parameter);
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    default <V> MutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.flatCollect(function);
     }
 
     /**
@@ -172,7 +209,19 @@ public interface MutableBag<T>
     <V> MutableBag<V> collectIf(Predicate<? super T> predicate, Function<? super T, ? extends V> function);
 
     @Override
+    <V> MutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
+
+    @Override
     <V> MutableBag<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> MutableBag<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     /**
      * @since 8.0

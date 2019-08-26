@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,35 +10,20 @@
 
 package org.eclipse.collections.impl.bag.mutable;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.factory.bag.MutableBagFactory;
 
-public enum MutableBagFactoryImpl implements MutableBagFactory
+public class MutableBagFactoryImpl implements MutableBagFactory
 {
-    INSTANCE;
+    public static final MutableBagFactory INSTANCE = new MutableBagFactoryImpl();
 
     @Override
     public <T> MutableBag<T> empty()
     {
         return HashBag.newBag();
-    }
-
-    @Override
-    public <T> MutableBag<T> of()
-    {
-        return this.empty();
-    }
-
-    @Override
-    public <T> MutableBag<T> with()
-    {
-        return this.empty();
-    }
-
-    @Override
-    public <T> MutableBag<T> of(T... elements)
-    {
-        return this.with(elements);
     }
 
     @Override
@@ -48,14 +33,14 @@ public enum MutableBagFactoryImpl implements MutableBagFactory
     }
 
     @Override
-    public <T> MutableBag<T> ofAll(Iterable<? extends T> items)
-    {
-        return this.withAll(items);
-    }
-
-    @Override
     public <T> MutableBag<T> withAll(Iterable<? extends T> items)
     {
         return HashBag.newBag(items);
+    }
+
+    @Override
+    public <T> MutableBag<T> fromStream(Stream<? extends T> stream)
+    {
+        return stream.collect(Collectors.toCollection(HashBag::newBag));
     }
 }

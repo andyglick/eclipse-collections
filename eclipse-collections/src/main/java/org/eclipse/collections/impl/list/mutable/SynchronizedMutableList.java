@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -19,6 +19,7 @@ import java.util.ListIterator;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.function.UnaryOperator;
 
 import org.eclipse.collections.api.LazyIterable;
 import org.eclipse.collections.api.block.HashingStrategy;
@@ -81,8 +82,8 @@ public class SynchronizedMutableList<T>
     }
 
     /**
-     * This method will take a MutableList and wrap it directly in a SynchronizedMutableList.  It will
-     * take any other non-GS-collection and first adapt it will a ListAdapter, and then return a
+     * This method will take a MutableList and wrap it directly in a SynchronizedMutableList. It will
+     * take any other non-Eclipse-Collections collection and first adapt it will a ListAdapter, and then return a
      * SynchronizedMutableList that wraps the adapter.
      */
     public static <E, L extends List<E>> SynchronizedMutableList<E> of(L list)
@@ -93,9 +94,9 @@ public class SynchronizedMutableList<T>
     }
 
     /**
-     * This method will take a MutableList and wrap it directly in a SynchronizedMutableList.  It will
-     * take any other non-GS-collection and first adapt it will a ListAdapter, and then return a
-     * SynchronizedMutableList that wraps the adapter.  Additionally, a developer specifies which lock to use
+     * This method will take a MutableList and wrap it directly in a SynchronizedMutableList. It will
+     * take any other non-Eclipse-Collections collection and first adapt it will a ListAdapter, and then return a
+     * SynchronizedMutableList that wraps the adapter. Additionally, a developer specifies which lock to use
      * with the collection.
      */
     public static <E, L extends List<E>> SynchronizedMutableList<E> of(L list, Object lock)
@@ -213,6 +214,30 @@ public class SynchronizedMutableList<T>
         synchronized (this.getLock())
         {
             return this.getDelegate().get(index);
+        }
+    }
+
+    /**
+     * @since 10.0 - Overridden for correctness
+     */
+    @Override
+    public void replaceAll(UnaryOperator<T> operator)
+    {
+        synchronized (this.getLock())
+        {
+            this.getDelegate().replaceAll(operator);
+        }
+    }
+
+    /**
+     * @since 10.0 - Overridden for correctness
+     */
+    @Override
+    public void sort(Comparator<? super T> comparator)
+    {
+        synchronized (this.getLock())
+        {
+            this.getDelegate().sort(comparator);
         }
     }
 

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
@@ -30,11 +31,13 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.function.Predicate;
 
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.function.Function3;
+import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
@@ -49,7 +52,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.MapIterate;
 import org.eclipse.collections.impl.utility.internal.IterableIterate;
 
-@SuppressWarnings({ "rawtypes", "ObjectEquality" })
+@SuppressWarnings({"rawtypes", "ObjectEquality"})
 public final class ConcurrentHashMap<K, V>
         extends AbstractMutableMap<K, V>
         implements ConcurrentMutableMap<K, V>, Externalizable
@@ -496,7 +499,7 @@ public final class ConcurrentHashMap<K, V>
      *                       Note that the transformed key must have the same identity/hashcode as the original "mutable" key.
      * @param factory        It creates an object, if it is not present in the map already.
      */
-    public <P1, P2> V putIfAbsentGetIfPresent(K key, Function2<K, V, K> keyTransformer, Function3<P1, P2, K, V> factory, P1 param1, P2 param2)
+    public <P1, P2> V putIfAbsentGetIfPresent(K key, Function2<? super K, ? super V, ? extends K> keyTransformer, Function3<P1, P2, ? super K, ? extends V> factory, P1 param1, P2 param2)
     {
         int hash = this.hash(key);
         AtomicReferenceArray currentArray = this.table;
@@ -792,11 +795,12 @@ public final class ConcurrentHashMap<K, V>
         if (o == null)
         {
             Entry<K, V> newEntry = new Entry<>(key, value, null);
+            this.addToSize(1);
             if (currentArray.compareAndSet(index, null, newEntry))
             {
-                this.addToSize(1);
                 return null;
             }
+            this.addToSize(-1);
         }
         return this.slowPut(key, value, hash, currentArray);
     }
@@ -843,7 +847,7 @@ public final class ConcurrentHashMap<K, V>
         }
     }
 
-    public void putAllInParallel(Map<K, V> map, int chunks, Executor executor)
+    public void putAllInParallel(Map<? extends K, ? extends V> map, int chunks, Executor executor)
     {
         if (this.size() == 0)
         {
@@ -1228,7 +1232,7 @@ public final class ConcurrentHashMap<K, V>
         }
     }
 
-    private void sequentialForEachKeyValue(Procedure2<K, V> block, AtomicReferenceArray currentArray, int start, int end)
+    private void sequentialForEachKeyValue(Procedure2<? super K, ? super V> block, AtomicReferenceArray currentArray, int start, int end)
     {
         for (int i = start; i < end; i++)
         {
@@ -1472,11 +1476,8 @@ public final class ConcurrentHashMap<K, V>
 
         protected HashIterator()
         {
-            if (!ConcurrentHashMap.this.isEmpty())
-            {
-                this.currentState = new IteratorState(ConcurrentHashMap.this.table);
-                this.findNext();
-            }
+            this.currentState = new IteratorState(ConcurrentHashMap.this.table);
+            this.findNext();
         }
 
         private void findNext()
@@ -1551,8 +1552,7 @@ public final class ConcurrentHashMap<K, V>
             return e;
         }
 
-        @Override
-        public void remove()
+        protected void removeByKey()
         {
             if (this.current == null)
             {
@@ -1562,10 +1562,28 @@ public final class ConcurrentHashMap<K, V>
             this.current = null;
             ConcurrentHashMap.this.remove(key);
         }
+
+        protected boolean removeByKeyValue()
+        {
+            if (this.current == null)
+            {
+                throw new IllegalStateException();
+            }
+            K key = this.current.key;
+            V val = this.current.value;
+            this.current = null;
+            return ConcurrentHashMap.this.remove(key, val);
+        }
     }
 
     private final class ValueIterator extends HashIterator<V>
     {
+        @Override
+        public void remove()
+        {
+            this.removeByKeyValue();
+        }
+
         @Override
         public V next()
         {
@@ -1580,6 +1598,12 @@ public final class ConcurrentHashMap<K, V>
         {
             return this.nextEntry().getKey();
         }
+
+        @Override
+        public void remove()
+        {
+            this.removeByKey();
+        }
     }
 
     private final class EntryIterator extends HashIterator<Map.Entry<K, V>>
@@ -1588,6 +1612,12 @@ public final class ConcurrentHashMap<K, V>
         public Map.Entry<K, V> next()
         {
             return this.nextEntry();
+        }
+
+        @Override
+        public void remove()
+        {
+            this.removeByKeyValue();
         }
     }
 
@@ -1633,6 +1663,38 @@ public final class ConcurrentHashMap<K, V>
         }
 
         @Override
+        public boolean removeAll(Collection<?> col)
+        {
+            Objects.requireNonNull(col);
+            boolean removed = false;
+            ValueIterator itr = new ValueIterator();
+            while (itr.hasNext())
+            {
+                if (col.contains(itr.next()))
+                {
+                    removed |= itr.removeByKeyValue();
+                }
+            }
+            return removed;
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super V> filter)
+        {
+            Objects.requireNonNull(filter);
+            boolean removed = false;
+            ValueIterator itr = new ValueIterator();
+            while (itr.hasNext())
+            {
+                if (filter.test(itr.next()))
+                {
+                    removed |= itr.removeByKeyValue();
+                }
+            }
+            return removed;
+        }
+
+        @Override
         public int size()
         {
             return ConcurrentHashMap.this.size();
@@ -1657,6 +1719,48 @@ public final class ConcurrentHashMap<K, V>
         public Iterator<Map.Entry<K, V>> iterator()
         {
             return new EntryIterator();
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> col)
+        {
+            Objects.requireNonNull(col);
+            boolean removed = false;
+
+            if (this.size() > col.size())
+            {
+                for (Iterator<?> itr = col.iterator(); itr.hasNext(); )
+                {
+                    removed |= this.remove(itr.next());
+                }
+            }
+            else
+            {
+                for (EntryIterator itr = new EntryIterator(); itr.hasNext(); )
+                {
+                    if (col.contains(itr.next()))
+                    {
+                        removed |= itr.removeByKeyValue();
+                    }
+                }
+            }
+            return removed;
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super Map.Entry<K, V>> filter)
+        {
+            Objects.requireNonNull(filter);
+            boolean removed = false;
+            EntryIterator itr = new EntryIterator();
+            while (itr.hasNext())
+            {
+                if (filter.test(itr.next()))
+                {
+                    removed |= itr.removeByKeyValue();
+                }
+            }
+            return removed;
         }
 
         @Override
@@ -1975,6 +2079,22 @@ public final class ConcurrentHashMap<K, V>
     public V removeKey(K key)
     {
         return this.remove(key);
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        int previousSize = this.size();
+        Iterator<Map.Entry<K, V>> iterator = this.entrySet().iterator();
+        while (iterator.hasNext())
+        {
+            Map.Entry<K, V> entry = iterator.next();
+            if (predicate.accept(entry.getKey(), entry.getValue()))
+            {
+                iterator.remove();
+            }
+        }
+        return previousSize > this.size();
     }
 
     @Override

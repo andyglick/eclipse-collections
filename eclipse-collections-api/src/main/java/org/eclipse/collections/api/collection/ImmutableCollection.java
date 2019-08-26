@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -57,25 +57,25 @@ public interface ImmutableCollection<T>
         extends RichIterable<T>
 {
     /**
-     * This method is similar to the <code>with</code> method in <code>MutableCollection</code>
+     * This method is similar to the {@code with} method in {@code MutableCollection}
      * with the difference that a new copy of this collection with the element appended will be returned.
      */
     ImmutableCollection<T> newWith(T element);
 
     /**
-     * This method is similar to the <code>without</code> method in <code>MutableCollection</code>
+     * This method is similar to the {@code without} method in {@code MutableCollection}
      * with the difference that a new copy of this collection with the element removed will be returned.
      */
     ImmutableCollection<T> newWithout(T element);
 
     /**
-     * This method is similar to the <code>withAll</code> method in <code>MutableCollection</code>
+     * This method is similar to the {@code withAll} method in {@code MutableCollection}
      * with the difference that a new copy of this collection with the elements appended will be returned.
      */
     ImmutableCollection<T> newWithAll(Iterable<? extends T> elements);
 
     /**
-     * This method is similar to the <code>withoutAll</code> method in <code>MutableCollection</code>
+     * This method is similar to the {@code withoutAll} method in {@code MutableCollection}
      * with the difference that a new copy of this collection with the elements removed will be returned.
      */
     ImmutableCollection<T> newWithoutAll(Iterable<? extends T> elements);
@@ -140,6 +140,15 @@ public interface ImmutableCollection<T>
     @Override
     <V> ImmutableCollection<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
 
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> ImmutableCollection<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
+
     @Override
     <V> ImmutableObjectLongMap<V> sumByInt(Function<? super T, ? extends V> groupBy, IntFunction<? super T> function);
 
@@ -168,6 +177,15 @@ public interface ImmutableCollection<T>
     default <V, P> ImmutableBag<V> countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
         return this.asLazy().<P, V>collectWith(function, parameter).toBag().toImmutable();
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    default <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.asLazy().flatCollect(function).toBag().toImmutable();
     }
 
     @Override

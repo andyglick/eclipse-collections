@@ -14,14 +14,12 @@ body(type, name) ::= <<
 
 package org.eclipse.collections.api.list.primitive;
 
-import java.lang.Iterable;
-
 import org.eclipse.collections.api.<name>Iterable;
+import org.eclipse.collections.api.block.function.primitive.<name>IntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.procedure.primitive.<name>Procedure;
 import org.eclipse.collections.api.collection.primitive.Mutable<name>Collection;
-import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.tuple.primitive.<name><name>Pair;
 import org.eclipse.collections.api.tuple.primitive.<name>ObjectPair;
@@ -58,6 +56,19 @@ public interface Mutable<name>List extends Mutable<name>Collection, <name>List
     }
 
     \<V> MutableList\<V> collect(<name>ToObjectFunction\<? extends V> function);
+
+    /**
+     * Returns a new MutableList using results obtained by applying the specified function to each element
+     * and its corresponding index.
+     *
+     * @since 9.1.
+     */
+    @Override
+    default \<V> MutableList\<V> collectWithIndex(<name>IntToObjectFunction\<? extends V> function)
+    {
+        int[] index = { 0 };
+        return this.collect(each -> function.value(each, index[0]++));
+    }
 
     Mutable<name>List reverseThis();
 
@@ -108,6 +119,16 @@ public interface Mutable<name>List extends Mutable<name>Collection, <name>List
     default \<T> MutableList\<<name>ObjectPair\<T\>> zip(Iterable\<T> list)
     {
         throw new UnsupportedOperationException("Default method to prevent breaking backwards compatibility");
+    }
+
+    /**
+     * Creates a new empty mutable version of the same List type.
+     *
+     * @since 9.2.
+     */
+    default Mutable<name>List newEmpty()
+    {
+        throw new UnsupportedOperationException("Implement in concrete classes.");
     }
 }
 

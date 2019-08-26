@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -12,7 +12,7 @@ class(primitive) ::= <<
 >>
 
 body(type, name) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.bag.mutable.primitive;
 
@@ -34,6 +34,7 @@ import org.eclipse.collections.api.tuple.primitive.<name>IntPair;
 import org.eclipse.collections.impl.collection.mutable.primitive.AbstractSynchronized<name>Collection;
 import org.eclipse.collections.impl.factory.primitive.<name>Bags;
 import org.eclipse.collections.impl.lazy.primitive.Lazy<name>IterableAdapter;
+import org.eclipse.collections.api.set.primitive.Mutable<name>Set;
 
 /**
  * A synchronized view of a {@link Mutable<name>Bag}. It is imperative that the user manually synchronize on the collection when iterating over it using the
@@ -45,7 +46,7 @@ import org.eclipse.collections.impl.lazy.primitive.Lazy<name>IterableAdapter;
  * @see MutableBag#asSynchronized()
  * @since 3.1.
  */
-public final class Synchronized<name>Bag
+public class Synchronized<name>Bag
         extends AbstractSynchronized<name>Collection
         implements Mutable<name>Bag
 {
@@ -170,6 +171,15 @@ public final class Synchronized<name>Bag
     }
 
     @Override
+    public Mutable<name>Set selectUnique()
+    {
+        synchronized (this.getLock())
+        {
+            return this.getMutable<name>Bag().selectUnique();
+        }
+    }
+
+    @Override
     public MutableList\<<name>IntPair> topOccurrences(int count)
     {
         synchronized (this.getLock())
@@ -235,7 +245,10 @@ public final class Synchronized<name>Bag
     @Override
     public Mutable<name>Bag asUnmodifiable()
     {
-        return new Unmodifiable<name>Bag(this);
+        synchronized (this.getLock())
+        {
+            return new Unmodifiable<name>Bag(this);
+        }
     }
 
     @Override
@@ -247,7 +260,22 @@ public final class Synchronized<name>Bag
     @Override
     public Immutable<name>Bag toImmutable()
     {
-        return <name>Bags.immutable.withAll(this);
+        synchronized (this.getLock())
+        {
+            return <name>Bags.immutable.withAll(this);
+        }
+    }
+
+    /**
+     * @since 9.2.
+     */
+    @Override
+    public Mutable<name>Bag newEmpty()
+    {
+        synchronized (this.getLock())
+        {
+            return this.getMutable<name>Bag().newEmpty();
+        }
     }
 }
 

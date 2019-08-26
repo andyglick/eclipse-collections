@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.collections.api.LazyIterable;
 import org.eclipse.collections.api.RichIterable;
@@ -28,6 +29,7 @@ import org.eclipse.collections.api.bag.primitive.MutableIntBag;
 import org.eclipse.collections.api.bag.primitive.MutableLongBag;
 import org.eclipse.collections.api.bag.primitive.MutableShortBag;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
@@ -59,6 +61,7 @@ import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.map.sorted.MutableSortedMap;
@@ -93,8 +96,8 @@ public class UnmodifiableMutableMap<K, V>
     }
 
     /**
-     * This method will take a MutableMap and wrap it directly in a UnmodifiableMutableMap.  It will
-     * take any other non-GS-map and first adapt it will a MapAdapter, and then return a
+     * This method will take a MutableMap and wrap it directly in a UnmodifiableMutableMap. It will
+     * take any other non-Eclipse-Collections map and first adapt it will a MapAdapter, and then return a
      * UnmodifiableMutableMap that wraps the adapter.
      */
     public static <K, V, M extends Map<K, V>> UnmodifiableMutableMap<K, V> of(M map)
@@ -158,6 +161,18 @@ public class UnmodifiableMutableMap<K, V>
     }
 
     @Override
+    public boolean removeAllKeys(Set<? extends K> keys)
+    {
+        throw new UnsupportedOperationException("Cannot call removeAllKeys() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        throw new UnsupportedOperationException("Cannot call removeIf() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
     public V updateValue(K key, Function0<? extends V> factory, Function<? super V, ? extends V> function)
     {
         throw new UnsupportedOperationException("Cannot call updateValue() on " + this.getClass().getSimpleName());
@@ -218,23 +233,13 @@ public class UnmodifiableMutableMap<K, V>
     @Override
     public V getIfAbsent(K key, Function0<? extends V> function)
     {
-        V result = this.get(key);
-        if (this.isAbsent(result, key))
-        {
-            return function.value();
-        }
-        return result;
+        return this.getMutableMap().getIfAbsent(key, function);
     }
 
     @Override
     public V getIfAbsentValue(K key, V value)
     {
-        V result = this.get(key);
-        if (this.isAbsent(result, key))
-        {
-            return value;
-        }
-        return result;
+        return this.getMutableMap().getIfAbsentValue(key, value);
     }
 
     @Override
@@ -243,12 +248,7 @@ public class UnmodifiableMutableMap<K, V>
             Function<? super P, ? extends V> function,
             P parameter)
     {
-        V result = this.get(key);
-        if (this.isAbsent(result, key))
-        {
-            return function.valueOf(parameter);
-        }
-        return result;
+        return this.getMutableMap().getIfAbsentWith(key, function, parameter);
     }
 
     private boolean isAbsent(V result, K key)
@@ -263,13 +263,13 @@ public class UnmodifiableMutableMap<K, V>
     }
 
     @Override
-    public V putPair(Pair<K, V> keyValuePair)
+    public V putPair(Pair<? extends K, ? extends V> keyValuePair)
     {
         throw new UnsupportedOperationException("Cannot call putPair() on " + this.getClass().getSimpleName());
     }
 
     @Override
-    public V add(Pair<K, V> keyValuePair)
+    public V add(Pair<? extends K, ? extends V> keyValuePair)
     {
         throw new UnsupportedOperationException("Cannot call add() on " + this.getClass().getSimpleName());
     }
@@ -547,6 +547,15 @@ public class UnmodifiableMutableMap<K, V>
     }
 
     @Override
+    public <NK, NV, R extends Map<NK, NV>> R toMap(
+            Function<? super V, ? extends NK> keyFunction,
+            Function<? super V, ? extends NV> valueFunction,
+            R target)
+    {
+        return this.getMutableMap().toMap(keyFunction, valueFunction, target);
+    }
+
+    @Override
     public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(
             Function<? super V, ? extends NK> keyFunction,
             Function<? super V, ? extends NV> valueFunction)
@@ -561,6 +570,23 @@ public class UnmodifiableMutableMap<K, V>
             Function<? super V, ? extends NV> valueFunction)
     {
         return this.getMutableMap().toSortedMap(comparator, keyFunction, valueFunction);
+    }
+
+    @Override
+    public <KK extends Comparable<? super KK>, NK, NV> MutableSortedMap<NK, NV> toSortedMapBy(
+            Function<? super NK, KK> sortBy,
+            Function<? super V, ? extends NK> keyFunction,
+            Function<? super V, ? extends NV> valueFunction)
+    {
+        return this.getMutableMap().toSortedMapBy(sortBy, keyFunction, valueFunction);
+    }
+
+    @Override
+    public <NK, NV> MutableBiMap<NK, NV> toBiMap(
+            Function<? super V, ? extends NK> keyFunction,
+            Function<? super V, ? extends NV> valueFunction)
+    {
+        return this.getMutableMap().toBiMap(keyFunction, valueFunction);
     }
 
     @Override
@@ -762,7 +788,7 @@ public class UnmodifiableMutableMap<K, V>
     }
 
     @Override
-    public <VV, R extends MutableMap<VV, V>> R groupByUniqueKey(Function<? super V, ? extends VV> function, R target)
+    public <VV, R extends MutableMapIterable<VV, V>> R groupByUniqueKey(Function<? super V, ? extends VV> function, R target)
     {
         return this.getMutableMap().groupByUniqueKey(function, target);
     }

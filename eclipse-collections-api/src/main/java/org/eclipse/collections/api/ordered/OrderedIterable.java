@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -60,9 +60,9 @@ public interface OrderedIterable<T> extends RichIterable<T>
     int indexOf(Object object);
 
     /**
-     * Returns the first element of an iterable.  In the case of a List it is the element at the first index.  In the
-     * case of any other Collection, it is the first element that would be returned during an iteration.  If the
-     * iterable is empty, null is returned.  If null is a valid element of the container, then a developer would need to
+     * Returns the first element of an iterable. In the case of a List it is the element at the first index. In the
+     * case of any other Collection, it is the first element that would be returned during an iteration. If the
+     * iterable is empty, null is returned. If null is a valid element of the container, then a developer would need to
      * check to see if the iterable is empty to validate that a null result was not due to the container being empty.
      */
     @Override
@@ -86,9 +86,9 @@ public interface OrderedIterable<T> extends RichIterable<T>
     }
 
     /**
-     * Returns the last element of an iterable.  In the case of a List it is the element at the last index.  In the case
-     * of any other Collection, it is the last element that would be returned during an iteration.  If the iterable is
-     * empty, null is returned.  If null is a valid element of the container, then a developer would need to check to
+     * Returns the last element of an iterable. In the case of a List it is the element at the last index. In the case
+     * of any other Collection, it is the last element that would be returned during an iteration. If the iterable is
+     * empty, null is returned. If null is a valid element of the container, then a developer would need to check to
      * see if the iterable is empty to validate that a null result was not due to the container being empty.
      */
     @Override
@@ -154,7 +154,7 @@ public interface OrderedIterable<T> extends RichIterable<T>
     <S> boolean corresponds(OrderedIterable<S> other, Predicate2<? super T, ? super S> predicate);
 
     /**
-     * Iterates over the section of the iterable covered by the specified inclusive indexes.  The indexes are
+     * Iterates over the section of the iterable covered by the specified inclusive indexes. The indexes are
      * both inclusive.
      * <p>
      * <p>
@@ -190,7 +190,7 @@ public interface OrderedIterable<T> extends RichIterable<T>
     void forEachWithIndex(ObjectIntProcedure<? super T> objectIntProcedure);
 
     /**
-     * Iterates over the section of the iterable covered by the specified inclusive indexes.  The indexes are
+     * Iterates over the section of the iterable covered by the specified inclusive indexes. The indexes are
      * both inclusive.
      * <p>
      * <p>
@@ -266,7 +266,7 @@ public interface OrderedIterable<T> extends RichIterable<T>
      */
     default <V> OrderedIterable<V> collectWithIndex(ObjectIntToObjectFunction<? super T, ? extends V> function)
     {
-        int[] index = { 0 };
+        int[] index = {0};
         return this.collect(each -> function.valueOf(each, index[0]++));
     }
 
@@ -278,7 +278,7 @@ public interface OrderedIterable<T> extends RichIterable<T>
      */
     default <V, R extends Collection<V>> R collectWithIndex(ObjectIntToObjectFunction<? super T, ? extends V> function, R target)
     {
-        int[] index = { 0 };
+        int[] index = {0};
         return this.collect(each -> function.valueOf(each, index[0]++), target);
     }
 
@@ -290,6 +290,15 @@ public interface OrderedIterable<T> extends RichIterable<T>
 
     @Override
     <V> OrderedIterable<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> OrderedIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     @Override
     OrderedBooleanIterable collectBoolean(BooleanFunction<? super T> booleanFunction);

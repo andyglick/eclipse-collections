@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -74,6 +74,21 @@ public class UnmodifiableMutableMapTest extends MutableMapTestCase
     {
         MutableMap<Integer, String> map = this.newMapWithKeysValues(1, "1", 2, "Two");
         Verify.assertThrows(UnsupportedOperationException.class, () -> map.removeKey(1));
+    }
+
+    @Override
+    @Test
+    public void removeAllKeys()
+    {
+        Verify.assertThrows(UnsupportedOperationException.class, () -> this.newMapWithKeysValues(1, "1", 2, "Two").removeAllKeys(null));
+    }
+
+    @Override
+    @Test
+    public void removeIf()
+    {
+        MutableMap<Integer, String> map = this.newMapWithKeysValues(1, "1", 2, "Two");
+        Verify.assertThrows(UnsupportedOperationException.class, () -> map.removeIf(null));
     }
 
     @Override
@@ -338,7 +353,7 @@ public class UnmodifiableMutableMapTest extends MutableMapTestCase
     @Test
     public void put()
     {
-        Verify.assertThrows(UnsupportedOperationException.class, UnmodifiableMutableMapTest.super::put);
+        Verify.assertThrows(UnsupportedOperationException.class, super::put);
     }
 
     @Override

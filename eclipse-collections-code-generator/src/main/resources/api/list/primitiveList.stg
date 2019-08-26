@@ -17,17 +17,21 @@ body(type, name) ::= <<
 
 package org.eclipse.collections.api.list.primitive;
 
-import java.lang.Iterable;
-
 import org.eclipse.collections.api.<name>Iterable;
+import org.eclipse.collections.api.block.function.primitive.<name>IntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.<name>ToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.<name>Predicate;
 import org.eclipse.collections.api.block.procedure.primitive.<name>Procedure;
 import org.eclipse.collections.api.list.ListIterable;
-import org.eclipse.collections.api.tuple.primitive.<name>ObjectPair;
 import org.eclipse.collections.api.ordered.primitive.Reversible<name>Iterable;
 import org.eclipse.collections.api.tuple.primitive.<name><name>Pair;
 import org.eclipse.collections.api.tuple.primitive.<name>ObjectPair;
+
+<if(primitive.specializedStream)>
+import java.util.Spliterator;
+import java.util.stream.StreamSupport;
+import java.util.stream.<name>Stream;
+<endif>
 
 /**
  * This file was automatically generated from template file primitiveList.stg.
@@ -55,6 +59,19 @@ public interface <name>List extends Reversible<name>Iterable
 
     @Override
     \<V> ListIterable\<V> collect(<name>ToObjectFunction\<? extends V> function);
+
+    /**
+     * Returns a new ListIterable using results obtained by applying the specified function to each element
+     * and its corresponding index.
+     *
+     * @since 9.1.
+     */
+    @Override
+    default \<V> ListIterable\<V> collectWithIndex(<name>IntToObjectFunction\<? extends V> function)
+    {
+        int[] index = { 0 };
+        return this.collect(each -> function.value(each, index[0]++));
+    }
 
     /**
      * Follows the same general contract as {@link java.util.List#equals(Object)}.
@@ -114,6 +131,29 @@ public interface <name>List extends Reversible<name>Iterable
     {
         throw new UnsupportedOperationException("Default method to prevent breaking backwards compatibility");
     }
+<if(primitive.specializedStream)>
+
+    /**
+     * @since 10.0
+     */
+    Spliterator.Of<name> spliterator();
+
+    /**
+     * @since 10.0
+     */
+    default <name>Stream primitiveStream()
+    {
+        return StreamSupport.<type>Stream(this.spliterator(), false);
+    }
+
+    /**
+     * @since 10.0
+     */
+    default <name>Stream primitiveParallelStream()
+    {
+        return StreamSupport.<type>Stream(this.spliterator(), true);
+    }
+<endif>
 }
 
 >>

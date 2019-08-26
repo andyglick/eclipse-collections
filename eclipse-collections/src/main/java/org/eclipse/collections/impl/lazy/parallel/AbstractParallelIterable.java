@@ -480,7 +480,7 @@ public abstract class AbstractParallelIterable<T, B extends Batch<T>> implements
             return list;
         };
         MutableList<T> state = new CompositeFastList<>();
-        this.collectCombine(map, MutableList<T>::addAll, state);
+        this.collectCombine(map, MutableList::addAll, state);
         return state;
     }
 
@@ -580,7 +580,8 @@ public abstract class AbstractParallelIterable<T, B extends Batch<T>> implements
     }
 
     @Override
-    public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(Comparator<? super NK> comparator,
+    public <NK, NV> MutableSortedMap<NK, NV> toSortedMap(
+            Comparator<? super NK> comparator,
             Function<? super T, ? extends NK> keyFunction,
             Function<? super T, ? extends NV> valueFunction)
     {
@@ -753,7 +754,7 @@ public abstract class AbstractParallelIterable<T, B extends Batch<T>> implements
     @Override
     public <V> MapIterable<V, T> groupByUniqueKey(Function<? super T, ? extends V> function)
     {
-        MutableMap<V, T> result = ConcurrentHashMap.newMap();
+        MutableMap<V, T> result = ConcurrentHashMap.newMap(this.getBatchSize());
         this.forEach(value -> {
             V key = function.valueOf(value);
             if (result.put(key, value) != null)

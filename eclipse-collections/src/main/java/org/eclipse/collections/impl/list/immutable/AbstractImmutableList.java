@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
+import java.util.function.UnaryOperator;
 
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.HashingStrategy;
@@ -96,7 +97,7 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.eclipse.collections.impl.utility.OrderedIterate;
 
 /**
- * This class is the parent class for all ImmutableLists.  All implementations of ImmutableList must implement the List
+ * This class is the parent class for all ImmutableLists. All implementations of ImmutableList must implement the List
  * interface so anArrayList.equals(anImmutableList) can return true when the contents and order are the same.
  */
 abstract class AbstractImmutableList<T>
@@ -565,24 +566,6 @@ abstract class AbstractImmutableList<T>
     }
 
     @Override
-    public void reverseForEach(Procedure<? super T> procedure)
-    {
-        if (this.notEmpty())
-        {
-            this.forEach(this.size() - 1, 0, procedure);
-        }
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super T> procedure)
-    {
-        if (this.notEmpty())
-        {
-            this.forEachWithIndex(this.size() - 1, 0, procedure);
-        }
-    }
-
-    @Override
     public int indexOf(Object object)
     {
         int n = this.size();
@@ -664,6 +647,24 @@ abstract class AbstractImmutableList<T>
     public T remove(int index)
     {
         throw new UnsupportedOperationException("Cannot call remove() on " + this.getClass().getSimpleName());
+    }
+
+    /**
+     * @since 10.0 - Override for correctness
+     */
+    @Override
+    public void replaceAll(UnaryOperator<T> operator)
+    {
+        throw new UnsupportedOperationException("Cannot call replaceAll() on " + this.getClass().getSimpleName());
+    }
+
+    /**
+     * @since 10.0 - Override for correctness
+     */
+    @Override
+    public void sort(Comparator<? super T> c)
+    {
+        throw new UnsupportedOperationException("Cannot call sort() on " + this.getClass().getSimpleName());
     }
 
     @Override
@@ -783,13 +784,19 @@ abstract class AbstractImmutableList<T>
     @Override
     public <S> ImmutableList<Pair<T, S>> zip(Iterable<S> that)
     {
+        if (that instanceof Collection || that instanceof RichIterable)
+        {
+            int thatSize = Iterate.sizeOf(that);
+            FastList<Pair<T, S>> target = FastList.newList(Math.min(this.size(), thatSize));
+            return this.zip(that, target).toImmutable();
+        }
         return this.zip(that, FastList.newList()).toImmutable();
     }
 
     @Override
     public ImmutableList<Pair<T, Integer>> zipWithIndex()
     {
-        return this.zipWithIndex(FastList.newList()).toImmutable();
+        return this.zipWithIndex(FastList.newList(this.size())).toImmutable();
     }
 
     @Override
@@ -897,9 +904,10 @@ abstract class AbstractImmutableList<T>
         }
         else
         {
-            for (int startIndex = 0, endIndex = size;
-                 endIndex <= this.size() && startIndex < this.size(); startIndex += size, endIndex += Math
-                    .min(size, this.size() - endIndex))
+            int endIndex = size;
+            for (int startIndex = 0;
+                    endIndex <= this.size() && startIndex < this.size();
+                    startIndex += size, endIndex += Math.min(size, this.size() - endIndex))
             {
                 result.add(new ImmutableSubList<>(this, startIndex, endIndex));
             }

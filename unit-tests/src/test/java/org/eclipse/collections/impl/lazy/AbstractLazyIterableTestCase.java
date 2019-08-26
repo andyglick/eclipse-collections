@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -50,6 +50,7 @@ import org.eclipse.collections.impl.block.function.NegativeIntervalFunction;
 import org.eclipse.collections.impl.block.function.PassThruFunction0;
 import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.Interval;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
@@ -748,6 +749,16 @@ public abstract class AbstractLazyIterableTestCase
     }
 
     @Test
+    public void toSortedMapBy()
+    {
+        LazyIterable<Integer> integers = this.newWith(1, 2, 3);
+        MutableSortedMap<Integer, String> map = integers.toSortedMapBy(key -> -key,
+                Functions.getIntegerPassThru(), String::valueOf);
+        Verify.assertMapsEqual(TreeSortedMap.newMapWith(Comparators.reverseNaturalOrder(), 1, "1", 2, "2", 3, "3"), map);
+        Verify.assertListsEqual(FastList.newListWith(3, 2, 1), map.keySet().toList());
+    }
+
+    @Test
     public void testToString()
     {
         Assert.assertEquals("[1, 2, 3]", this.newWith(1, 2, 3).toString());
@@ -926,6 +937,20 @@ public abstract class AbstractLazyIterableTestCase
         Verify.assertSetsEqual(
                 UnifiedSet.newSetWith("1", "2", "3", "4"),
                 collection.flatCollect(function, UnifiedSet.newSet()));
+    }
+
+    @Test
+    public void flatCollectWith()
+    {
+        LazyIterable<Integer> collection = this.newWith(4, 5, 6, 7);
+
+        Verify.assertSetsEqual(
+                Sets.mutable.with(1, 2, 3, 4, 5, 6, 7),
+                collection.flatCollectWith(Interval::fromTo, 1).toSet());
+
+        Verify.assertBagsEqual(
+                Bags.mutable.with(4, 3, 2, 1, 5, 4, 3, 2, 1, 6, 5, 4, 3, 2, 1, 7, 6, 5, 4, 3, 2, 1),
+                collection.flatCollectWith(Interval::fromTo, 1, Bags.mutable.empty()));
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -27,6 +27,7 @@ import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
 import org.eclipse.collections.api.block.function.primitive.FloatFunction;
 import org.eclipse.collections.api.block.function.primitive.IntFunction;
 import org.eclipse.collections.api.block.function.primitive.LongFunction;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
@@ -45,6 +46,21 @@ public interface UnsortedBag<T> extends Bag<T>
 
     @Override
     UnsortedBag<T> selectByOccurrences(IntPredicate predicate);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default UnsortedBag<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    UnsortedSetIterable<T> selectUnique();
 
     @Override
     UnsortedBag<T> select(Predicate<? super T> predicate);
@@ -98,7 +114,19 @@ public interface UnsortedBag<T> extends Bag<T>
     <V> UnsortedBag<V> collectIf(Predicate<? super T> predicate, Function<? super T, ? extends V> function);
 
     @Override
+    <V> UnsortedBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
+
+    @Override
     <V> UnsortedBag<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> UnsortedBag<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     /**
      * @deprecated in 6.0. Use {@link OrderedIterable#zip(Iterable)} instead.

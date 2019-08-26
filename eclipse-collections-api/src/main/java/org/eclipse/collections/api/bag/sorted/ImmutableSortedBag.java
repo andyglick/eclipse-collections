@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -29,6 +29,7 @@ import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
+import org.eclipse.collections.api.factory.SortedSets;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 import org.eclipse.collections.api.list.primitive.ImmutableByteList;
@@ -43,6 +44,7 @@ import org.eclipse.collections.api.map.sorted.MutableSortedMap;
 import org.eclipse.collections.api.multimap.sortedbag.ImmutableSortedBagMultimap;
 import org.eclipse.collections.api.partition.bag.sorted.PartitionImmutableSortedBag;
 import org.eclipse.collections.api.set.sorted.ImmutableSortedSet;
+import org.eclipse.collections.api.set.sorted.MutableSortedSet;
 import org.eclipse.collections.api.tuple.Pair;
 
 /**
@@ -67,6 +69,32 @@ public interface ImmutableSortedBag<T>
 
     @Override
     ImmutableSortedBag<T> selectByOccurrences(IntPredicate predicate);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default ImmutableSortedBag<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default ImmutableSortedSet<T> selectUnique()
+    {
+        MutableSortedSet<T> result = SortedSets.mutable.with(this.comparator());
+        this.forEachWithOccurrences((each, occurrences) ->
+        {
+            if (occurrences == 1)
+            {
+                result.add(each);
+            }
+        });
+        return result.toImmutable();
+    }
 
     @Override
     ImmutableSortedBag<T> tap(Procedure<? super T> procedure);
@@ -101,7 +129,7 @@ public interface ImmutableSortedBag<T>
     @Override
     default <V> ImmutableList<V> collectWithIndex(ObjectIntToObjectFunction<? super T, ? extends V> function)
     {
-        int[] index = { 0 };
+        int[] index = {0};
         return this.collect(each -> function.valueOf(each, index[0]++));
     }
 
@@ -136,7 +164,21 @@ public interface ImmutableSortedBag<T>
     <V> ImmutableList<V> collectIf(Predicate<? super T> predicate, Function<? super T, ? extends V> function);
 
     @Override
+    <V> ImmutableList<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
+
+    @Override
     <V> ImmutableList<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
+
+    /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> ImmutableList<V> flatCollectWith(
+            Function2<? super T, ? super P, ? extends Iterable<V>> function,
+            P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
 
     @Override
     ImmutableSortedSet<T> distinct();
@@ -163,6 +205,15 @@ public interface ImmutableSortedBag<T>
     default <V, P> ImmutableBag<V> countByWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
         return this.asLazy().<P, V>collectWith(function, parameter).toBag().toImmutable();
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    default <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.asLazy().flatCollect(function).toBag().toImmutable();
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.collections.api.LazyIterable;
@@ -253,6 +254,15 @@ public class ImmutableHashBag<T>
     }
 
     @Override
+    public <K, V, R extends Map<K, V>> R toMap(
+            Function<? super T, ? extends K> keyFunction,
+            Function<? super T, ? extends V> valueFunction,
+            R target)
+    {
+        return this.delegate.toMap(keyFunction, valueFunction, target);
+    }
+
+    @Override
     public void each(Procedure<? super T> procedure)
     {
         this.delegate.forEach(procedure);
@@ -334,6 +344,12 @@ public class ImmutableHashBag<T>
     public <K, V> MutableSortedMap<K, V> toSortedMap(Comparator<? super K> comparator, Function<? super T, ? extends K> keyFunction, Function<? super T, ? extends V> valueFunction)
     {
         return this.delegate.toSortedMap(comparator, keyFunction, valueFunction);
+    }
+
+    @Override
+    public <KK extends Comparable<? super KK>, K, V> MutableSortedMap<K, V> toSortedMapBy(Function<? super K, KK> sortBy, Function<? super T, ? extends K> keyFunction, Function<? super T, ? extends V> valueFunction)
+    {
+        return this.delegate.toSortedMapBy(sortBy, keyFunction, valueFunction);
     }
 
     @Override

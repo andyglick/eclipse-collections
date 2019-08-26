@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -235,6 +235,24 @@ class ImmutableEmptySortedBag<T>
         return target;
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return Bags.immutable.empty();
+    }
+
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V, R extends MutableBagIterable<V>> R countByEach(Function<? super T, ? extends Iterable<V>> function, R target)
+    {
+        return target;
+    }
+
     @Override
     public ImmutableSortedBag<T> selectByOccurrences(IntPredicate predicate)
     {
@@ -346,6 +364,12 @@ class ImmutableEmptySortedBag<T>
     }
 
     @Override
+    public <V> ImmutableList<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        return Lists.immutable.empty();
+    }
+
+    @Override
     public PartitionImmutableSortedBag<T> partitionWhile(Predicate<? super T> predicate)
     {
         return new PartitionImmutableSortedBagImpl<>(new PartitionTreeBag<>(this.comparator()));
@@ -451,5 +475,11 @@ class ImmutableEmptySortedBag<T>
             throw new IllegalArgumentException("Count must be greater than zero, but was: " + count);
         }
         return this;
+    }
+
+    @Override
+    public ImmutableSortedSet<T> selectUnique()
+    {
+        return SortedSets.immutable.of(this.comparator());
     }
 }

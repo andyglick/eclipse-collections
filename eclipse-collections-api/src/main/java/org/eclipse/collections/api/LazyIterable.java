@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -37,9 +37,6 @@ import org.eclipse.collections.api.tuple.Pair;
 public interface LazyIterable<T>
         extends RichIterable<T>
 {
-    /**
-     * @inheritDoc
-     */
     @Override
     T getFirst();
 
@@ -115,6 +112,15 @@ public interface LazyIterable<T>
     <V> LazyIterable<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
 
     /**
+     * @since 9.2
+     */
+    @Override
+    default <P, V> LazyIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
+
+    /**
      * Creates a deferred iterable that will join this iterable with the specified iterable.
      */
     LazyIterable<T> concatenate(Iterable<T> iterable);
@@ -132,7 +138,7 @@ public interface LazyIterable<T>
     LazyIterable<Pair<T, Integer>> zipWithIndex();
 
     /**
-     * Creates a deferred chunking iterable.
+     * Creates a deferred chunk iterable.
      */
     @Override
     LazyIterable<RichIterable<T>> chunk(int size);

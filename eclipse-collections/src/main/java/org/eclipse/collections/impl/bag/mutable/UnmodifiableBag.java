@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -256,6 +256,12 @@ public class UnmodifiableBag<T>
     }
 
     @Override
+    public <V> MutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        return this.getMutableBag().collectWithOccurrences(function, Bags.mutable.empty());
+    }
+
+    @Override
     public <P, A> MutableBag<A> collectWith(Function2<? super T, ? super P, ? extends A> function, P parameter)
     {
         return this.getMutableBag().collectWith(function, parameter);
@@ -425,5 +431,11 @@ public class UnmodifiableBag<T>
         {
             return this.mutableBag.asUnmodifiable();
         }
+    }
+
+    @Override
+    public MutableSet<T> selectUnique()
+    {
+        return this.getMutableBag().selectUnique();
     }
 }

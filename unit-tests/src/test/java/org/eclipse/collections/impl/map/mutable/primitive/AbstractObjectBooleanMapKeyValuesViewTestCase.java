@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -387,7 +387,7 @@ public abstract class AbstractObjectBooleanMapKeyValuesViewTestCase
     {
         Assert.assertEquals(
                 Bags.mutable.of(5L, 7L, 9L),
-                this.newWith(2, true, 3, false, 4, true).collectWith((argument1, argument2) -> (argument1.getOne() + argument1.getOne() + argument2), 1L).toBag());
+                this.newWith(2, true, 3, false, 4, true).collectWith((argument1, argument2) -> argument1.getOne() + argument1.getOne() + argument2, 1L).toBag());
     }
 
     @Test
@@ -395,7 +395,7 @@ public abstract class AbstractObjectBooleanMapKeyValuesViewTestCase
     {
         Assert.assertEquals(
                 Bags.mutable.of(5L, 7L, 9L),
-                this.newWith(2, true, 3, false, 4, true).collectWith((argument1, argument2) -> (argument1.getOne() + argument1.getOne() + argument2), 1L, HashBag.newBag()));
+                this.newWith(2, true, 3, false, 4, true).collectWith((argument1, argument2) -> argument1.getOne() + argument1.getOne() + argument2, 1L, HashBag.newBag()));
     }
 
     @Test
@@ -625,7 +625,9 @@ public abstract class AbstractObjectBooleanMapKeyValuesViewTestCase
     {
         RichIterable<ObjectBooleanPair<Integer>> pairs = this.newWith(5, false, 1, true, 2, true);
         MutableSortedSet<ObjectBooleanPair<Integer>> set = pairs.toSortedSet(Comparators.reverseNaturalOrder());
-        Verify.assertSortedSetsEqual(TreeSortedSet.newSetWith(Comparators.reverseNaturalOrder(),
+        Verify.assertSortedSetsEqual(
+                TreeSortedSet.newSetWith(
+                        Comparators.reverseNaturalOrder(),
                         PrimitiveTuples.pair(Integer.valueOf(5), false),
                         PrimitiveTuples.pair(Integer.valueOf(2), true),
                         PrimitiveTuples.pair(Integer.valueOf(1), true)),
@@ -673,6 +675,15 @@ public abstract class AbstractObjectBooleanMapKeyValuesViewTestCase
         MutableSortedMap<String, String> map =
                 pairs.toSortedMap(Comparators.reverseNaturalOrder(), String::valueOf, String::valueOf);
         Assert.assertEquals(TreeSortedMap.newMapWith(Comparators.reverseNaturalOrder(), "1:true", "1:true", "2:false", "2:false", "3:true", "3:true"), map);
+    }
+
+    @Test
+    public void toSortedMapBy()
+    {
+        RichIterable<ObjectBooleanPair<Integer>> pairs = this.newWith(1, true, 2, false, 3, true);
+        MutableSortedMap<String, String> map =
+                pairs.toSortedMapBy(String::valueOf, String::valueOf, String::valueOf);
+        Assert.assertEquals(TreeSortedMap.newMapWith(Comparators.naturalOrder(), "1:true", "1:true", "2:false", "2:false", "3:true", "3:true"), map);
     }
 
     @Test
@@ -780,7 +791,9 @@ public abstract class AbstractObjectBooleanMapKeyValuesViewTestCase
     public void chunk()
     {
         RichIterable<ObjectBooleanPair<Integer>> collection = this.newWith(1, true, 2, false, 3, true);
-        Assert.assertEquals(Bags.immutable.of(FastList.newListWith(PrimitiveTuples.pair(Integer.valueOf(1), true)),
+        Assert.assertEquals(
+                Bags.immutable.of(
+                        FastList.newListWith(PrimitiveTuples.pair(Integer.valueOf(1), true)),
                         FastList.newListWith(PrimitiveTuples.pair(Integer.valueOf(2), false)),
                         FastList.newListWith(PrimitiveTuples.pair(Integer.valueOf(3), true))),
                 collection.chunk(1).toBag());

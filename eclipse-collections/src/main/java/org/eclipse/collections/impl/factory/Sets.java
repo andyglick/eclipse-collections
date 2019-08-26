@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -23,12 +23,14 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.factory.set.FixedSizeSetFactory;
 import org.eclipse.collections.api.factory.set.ImmutableSetFactory;
+import org.eclipse.collections.api.factory.set.MultiReaderSetFactory;
 import org.eclipse.collections.api.factory.set.MutableSetFactory;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.set.fixed.FixedSizeSetFactoryImpl;
 import org.eclipse.collections.impl.set.immutable.ImmutableSetFactoryImpl;
+import org.eclipse.collections.impl.set.mutable.MultiReaderMutableSetFactory;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 import org.eclipse.collections.impl.set.mutable.SetAdapter;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -70,9 +72,9 @@ import org.eclipse.collections.impl.utility.LazyIterate;
  * FixedSize Examples:
  *
  * <pre>
- * FixedSizeList&lt;String&gt; emptySet = Sets.fixedSize.empty();
- * FixedSizeList&lt;String&gt; setWith = Sets.fixedSize.with("a", "b", "c");
- * FixedSizeList&lt;String&gt; setOf = Sets.fixedSize.of("a", "b", "c");
+ * FixedSizeSet&lt;String&gt; emptySet = Sets.fixedSize.empty();
+ * FixedSizeSet&lt;String&gt; setWith = Sets.fixedSize.with("a", "b", "c");
+ * FixedSizeSet&lt;String&gt; setOf = Sets.fixedSize.of("a", "b", "c");
  * </pre>
  */
 @SuppressWarnings("ConstantNamingConvention")
@@ -81,8 +83,9 @@ public final class Sets
     public static final ImmutableSetFactory immutable = ImmutableSetFactoryImpl.INSTANCE;
     public static final FixedSizeSetFactory fixedSize = FixedSizeSetFactoryImpl.INSTANCE;
     public static final MutableSetFactory mutable = MutableSetFactoryImpl.INSTANCE;
+    public static final MultiReaderSetFactory multiReader = MultiReaderMutableSetFactory.INSTANCE;
 
-    private static final Predicate<Set<?>> INSTANCE_OF_SORTED_SET_PREDICATE = set -> set instanceof SortedSet;
+    private static final Predicate<Set<?>> INSTANCE_OF_SORTED_SET_PREDICATE = SortedSet.class::isInstance;
 
     private static final Predicate<Set<?>> HAS_NON_NULL_COMPARATOR = set -> ((SortedSet<?>) set).comparator() != null;
 
@@ -283,8 +286,8 @@ public final class Sets
         return Sets.cartesianProduct(set1, set2, Tuples::pair);
     }
 
-    public static <A, B, C> LazyIterable<C> cartesianProduct(Set<A> set1, Set<B> set2, Function2<A, B, C> function)
+    public static <A, B, C> LazyIterable<C> cartesianProduct(Set<A> set1, Set<B> set2, Function2<? super A, ? super B, ? extends C> function)
     {
-        return LazyIterate.flatCollect(set1, first -> LazyIterate.collect(set2, second -> function.value(first, second)));
+        return LazyIterate.cartesianProduct(set1, set2, function);
     }
 }

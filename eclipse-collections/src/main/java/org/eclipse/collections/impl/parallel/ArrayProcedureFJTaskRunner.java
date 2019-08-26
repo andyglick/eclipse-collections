@@ -52,8 +52,7 @@ public final class ArrayProcedureFJTaskRunner<T, BT extends Procedure<? super T>
     {
         this.procedures = new ArrayProcedureFJTask[this.taskCount];
         int sectionSize = array.length / this.taskCount;
-        int size = this.taskCount;
-        for (int index = 0; index < size; index++)
+        for (int index = 0; index < this.taskCount; index++)
         {
             ArrayProcedureFJTask<T, BT> procedureFJTask = new ArrayProcedureFJTask<>(this, procedureFactory, array, index,
                     sectionSize, index == this.taskCount - 1);
@@ -80,11 +79,11 @@ public final class ArrayProcedureFJTaskRunner<T, BT extends Procedure<? super T>
         {
             if (this.combiner.useCombineOne())
             {
-                int remaingTaskCount = this.taskCount;
-                while (remaingTaskCount > 0)
+                int remainingTaskCount = this.taskCount;
+                while (remainingTaskCount > 0)
                 {
                     this.combiner.combineOne(this.outputQueue.take());
-                    remaingTaskCount--;
+                    remainingTaskCount--;
                 }
             }
             else

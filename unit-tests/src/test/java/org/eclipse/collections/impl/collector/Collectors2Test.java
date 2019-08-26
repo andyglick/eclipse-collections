@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -22,15 +22,18 @@ import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
+import org.eclipse.collections.api.map.sorted.MutableSortedMap;
 import org.eclipse.collections.api.multimap.bag.MutableBagMultimap;
 import org.eclipse.collections.api.multimap.list.MutableListMultimap;
 import org.eclipse.collections.api.partition.PartitionMutableCollection;
 import org.eclipse.collections.impl.factory.BiMaps;
 import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.factory.Multimaps;
+import org.eclipse.collections.impl.factory.SortedMaps;
 import org.eclipse.collections.impl.factory.Stacks;
 import org.eclipse.collections.impl.factory.primitive.IntBags;
 import org.eclipse.collections.impl.list.Interval;
+import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.partition.bag.PartitionHashBag;
 import org.eclipse.collections.impl.test.Verify;
 import org.junit.Assert;
@@ -41,8 +44,8 @@ public final class Collectors2Test
     public static final Interval SMALL_INTERVAL = Interval.oneTo(5);
     public static final Interval LARGE_INTERVAL = Interval.oneTo(20000);
     public static final Integer HALF_SIZE = Integer.valueOf(LARGE_INTERVAL.size() / 2);
-    private final List<Integer> smallData = new ArrayList<Integer>(SMALL_INTERVAL);
-    private final List<Integer> bigData = new ArrayList<Integer>(LARGE_INTERVAL);
+    private final List<Integer> smallData = new ArrayList<>(SMALL_INTERVAL);
+    private final List<Integer> bigData = new ArrayList<>(LARGE_INTERVAL);
 
     @Test
     public void makeString0()
@@ -414,13 +417,13 @@ public final class Collectors2Test
     public void groupingByToBagMultimap()
     {
         Map<Integer, MutableBagMultimap<Integer, Integer>> expected = Interval.oneTo(100).stream().collect(
-                Collectors.groupingBy(each -> each % 2,
-                        Collectors2.toBagMultimap(each -> each % 5))
-        );
+                Collectors.groupingBy(
+                        each -> each % 2,
+                        Collectors2.toBagMultimap(each -> each % 5)));
         Map<Integer, MutableBagMultimap<Integer, Integer>> actual = Interval.oneTo(100).reduceInPlace(
-                Collectors.groupingBy(each -> each % 2,
-                        Collectors2.toBagMultimap(each -> each % 5))
-        );
+                Collectors.groupingBy(
+                        each -> each % 2,
+                        Collectors2.toBagMultimap(each -> each % 5)));
         Assert.assertEquals(expected, actual);
     }
 
@@ -428,13 +431,13 @@ public final class Collectors2Test
     public void groupingByPartition()
     {
         Map<Integer, PartitionMutableCollection<Integer>> expected = Interval.oneTo(100).stream().collect(
-                Collectors.groupingBy(each -> each % 2,
-                        Collectors2.partition(each -> each % 5 == 0, PartitionHashBag::new))
-        );
+                Collectors.groupingBy(
+                        each -> each % 2,
+                        Collectors2.partition(each -> each % 5 == 0, PartitionHashBag::new)));
         Map<Integer, PartitionMutableCollection<Integer>> actual = Interval.oneTo(100).reduceInPlace(
-                Collectors.groupingBy(each -> each % 2,
-                        Collectors2.partition(each -> each % 5 == 0, PartitionHashBag::new))
-        );
+                Collectors.groupingBy(
+                        each -> each % 2,
+                        Collectors2.partition(each -> each % 5 == 0, PartitionHashBag::new)));
         Assert.assertEquals(expected.get(0).getSelected(), actual.get(0).getSelected());
         Assert.assertEquals(expected.get(0).getRejected(), actual.get(0).getRejected());
     }
@@ -1112,10 +1115,38 @@ public final class Collectors2Test
     }
 
     @Test
+    public void countByEach()
+    {
+        List<Interval> intervals = FastList.newListWith(
+                Interval.evensFromTo(1, 100),
+                Interval.oddsFromTo(1, 100));
+
+        MutableBag<Integer> counts = intervals.stream().collect(Collectors2.countByEach(iv -> iv.collect(i -> i % 2)));
+
+        Assert.assertEquals(Interval.oneTo(100).countBy(i -> i % 2), counts);
+        Assert.assertEquals(50, counts.occurrencesOf(0));
+        Assert.assertEquals(50, counts.occurrencesOf(1));
+    }
+
+    @Test
+    public void countByEachParallel()
+    {
+        List<Interval> intervals = FastList.newListWith(
+                Interval.evensFromTo(1, 100000),
+                Interval.oddsFromTo(1, 100000));
+
+        MutableBag<Integer> counts = intervals.parallelStream().collect(Collectors2.countByEach(iv -> iv.collect(i -> i % 2)));
+
+        Assert.assertEquals(Interval.oneTo(100000).countBy(i -> i % 2), counts);
+        Assert.assertEquals(50000, counts.occurrencesOf(0));
+        Assert.assertEquals(50000, counts.occurrencesOf(1));
+    }
+
+    @Test
     public void groupByEach()
     {
         Function<Integer, Iterable<Integer>> groupByFunction =
-                (Integer each) -> SMALL_INTERVAL.collect((Integer i) -> ((Integer) each * i));
+                (Integer each) -> SMALL_INTERVAL.collect((Integer i) -> each * i);
         MutableListMultimap<Integer, Integer> products = this.smallData.stream()
                 .collect(Collectors2.groupByEach(groupByFunction, Multimaps.mutable.list::empty));
 
@@ -1131,7 +1162,7 @@ public final class Collectors2Test
     public void groupByEachParallel()
     {
         Function<Integer, Iterable<Integer>> groupByFunction =
-                (Integer each) -> SMALL_INTERVAL.collect((Integer i) -> ((Integer) each * i));
+                (Integer each) -> SMALL_INTERVAL.collect((Integer i) -> each * i);
         MutableListMultimap<Integer, Integer> products = this.smallData.parallelStream()
                 .collect(Collectors2.groupByEach(groupByFunction, Multimaps.mutable.list::empty));
 
@@ -1175,5 +1206,33 @@ public final class Collectors2Test
     public void groupByUniqueKey_parallelStream_duplicate_from_combiner()
     {
         LARGE_INTERVAL.parallelStream().collect(Collectors2.groupByUniqueKey(id -> id == 15000 ? 1 : id, Maps.mutable::empty));
+    }
+
+    @Test
+    public void aggregateBy()
+    {
+        MutableMap<Integer, Integer> expectedMap = SMALL_INTERVAL.toList().aggregateBy(each -> each % 2, () -> 0, Integer::sum);
+        MutableMap<Integer, Integer> actualMap = SMALL_INTERVAL.stream().collect(Collectors2.aggregateBy(each -> each % 2, () -> 0, Integer::sum, Maps.mutable::empty));
+        Assert.assertEquals(expectedMap, actualMap);
+    }
+
+    @Test
+    public void aggregateBy_parallelStream()
+    {
+        MutableMap<Integer, Integer> expectedMap = LARGE_INTERVAL.toList().aggregateBy(each -> each % 2, () -> 0, Integer::sum);
+        MutableMap<Integer, Integer> actualMap = LARGE_INTERVAL.parallelStream().collect(Collectors2.aggregateBy(each -> each % 2, () -> 0, Integer::sum, Maps.mutable::empty));
+        Assert.assertEquals(expectedMap, actualMap);
+    }
+
+    @Test
+    public void aggregateBy_mutableSortedMap()
+    {
+        Verify.assertInstanceOf(MutableSortedMap.class, SMALL_INTERVAL.stream().collect(Collectors2.aggregateBy(each -> each % 2, () -> 0, Integer::sum, SortedMaps.mutable::empty)));
+    }
+
+    @Test
+    public void aggregateBy_parallelStream_mutableSortedMap()
+    {
+        Verify.assertInstanceOf(MutableSortedMap.class, LARGE_INTERVAL.parallelStream().collect(Collectors2.aggregateBy(each -> each % 2, () -> 0, Integer::sum, SortedMaps.mutable::empty)));
     }
 }

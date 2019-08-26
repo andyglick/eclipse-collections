@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.bag.ImmutableBag;
+import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.primitive.ImmutableBooleanBag;
 import org.eclipse.collections.api.bag.sorted.MutableSortedBag;
 import org.eclipse.collections.api.block.function.Function;
@@ -39,6 +40,7 @@ import org.eclipse.collections.impl.block.function.PassThruFunction0;
 import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.map.sorted.mutable.TreeSortedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -91,6 +93,15 @@ public class ImmutableEmptyBagTest extends ImmutableBagTestCase
         Assert.assertNotEquals(bag, newBag2);
         Assert.assertEquals(newBag2.size(), bag.size() + 1);
         Assert.assertEquals(1, newBag2.sizeDistinct());
+    }
+
+    @Override
+    @Test
+    public void selectDuplicates()
+    {
+        Assert.assertEquals(
+                Bags.immutable.empty(),
+                this.newBag().selectDuplicates());
     }
 
     @Test
@@ -445,6 +456,16 @@ public class ImmutableEmptyBagTest extends ImmutableBagTestCase
 
     @Override
     @Test
+    public void toSortedMapBy()
+    {
+        MutableSortedMap<String, String> map = this.newBag().toSortedMapBy(Integer::valueOf,
+                Functions.getStringPassThru(), Functions.getStringPassThru());
+        Verify.assertEmpty(map);
+        Verify.assertInstanceOf(TreeSortedMap.class, map);
+    }
+
+    @Override
+    @Test
     public void serialization()
     {
         ImmutableBag<String> bag = this.newBag();
@@ -527,6 +548,19 @@ public class ImmutableEmptyBagTest extends ImmutableBagTestCase
         Assert.assertEquals(UnifiedMap.newMap(), this.newBag().groupByUniqueKey(id -> id, UnifiedMap.newMap()));
     }
 
+    @Test
+    public void countByEach()
+    {
+        Assert.assertEquals(Bags.immutable.empty(), this.newBag().countByEach(each -> IntInterval.oneTo(5).collect(i -> each + i)));
+    }
+
+    @Test
+    public void countByEach_target()
+    {
+        MutableBag<String> target = Bags.mutable.empty();
+        Assert.assertEquals(target, this.newBag().countByEach(each -> IntInterval.oneTo(5).collect(i -> each + i), target));
+    }
+
     @Override
     @Test
     public void toSortedBag()
@@ -582,5 +616,17 @@ public class ImmutableEmptyBagTest extends ImmutableBagTestCase
         TreeBag<Object> expectedBag = TreeBag.newBag(Comparators.byFunction(String::valueOf));
 
         Verify.assertSortedBagsEqual(expectedBag, sortedBag);
+    }
+
+    @Override
+    @Test
+    public void selectUnique()
+    {
+        super.selectUnique();
+
+        ImmutableBag<String> bag = this.newBag();
+        ImmutableSet<String> expected = Sets.immutable.empty();
+        ImmutableSet<String> actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
     }
 }

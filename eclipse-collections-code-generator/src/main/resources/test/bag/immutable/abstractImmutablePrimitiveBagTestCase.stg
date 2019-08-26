@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -15,7 +15,7 @@ class(primitive) ::= <<
 >>
 
 body(type, name, wrapperName) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.bag.immutable.primitive;
 
@@ -24,14 +24,16 @@ import java.util.NoSuchElementException;
 import org.eclipse.collections.api.bag.ImmutableBag;
 import org.eclipse.collections.api.bag.primitive.Immutable<name>Bag;
 import org.eclipse.collections.api.bag.primitive.Mutable<name>Bag;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.tuple.primitive.<name>IntPair;
 import org.eclipse.collections.api.iterator.<name>Iterator;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.set.primitive.Immutable<name>Set;
+import org.eclipse.collections.api.tuple.primitive.<name>IntPair;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.bag.mutable.primitive.<name>HashBag;
 import org.eclipse.collections.impl.block.factory.primitive.<name>Predicates;
 import org.eclipse.collections.impl.collection.immutable.primitive.AbstractImmutable<name>CollectionTestCase;
 import org.eclipse.collections.impl.factory.primitive.<name>Bags;
+import org.eclipse.collections.impl.factory.primitive.<name>Sets;
 import org.eclipse.collections.impl.list.mutable.primitive.<name>ArrayList;
 import org.eclipse.collections.impl.test.Verify;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
@@ -80,6 +82,22 @@ public abstract class AbstractImmutable<name>BagTestCase extends AbstractImmutab
         Immutable<name>Bag bag = this.newWith(<["1", "2", "2", "3", "3", "3"]:(literal.(type))(); separator=", ">);
         Immutable<name>Bag filtered = bag.selectByOccurrences(i -> i > 2);
         Assert.assertEquals(<name>HashBag.newBagWith(<["3", "3", "3"]:(literal.(type))(); separator=", ">), filtered);
+    }
+
+    @Test
+    public void selectDuplicates()
+    {
+        Immutable<name>Bag bag = this.newWith(<["1", "2", "2", "3", "3", "3"]:(literal.(type))(); separator=", ">);
+        Assert.assertEquals(<name>HashBag.newBagWith(<["2", "2", "3", "3", "3"]:(literal.(type))(); separator=", ">), bag.selectDuplicates());
+    }
+
+    @Test
+    public void selectUnique()
+    {
+        Immutable<name>Bag bag = this.newWith(<["1", "2", "2", "3", "3", "3", "3", "4", "5", "5", "6"]:(literal.(type))(); separator=", ">);
+        Immutable<name>Set expected = <name>Sets.immutable.with(<["1", "4", "6"]:(literal.(type))(); separator=", ">);
+        Immutable<name>Set actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
     }
 
     protected Immutable<name>Bag newWithOccurrences(<name>IntPair... elementsWithOccurrences)
@@ -158,7 +176,7 @@ public abstract class AbstractImmutable<name>BagTestCase extends AbstractImmutab
     {
         StringBuilder stringBuilder = new StringBuilder();
         this.newWith(<["1", "1", "2"]:(literal.(type))(); separator=", ">).forEachWithOccurrences(
-            (<type> argument1, int argument2) -> stringBuilder.append(argument1).append(argument2));
+                (<type> argument1, int argument2) -> stringBuilder.append(argument1).append(argument2));
         String string = stringBuilder.toString();
         Assert.assertTrue("<(toStringLiteral.(type))("1")>2<(toStringLiteral.(type))("2")>1".equals(string)
                 || "<(toStringLiteral.(type))("2")>1<(toStringLiteral.(type))("1")>2".equals(string));
@@ -275,6 +293,16 @@ public abstract class AbstractImmutable<name>BagTestCase extends AbstractImmutab
         Assert.assertEquals(this.classUnderTest(), this.classUnderTest().toImmutable());
         Immutable<name>Bag expected = this.classUnderTest();
         Assert.assertSame(expected, expected.toImmutable());
+    }
+
+    @Test
+    public void toStringOfItemToCount()
+    {
+        Immutable<name>Bag empty = this.newWith();
+        Assert.assertEquals("{}", empty.toStringOfItemToCount());
+        Assert.assertEquals("{" + <(literal.(type))("100")> + "=3}", this.newWith(<["100", "100", "100"]:(literal.(type))(); separator=", ">).toStringOfItemToCount());
+        String actual = this.newWith(<["100", "101", "101"]:(literal.(type))(); separator=", ">).toStringOfItemToCount();
+        Assert.assertTrue(("{" + <(literal.(type))("100")> + "=1, " + <(literal.(type))("101")> + "=2}").equals(actual) || ("{" + <(literal.(type))("101")> + "=2, " + <(literal.(type))("100")> + "=1}").equals(actual));
     }
 }
 

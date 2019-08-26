@@ -20,6 +20,7 @@ import java.io.Serializable;
 
 import org.eclipse.collections.api.<name>Iterable;
 import org.eclipse.collections.api.Lazy<name>Iterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.ImmutableBag;
 import org.eclipse.collections.api.bag.primitive.Immutable<name>Bag;
 import org.eclipse.collections.api.bag.primitive.<name>Bag;
@@ -43,6 +44,8 @@ import org.eclipse.collections.impl.set.mutable.primitive.<name>HashSet;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.tuple.primitive.<name>IntPair;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.api.set.primitive.Immutable<name>Set;
+import org.eclipse.collections.impl.factory.primitive.<name>Sets;
 
 /**
  * Immutable<name>EmptyBag is an optimization for {@link Immutable<name>Bag} of size 0.
@@ -141,6 +144,12 @@ final class Immutable<name>EmptyBag implements Immutable<name>Bag, Serializable
     }
 
     @Override
+    public Immutable<name>Set selectUnique()
+    {
+        return <name>Sets.immutable.empty();
+    }
+
+    @Override
     public Immutable<name>Bag reject(<name>Predicate predicate)
     {
         return this;
@@ -236,6 +245,12 @@ final class Immutable<name>EmptyBag implements Immutable<name>Bag, Serializable
     public \<T> T injectInto(T injectedValue, Object<name>ToObjectFunction\<? super T, ? extends T> function)
     {
         return injectedValue;
+    }
+
+    @Override
+    public RichIterable\<<name>Iterable> chunk(int size)
+    {
+        return Lists.immutable.empty();
     }
 
     @Override

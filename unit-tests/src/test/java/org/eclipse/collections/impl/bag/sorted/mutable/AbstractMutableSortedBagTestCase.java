@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -28,6 +28,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.multimap.sortedbag.MutableSortedBagMultimap;
 import org.eclipse.collections.api.partition.bag.sorted.PartitionMutableSortedBag;
+import org.eclipse.collections.api.set.sorted.MutableSortedSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
@@ -48,6 +49,7 @@ import org.eclipse.collections.impl.block.function.PassThruFunction0;
 import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.SortedBags;
+import org.eclipse.collections.impl.factory.SortedSets;
 import org.eclipse.collections.impl.list.Interval;
 import org.eclipse.collections.impl.list.mutable.AddToList;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -625,7 +627,8 @@ public abstract class AbstractMutableSortedBagTestCase extends MutableBagTestCas
     {
         super.zipWithIndex();
         MutableSortedBag<Integer> integers = this.newWith(Collections.reverseOrder(), 1, 3, 5, 5, 5, 2, 4);
-        Assert.assertEquals(UnifiedSet.newSetWith(
+        Assert.assertEquals(
+                UnifiedSet.newSetWith(
                         Tuples.pair(5, 0),
                         Tuples.pair(5, 1),
                         Tuples.pair(5, 2),
@@ -987,7 +990,8 @@ public abstract class AbstractMutableSortedBagTestCase extends MutableBagTestCas
     {
         super.toBag();
 
-        Assert.assertEquals(Bags.mutable.of("C", "C", "B", "A"),
+        Assert.assertEquals(
+                Bags.mutable.of("C", "C", "B", "A"),
                 this.newWith(Comparators.reverseNaturalOrder(), "C", "C", "B", "A").toBag());
     }
 
@@ -1106,6 +1110,20 @@ public abstract class AbstractMutableSortedBagTestCase extends MutableBagTestCas
 
     @Override
     @Test
+    public void toSortedMapBy()
+    {
+        super.toSortedMapBy();
+
+        Verify.assertSortedMapsEqual(
+                TreeSortedMap.newMapWith(Comparators.reverseNaturalOrder(), 3, "3", 2, "2", 1, "1"),
+                this.newWith(3, 2, 1, 1).toSortedMapBy(
+                        key -> -key,
+                        Functions.getIntegerPassThru(),
+                        String::valueOf));
+    }
+
+    @Override
+    @Test
     public void asUnmodifiable()
     {
         Verify.assertInstanceOf(UnmodifiableSortedBag.class, this.newWith().asUnmodifiable());
@@ -1133,6 +1151,18 @@ public abstract class AbstractMutableSortedBagTestCase extends MutableBagTestCas
         Verify.assertSortedBagsEqual(
                 TreeBag.newBagWith(Collections.reverseOrder(), 3, 3, 1, 1, 1, 1),
                 integers.selectByOccurrences(IntPredicates.isEven()));
+    }
+
+    @Override
+    @Test
+    public void selectDuplicates()
+    {
+        super.selectDuplicates();
+
+        MutableSortedBag<Integer> integers = this.newWith(Collections.reverseOrder(), 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 0);
+        Verify.assertSortedBagsEqual(
+                TreeBag.newBagWith(Collections.reverseOrder(), 3, 3, 2, 2, 2, 1, 1, 1, 1),
+                integers.selectDuplicates());
     }
 
     @Override
@@ -1905,6 +1935,20 @@ public abstract class AbstractMutableSortedBagTestCase extends MutableBagTestCas
     public void drop_throws()
     {
         this.newWith(1, 2, 3).drop(-1);
+    }
+
+    @Override
+    @Test
+    public void selectUnique()
+    {
+        super.selectUnique();
+
+        Comparator<Integer> comparator = Collections.reverseOrder();
+        MutableSortedBag<Integer> integers = this.newWith(comparator, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 0);
+        MutableSortedSet<Integer> expected = SortedSets.mutable.of(comparator, 5, 4, 0);
+        MutableSortedSet<Integer> actual = integers.selectUnique();
+        Assert.assertEquals(expected, actual);
+        Assert.assertEquals(expected.comparator(), actual.comparator());
     }
 
     // Like Integer, but not Comparable

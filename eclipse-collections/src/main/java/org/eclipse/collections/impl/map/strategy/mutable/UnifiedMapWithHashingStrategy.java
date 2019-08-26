@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -28,6 +28,7 @@ import org.eclipse.collections.api.block.HashingStrategy;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
+import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
@@ -51,7 +52,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 
 /**
  * UnifiedMapWithHashingStrategy stores key/value pairs in a single array, where alternate slots are keys and values.
- * This is nicer to CPU caches as consecutive memory addresses are very cheap to access.  Entry objects are not stored in the
+ * This is nicer to CPU caches as consecutive memory addresses are very cheap to access. Entry objects are not stored in the
  * table like in java.util.HashMap. Instead of trying to deal with collisions in the main array using Entry objects,
  * we put a special object in the key slot and put a regular Object[] in the value slot. The array contains the key value
  * pairs in consecutive slots, just like the main array, but it's a linear list with no hashing.
@@ -121,7 +122,7 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
 
     protected int maxSize;
 
-    private HashingStrategy<? super K> hashingStrategy;
+    protected HashingStrategy<? super K> hashingStrategy;
 
     /**
      * @deprecated No argument default constructor used for serialization. Instantiating an UnifiedMapWithHashingStrategyMultimap with
@@ -313,7 +314,7 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
     @Override
     public MutableMap<K, V> newEmpty(int capacity)
     {
-        return UnifiedMapWithHashingStrategy.newMap(this.hashingStrategy, capacity);
+        return new UnifiedMapWithHashingStrategy<>(this.hashingStrategy, capacity, this.loadFactor);
     }
 
     private int fastCeil(float v)
@@ -356,7 +357,7 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
         this.maxSize = Math.min(capacity - 1, (int) (capacity * this.loadFactor));
     }
 
-    protected final int index(K key)
+    protected int index(K key)
     {
         // This function ensures that hashCodes that differ only by
         // constant multiples at each bit position have a bounded
@@ -869,7 +870,7 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
     }
 
     /**
-     * Returns the number of JVM words that is used by this map.  A word is 4 bytes in a 32bit VM and 8 bytes in a 64bit
+     * Returns the number of JVM words that is used by this map. A word is 4 bytes in a 32bit VM and 8 bytes in a 64bit
      * VM. Each array has a 2 word header, thus the formula is:
      * words = (internal table length + 2) + sum (for all chains (chain length + 2))
      *
@@ -1076,6 +1077,22 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
     public V removeKey(K key)
     {
         return this.remove(key);
+    }
+
+    @Override
+    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        int previousSize = this.size();
+        Iterator<Entry<K, V>> iterator = this.entrySet().iterator();
+        while (iterator.hasNext())
+        {
+            Entry<K, V> entry = iterator.next();
+            if (predicate.accept(entry.getKey(), entry.getValue()))
+            {
+                iterator.remove();
+            }
+        }
+        return previousSize > this.size();
     }
 
     private void chainedForEachEntry(Object[] chain, Procedure2<? super K, ? super V> procedure)
@@ -1419,7 +1436,9 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
             else if (cur != null)
             {
                 Object value = this.table[i + 1];
-                hashCode += this.hashingStrategy.computeHashCode(this.nonSentinel(cur)) ^ (value == null ? 0 : value.hashCode());
+                hashCode += this.hashingStrategy.computeHashCode(this.nonSentinel(cur)) ^ (value == null
+                        ? 0
+                        : value.hashCode());
             }
         }
         return hashCode;
@@ -1436,7 +1455,9 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
                 return hashCode;
             }
             Object value = chain[i + 1];
-            hashCode += this.hashingStrategy.computeHashCode(this.nonSentinel(cur)) ^ (value == null ? 0 : value.hashCode());
+            hashCode += this.hashingStrategy.computeHashCode(this.nonSentinel(cur)) ^ (value == null
+                    ? 0
+                    : value.hashCode());
         }
         return hashCode;
     }
@@ -1538,7 +1559,7 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
                 }
             }
             Object[] newChain = new Object[chain.length + 4];
-            System.arraycopy(chain,  0,  newChain,  0,  chain.length);
+            System.arraycopy(chain, 0, newChain, 0, chain.length);
             this.table[index + 1] = newChain;
             newChain[chain.length] = UnifiedMapWithHashingStrategy.toSentinelIfNull(key);
             newChain[chain.length + 1] = value;
@@ -1559,7 +1580,8 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
         this.hashingStrategy = (HashingStrategy<? super K>) in.readObject();
         int size = in.readInt();
         this.loadFactor = in.readFloat();
-        this.init(Math.max((int) (size / this.loadFactor) + 1,
+        this.init(Math.max(
+                (int) (size / this.loadFactor) + 1,
                 DEFAULT_INITIAL_CAPACITY));
         for (int i = 0; i < size; i++)
         {
@@ -1673,7 +1695,7 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
     @Override
     public <R> MutableMap<K, R> collectValues(Function2<? super K, ? super V, ? extends R> function)
     {
-        UnifiedMapWithHashingStrategy<K, R> target = UnifiedMapWithHashingStrategy.newMap(this.hashingStrategy);
+        UnifiedMapWithHashingStrategy<K, R> target = (UnifiedMapWithHashingStrategy<K, R>) this.newEmpty();
         target.loadFactor = this.loadFactor;
         target.occupied = this.occupied;
         target.allocate(this.table.length >> 1);
@@ -1816,8 +1838,8 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
         public boolean retainAll(Collection<?> collection)
         {
             int retainedSize = collection.size();
-            UnifiedMapWithHashingStrategy<K, V> retainedCopy = new UnifiedMapWithHashingStrategy<>(
-                    UnifiedMapWithHashingStrategy.this.hashingStrategy, retainedSize, UnifiedMapWithHashingStrategy.this.loadFactor);
+            UnifiedMapWithHashingStrategy<K, V> retainedCopy = (UnifiedMapWithHashingStrategy<K, V>)
+                    UnifiedMapWithHashingStrategy.this.newEmpty(retainedSize);
             for (Object key : collection)
             {
                 this.putIfFound(key, retainedCopy);
@@ -2334,9 +2356,8 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
         public boolean retainAll(Collection<?> collection)
         {
             int retainedSize = collection.size();
-            UnifiedMapWithHashingStrategy<K, V> retainedCopy = new UnifiedMapWithHashingStrategy<>(
-                    UnifiedMapWithHashingStrategy.this.hashingStrategy, retainedSize, UnifiedMapWithHashingStrategy.this.loadFactor);
-
+            UnifiedMapWithHashingStrategy<K, V> retainedCopy = (UnifiedMapWithHashingStrategy<K, V>)
+                    UnifiedMapWithHashingStrategy.this.newEmpty(retainedSize);
             for (Object obj : collection)
             {
                 if (obj instanceof Entry)
@@ -2574,7 +2595,10 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
         protected final WeakReference<UnifiedMapWithHashingStrategy<K, V>> holder;
         protected final HashingStrategy<? super K> hashingStrategy;
 
-        protected WeakBoundEntry(K key, V value, WeakReference<UnifiedMapWithHashingStrategy<K, V>> holder,
+        protected WeakBoundEntry(
+                K key,
+                V value,
+                WeakReference<UnifiedMapWithHashingStrategy<K, V>> holder,
                 HashingStrategy<? super K> hashingStrategy)
         {
             this.key = key;

@@ -1,4 +1,4 @@
-import "copyright.stg"
+import "copyrightAndOthers.stg"
 import "primitiveEquals.stg"
 import "primitiveHashCode.stg"
 import "primitiveLiteral.stg"
@@ -12,7 +12,7 @@ class(primitive) ::= <<
 >>
 
 body(type, name) ::= <<
-<copyright()>
+<copyrightAndOthers()>
 
 package org.eclipse.collections.impl.bag.mutable.primitive;
 
@@ -28,13 +28,14 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.tuple.primitive.<name>IntPair;
 import org.eclipse.collections.impl.collection.mutable.primitive.AbstractUnmodifiable<name>Collection;
 import org.eclipse.collections.impl.factory.primitive.<name>Bags;
+import org.eclipse.collections.api.set.primitive.Mutable<name>Set;
 
 /**
  * This file was automatically generated from template file unmodifiablePrimitiveBag.stg.
  *
  * @since 3.1.
  */
-public final class Unmodifiable<name>Bag
+public class Unmodifiable<name>Bag
         extends AbstractUnmodifiable<name>Collection
         implements Mutable<name>Bag
 {
@@ -111,6 +112,12 @@ public final class Unmodifiable<name>Bag
     }
 
     @Override
+    public Mutable<name>Set selectUnique()
+    {
+        return this.getMutable<name>Bag().selectUnique();
+    }
+
+    @Override
     public MutableList\<<name>IntPair> topOccurrences(int count)
     {
         return this.getMutable<name>Bag().topOccurrences(count);
@@ -168,6 +175,14 @@ public final class Unmodifiable<name>Bag
     public Immutable<name>Bag toImmutable()
     {
         return <name>Bags.immutable.withAll(this);
+    }
+
+    /**
+     * @since 9.2.
+     */
+    public Mutable<name>Bag newEmpty()
+    {
+        return this.getMutable<name>Bag().newEmpty();
     }
 }
 

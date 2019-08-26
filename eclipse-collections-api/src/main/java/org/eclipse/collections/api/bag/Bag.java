@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -41,7 +41,7 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 
 /**
- * A Bag is a Collection whose elements are unordered and may contain duplicate entries.  It varies from
+ * A Bag is a Collection whose elements are unordered and may contain duplicate entries. It varies from
  * MutableCollection in that it adds a protocol for determining, adding, and removing the number of occurrences for an
  * item.
  *
@@ -51,7 +51,7 @@ public interface Bag<T>
         extends RichIterable<T>
 {
     /**
-     * Two bags<tt>b1</tt> and <tt>b2</tt> are equal if <tt>m1.toMapOfItemToCount().equals(m2.toMapOfItemToCount())</tt>.
+     * Two bags {@code b1} and {@code b2} are equal if {@code m1.toMapOfItemToCount().equals(m2.toMapOfItemToCount())}.
      *
      * @see Map#equals(Object)
      */
@@ -59,7 +59,7 @@ public interface Bag<T>
     boolean equals(Object object);
 
     /**
-     * Returns the hash code for this Bag, defined as <tt>this.{@link #toMapOfItemToCount()}.hashCode()</tt>.
+     * Returns the hash code for this Bag, defined as <em>this.{@link #toMapOfItemToCount()}.hashCode()</em>.
      *
      * @see Map#hashCode()
      */
@@ -117,6 +117,23 @@ public interface Bag<T>
     Bag<T> selectByOccurrences(IntPredicate predicate);
 
     /**
+     * Returns all elements of the bag that have more than one occurrence.
+     *
+     * @since 9.2
+     */
+    default Bag<T> selectDuplicates()
+    {
+        return this.selectByOccurrences(occurrences -> occurrences > 1);
+    }
+
+    /**
+     * Returns a set containing all elements of the bag that have exactly one occurrence.
+     *
+     * @since 9.2
+     */
+    SetIterable<T> selectUnique();
+
+    /**
      * Returns the {@code count} most frequently occurring items.
      *
      * In the event of a tie, all of the items with the number of occurrences that match the occurrences of the last
@@ -153,7 +170,7 @@ public interface Bag<T>
      * Assert.assertEquals("{1=1, 2=2, 3=3}", Bags.mutable.with(1, 2, 2, 3, 3, 3).toStringOfItemToCount());
      * </pre>
      * This string representation is similar to {@link java.util.AbstractMap#toString()}, not {@link RichIterable#toString()},
-     * whereas the <code>toString()</code> implementation for a Bag is consistent with {@link RichIterable#toString()}.
+     * whereas the {@code toString()} implementation for a Bag is consistent with {@link RichIterable#toString()}.
      *
      * @return a string representation of this bag
      * @since 3.0
@@ -272,6 +289,13 @@ public interface Bag<T>
         });
         return mutableResult;
     }
+
+    /**
+     * Iterates over the unique elements and their occurrences and collects the results of applying the specified function.
+     *
+     * @since 10.0
+     */
+    <V> RichIterable<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function);
 
     /**
      * Iterates over the unique elements and their occurrences and collects the results of applying the

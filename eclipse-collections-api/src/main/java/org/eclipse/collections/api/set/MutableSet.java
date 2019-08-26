@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -37,7 +37,7 @@ import org.eclipse.collections.api.set.primitive.MutableShortSet;
 import org.eclipse.collections.api.tuple.Pair;
 
 /**
- * A MutableSet is an extenstion java.util.Set which provides methods matching the Smalltalk Collection protocol.
+ * A MutableSet is an extension java.util.Set which provides methods matching the Smalltalk Collection protocol.
  */
 public interface MutableSet<T>
         extends UnsortedSetIterable<T>, MutableSetIterable<T>, Cloneable
@@ -120,7 +120,16 @@ public interface MutableSet<T>
     <V> MutableSet<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
 
     /**
-     * Returns an unmodifable view of the set.
+     * @since 9.2
+     */
+    @Override
+    default <P, V> MutableSet<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    {
+        return this.flatCollect(each -> function.apply(each, parameter));
+    }
+
+    /**
+     * Returns an unmodifiable view of the set.
      *
      * @return an unmodifiable view of this set
      */

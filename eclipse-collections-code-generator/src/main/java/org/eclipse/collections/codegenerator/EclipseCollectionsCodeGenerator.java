@@ -70,6 +70,7 @@ public class EclipseCollectionsCodeGenerator
                 boolean hasTwoPrimitives = this.templateFile.isDefined("hasTwoPrimitives") && Boolean.valueOf(this.templateFile.getInstanceOf("hasTwoPrimitives").render());
                 boolean skipBoolean = this.templateFile.isDefined("skipBoolean") && Boolean.valueOf(this.templateFile.getInstanceOf("skipBoolean").render());
                 boolean skipBooleanKeys = this.templateFile.isDefined("skipBooleanKeys") && Boolean.valueOf(this.templateFile.getInstanceOf("skipBooleanKeys").render());
+                boolean forSpecializedStream = this.templateFile.isDefined("forSpecializedStream") && Boolean.valueOf(this.templateFile.getInstanceOf("forSpecializedStream").render());
 
                 if (hasTwoPrimitives)
                 {
@@ -101,6 +102,10 @@ public class EclipseCollectionsCodeGenerator
                     for (Primitive primitive : Primitive.values())
                     {
                         if (primitive == Primitive.BOOLEAN && skipBoolean)
+                        {
+                            continue;
+                        }
+                        if (forSpecializedStream && !primitive.hasSpecializedStream())
                         {
                             continue;
                         }
@@ -183,7 +188,9 @@ public class EclipseCollectionsCodeGenerator
 
     private void setTest()
     {
-        this.isTest = this.templateFile.getInstanceOf("isTest") == null ? false : Boolean.valueOf(this.templateFile.getInstanceOf("isTest").render());
+        this.isTest = this.templateFile.getInstanceOf("isTest") == null
+                ? false
+                : Boolean.valueOf(this.templateFile.getInstanceOf("isTest").render());
     }
 
     private File constructTargetPath()
@@ -225,7 +232,7 @@ public class EclipseCollectionsCodeGenerator
         {
             String error = String.format("String template %s error while processing [%s]: %s", errorType, EclipseCollectionsCodeGenerator.this.url.getPath(), stMessage.toString());
             this.errorListener.error(error);
-            throw new RuntimeException();
+            throw new RuntimeException(error);
         }
 
         @Override

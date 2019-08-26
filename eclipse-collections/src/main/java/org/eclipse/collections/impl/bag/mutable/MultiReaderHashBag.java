@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,6 +14,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -21,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.eclipse.collections.api.LazyIterable;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.ImmutableBag;
+import org.eclipse.collections.api.bag.MultiReaderBag;
 import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.primitive.MutableBooleanBag;
 import org.eclipse.collections.api.bag.primitive.MutableByteBag;
@@ -39,6 +41,7 @@ import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
 import org.eclipse.collections.api.block.function.primitive.FloatFunction;
 import org.eclipse.collections.api.block.function.primitive.IntFunction;
 import org.eclipse.collections.api.block.function.primitive.LongFunction;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
@@ -68,21 +71,20 @@ import org.eclipse.collections.impl.utility.LazyIterate;
 
 /**
  * MultiReaderHashBag provides a thread-safe wrapper around a HashBag, using a ReentrantReadWriteLock. In order to
- * provide true thread-safety, MultiReaderHashBag does not implement iterator() as this method requires an external lock
+ * provide true thread-safety, MultiReaderHashBag does <em>not</em> implement {@code iterator()} as this method requires an external lock
  * to be taken to provide thread-safe iteration. All of these methods are available however, if you use the
- * withReadLockAndDelegate() or withWriteLockAndDelegate() methods. Both of these methods take a parameter of type
- * Procedure<MutableBag>, and a wrapped version of the underlying HashBag is returned. This wrapper guarantees that
+ * {@code withReadLockAndDelegate()} or {@code withWriteLockAndDelegate()} methods. Both of these methods take a parameter of type
+ * {@code Procedure<MutableBag>}, and a wrapped version of the underlying HashBag is returned. This wrapper guarantees that
  * no external pointer can ever reference the underlying HashBag outside of a locked procedure. In the case of the
  * read lock method, an Unmodifiable version of the collection is offered, which will throw UnsupportedOperationExceptions
  * on any write methods like add or remove.
  */
 public final class MultiReaderHashBag<T>
         extends AbstractMultiReaderMutableCollection<T>
-        implements Externalizable, MutableBag<T>
+        implements Externalizable, MultiReaderBag<T>
 {
     private static final long serialVersionUID = 1L;
 
-    private transient ReadWriteLock lock;
     private MutableBag<T> delegate;
 
     /**
@@ -103,6 +105,7 @@ public final class MultiReaderHashBag<T>
     private MultiReaderHashBag(MutableBag<T> newDelegate, ReadWriteLock newLock)
     {
         this.lock = newLock;
+        this.lockWrapper = new ReadWriteLockWrapper(newLock);
         this.delegate = newDelegate;
     }
 
@@ -132,12 +135,6 @@ public final class MultiReaderHashBag<T>
         return this.delegate;
     }
 
-    @Override
-    protected ReadWriteLock getLock()
-    {
-        return this.lock;
-    }
-
     UntouchableMutableBag<T> asReadUntouchable()
     {
         return new UntouchableMutableBag<>(this.delegate.asUnmodifiable());
@@ -148,271 +145,176 @@ public final class MultiReaderHashBag<T>
         return new UntouchableMutableBag<>(this.delegate);
     }
 
-    public void withReadLockAndDelegate(Procedure<MutableBag<T>> procedure)
+    public void withReadLockAndDelegate(Procedure<? super MutableBag<T>> procedure)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             UntouchableMutableBag<T> bag = this.asReadUntouchable();
             procedure.value(bag);
             bag.becomeUseless();
         }
-        finally
-        {
-            this.unlockReadLock();
-        }
     }
 
-    public void withWriteLockAndDelegate(Procedure<MutableBag<T>> procedure)
+    public void withWriteLockAndDelegate(Procedure<? super MutableBag<T>> procedure)
     {
-        this.acquireWriteLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireWriteLock())
         {
             UntouchableMutableBag<T> bag = this.asWriteUntouchable();
             procedure.value(bag);
             bag.becomeUseless();
-        }
-        finally
-        {
-            this.unlockWriteLock();
         }
     }
 
     @Override
     public MutableBag<T> asSynchronized()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return SynchronizedBag.of(this);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableBag<T> asUnmodifiable()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return UnmodifiableBag.of(this);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public ImmutableBag<T> toImmutable()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return Bags.immutable.withAll(this.delegate);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public int addOccurrences(T item, int occurrences)
     {
-        this.acquireWriteLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireWriteLock())
         {
             return this.delegate.addOccurrences(item, occurrences);
-        }
-        finally
-        {
-            this.unlockWriteLock();
         }
     }
 
     @Override
     public boolean removeOccurrences(Object item, int occurrences)
     {
-        this.acquireWriteLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireWriteLock())
         {
             return this.delegate.removeOccurrences(item, occurrences);
-        }
-        finally
-        {
-            this.unlockWriteLock();
         }
     }
 
     @Override
     public boolean setOccurrences(T item, int occurrences)
     {
-        this.acquireWriteLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireWriteLock())
         {
             return this.delegate.setOccurrences(item, occurrences);
-        }
-        finally
-        {
-            this.unlockWriteLock();
         }
     }
 
     @Override
     public int occurrencesOf(Object item)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.occurrencesOf(item);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public int sizeDistinct()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.sizeDistinct();
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public <V> MutableBag<V> collect(Function<? super T, ? extends V> function)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collect(function);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableBooleanBag collectBoolean(BooleanFunction<? super T> booleanFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectBoolean(booleanFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableByteBag collectByte(ByteFunction<? super T> byteFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectByte(byteFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableCharBag collectChar(CharFunction<? super T> charFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectChar(charFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableDoubleBag collectDouble(DoubleFunction<? super T> doubleFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectDouble(doubleFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableFloatBag collectFloat(FloatFunction<? super T> floatFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectFloat(floatFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableIntBag collectInt(IntFunction<? super T> intFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectInt(intFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableLongBag collectLong(LongFunction<? super T> longFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectLong(longFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableShortBag collectShort(ShortFunction<? super T> shortFunction)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectShort(shortFunction);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -420,42 +322,27 @@ public final class MultiReaderHashBag<T>
     public <V> MutableBag<V> flatCollect(
             Function<? super T, ? extends Iterable<V>> function)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.flatCollect(function);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableList<ObjectIntPair<T>> topOccurrences(int count)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.topOccurrences(count);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableList<ObjectIntPair<T>> bottomOccurrences(int count)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.bottomOccurrences(count);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -464,14 +351,30 @@ public final class MultiReaderHashBag<T>
             Predicate<? super T> predicate,
             Function<? super T, ? extends V> function)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectIf(predicate, function);
         }
-        finally
+    }
+
+    @Override
+    public <V> MutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
-            this.unlockReadLock();
+            return this.collectWithOccurrences(function, Bags.mutable.empty());
+        }
+    }
+
+    @Override
+    public <V, R extends Collection<V>> R collectWithOccurrences(
+            ObjectIntToObjectFunction<? super T, ? extends V> function,
+            R target)
+    {
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
+        {
+            this.forEachWithOccurrences((each, occurrences) -> target.add(function.valueOf(each, occurrences)));
+            return target;
         }
     }
 
@@ -480,14 +383,9 @@ public final class MultiReaderHashBag<T>
             Function2<? super T, ? super P, ? extends V> function,
             P parameter)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.collectWith(function, parameter);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -500,14 +398,9 @@ public final class MultiReaderHashBag<T>
     @Override
     public MutableBag<T> reject(Predicate<? super T> predicate)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.reject(predicate);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -516,43 +409,28 @@ public final class MultiReaderHashBag<T>
             Predicate2<? super T, ? super P> predicate,
             P parameter)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.rejectWith(predicate, parameter);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableBag<T> tap(Procedure<? super T> procedure)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             this.forEach(procedure);
             return this;
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableBag<T> select(Predicate<? super T> predicate)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.select(predicate);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -561,70 +439,45 @@ public final class MultiReaderHashBag<T>
             Predicate2<? super T, ? super P> predicate,
             P parameter)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.selectWith(predicate, parameter);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public MutableBag<T> selectByOccurrences(IntPredicate predicate)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.selectByOccurrences(predicate);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public <S> MutableBag<S> selectInstancesOf(Class<S> clazz)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.selectInstancesOf(clazz);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public PartitionMutableBag<T> partition(Predicate<? super T> predicate)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.partition(predicate);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public <P> PartitionMutableBag<T> partitionWith(Predicate2<? super T, ? super P> predicate, P parameter)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.partitionWith(predicate, parameter);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -659,70 +512,45 @@ public final class MultiReaderHashBag<T>
     @Override
     public MutableMap<T, Integer> toMapOfItemToCount()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.toMapOfItemToCount();
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public String toStringOfItemToCount()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.toStringOfItemToCount();
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public <V> MutableBagMultimap<V, T> groupBy(Function<? super T, ? extends V> function)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.groupBy(function);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public <V> MutableBagMultimap<V, T> groupByEach(Function<? super T, ? extends Iterable<V>> function)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.groupByEach(function);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public <V> MutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.groupByUniqueKey(function);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -733,14 +561,9 @@ public final class MultiReaderHashBag<T>
     @Deprecated
     public <S> MutableBag<Pair<T, S>> zip(Iterable<S> that)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.zip(that);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -751,70 +574,45 @@ public final class MultiReaderHashBag<T>
     @Deprecated
     public MutableSet<Pair<T, Integer>> zipWithIndex()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.zipWithIndex();
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public RichIterable<RichIterable<T>> chunk(int size)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.chunk(size);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public void forEachWithOccurrences(ObjectIntProcedure<? super T> procedure)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             this.delegate.forEachWithOccurrences(procedure);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public boolean equals(Object o)
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.equals(o);
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
     @Override
     public int hashCode()
     {
-        this.acquireReadLock();
-        try
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
         {
             return this.delegate.hashCode();
-        }
-        finally
-        {
-            this.unlockReadLock();
         }
     }
 
@@ -829,6 +627,16 @@ public final class MultiReaderHashBag<T>
     {
         this.delegate = (MutableBag<T>) in.readObject();
         this.lock = new ReentrantReadWriteLock();
+        this.lockWrapper = new ReadWriteLockWrapper(this.lock);
+    }
+
+    @Override
+    public MutableSet<T> selectUnique()
+    {
+        try (LockWrapper wrapper = this.lockWrapper.acquireReadLock())
+        {
+            return this.getDelegate().selectUnique();
+        }
     }
 
     //Exposed for testing
@@ -1069,6 +877,20 @@ public final class MultiReaderHashBag<T>
         }
 
         @Override
+        public <V> MutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+        {
+            return this.getDelegate().collectWithOccurrences(function);
+        }
+
+        @Override
+        public <V, R extends Collection<V>> R collectWithOccurrences(
+                ObjectIntToObjectFunction<? super T, ? extends V> function,
+                R target)
+        {
+            return this.getDelegate().collectWithOccurrences(function, target);
+        }
+
+        @Override
         public <P, V> MutableBag<V> collectWith(
                 Function2<? super T, ? super P, ? extends V> function,
                 P parameter)
@@ -1200,6 +1022,12 @@ public final class MultiReaderHashBag<T>
         private MutableBag<T> getDelegate()
         {
             return (MutableBag<T>) this.delegate;
+        }
+
+        @Override
+        public MutableSet<T> selectUnique()
+        {
+            return this.getDelegate().selectUnique();
         }
     }
 

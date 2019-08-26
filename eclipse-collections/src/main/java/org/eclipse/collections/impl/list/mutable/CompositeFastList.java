@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
+import java.util.function.UnaryOperator;
 
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function2;
@@ -34,6 +35,7 @@ import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.ParallelListIterable;
+import org.eclipse.collections.impl.AbstractRichIterable;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.lazy.parallel.list.NonParallelListIterable;
 import org.eclipse.collections.impl.parallel.BatchIterable;
@@ -178,7 +180,7 @@ public final class CompositeFastList<E>
     @Override
     public boolean isEmpty()
     {
-        return this.lists.allSatisfy(FastList<E>::isEmpty);
+        return this.lists.allSatisfy(AbstractRichIterable::isEmpty);
     }
 
     @Override
@@ -283,7 +285,7 @@ public final class CompositeFastList<E>
     @Override
     public void clear()
     {
-        this.lists.each(FastList<E>::clear);
+        this.lists.each(FastList::clear);
         this.size = 0;
     }
 
@@ -431,6 +433,25 @@ public final class CompositeFastList<E>
     }
 
     /**
+     * @since 10.0
+     */
+    @Override
+    public void replaceAll(UnaryOperator<E> operator)
+    {
+        this.lists.forEachWith(List::replaceAll, operator);
+    }
+
+    @Override
+    public void sort(Comparator<? super E> comparator)
+    {
+        FastList<E> list = comparator == null
+                ? (FastList<E>) this.toSortedList()
+                : (FastList<E>) this.toSortedList(comparator);
+        this.lists.clear();
+        this.lists.add(list);
+    }
+
+    /**
      * a list iterator is a problem for a composite list as going back in the order of the list is an issue,
      * as are the other methods like set() and add() (and especially, remove).
      * Convert the internal lists to one list (if not already just one list)
@@ -438,7 +459,7 @@ public final class CompositeFastList<E>
      * <p>
      * AFAIK list iterator is only commonly used in sorting.
      *
-     * @return a ListIterator for this, with internal state convertedto one list if needed.
+     * @return a ListIterator for this, with internal state converted to one list if needed.
      */
     @Override
     public ListIterator<E> listIterator()
@@ -454,7 +475,7 @@ public final class CompositeFastList<E>
      * <p>
      * AFAIK list iterator is only commonly used in sorting.
      *
-     * @return a ListIterator for this, with internal state convertedto one list if needed.
+     * @return a ListIterator for this, with internal state converted to one list if needed.
      */
     @Override
     public ListIterator<E> listIterator(int index)
@@ -599,19 +620,6 @@ public final class CompositeFastList<E>
     private void flattenLists()
     {
         FastList<E> list = (FastList<E>) this.toList();
-        this.lists.clear();
-        this.lists.add(list);
-    }
-
-    /**
-     * Override in subclasses where it can be optimized.
-     */
-    @Override
-    protected void defaultSort(Comparator<? super E> comparator)
-    {
-        FastList<E> list = comparator == null
-                ? (FastList<E>) this.toSortedList()
-                : (FastList<E>) this.toSortedList(comparator);
         this.lists.clear();
         this.lists.add(list);
     }

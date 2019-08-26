@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -24,9 +24,11 @@ import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.impl.IntegerWithCast;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.block.factory.Functions;
+import org.eclipse.collections.impl.block.factory.Predicates2;
 import org.eclipse.collections.impl.block.function.PassThruFunction0;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Maps;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.Interval;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.AbstractSynchronizedMapIterable;
@@ -336,6 +338,57 @@ public abstract class MutableMapIterableTestCase extends MapIterableTestCase
 
         Assert.assertEquals("Two", map.removeKey(2));
         Verify.assertEmpty(map);
+    }
+
+    @Test
+    public void removeAllKeys()
+    {
+        MutableMapIterable<Integer, String> map = this.newMapWithKeysValues(1, "1", 2, "Two", 3, "Three");
+
+        Verify.assertThrows(NullPointerException.class, () -> map.removeAllKeys(null));
+        Assert.assertFalse(map.removeAllKeys(Sets.mutable.with(4)));
+        Assert.assertFalse(map.removeAllKeys(Sets.mutable.with(4, 5, 6)));
+        Assert.assertFalse(map.removeAllKeys(Sets.mutable.with(4, 5, 6, 7, 8, 9)));
+
+        Assert.assertTrue(map.removeAllKeys(Sets.mutable.with(1)));
+        Verify.denyContainsKey(1, map);
+        Assert.assertTrue(map.removeAllKeys(Sets.mutable.with(3, 4, 5, 6, 7)));
+        Verify.denyContainsKey(3, map);
+
+        map.putAll(Maps.mutable.with(4, "Four", 5, "Five", 6, "Six", 7, "Seven"));
+        Assert.assertTrue(map.removeAllKeys(Sets.mutable.with(2, 3, 9, 10)));
+        Verify.denyContainsKey(2, map);
+        Assert.assertTrue(map.removeAllKeys(Sets.mutable.with(5, 3, 7, 8, 9)));
+        Assert.assertEquals(Maps.mutable.with(4, "Four", 6, "Six"), map);
+    }
+
+    @Test
+    public void removeIf()
+    {
+        MutableMapIterable<Integer, String> map = this.newMapWithKeysValues(1, "1", 2, "Two");
+
+        Assert.assertFalse(map.removeIf(Predicates2.alwaysFalse()));
+        Assert.assertEquals(this.newMapWithKeysValues(1, "1", 2, "Two"), map);
+        Assert.assertTrue(map.removeIf(Predicates2.alwaysTrue()));
+        Verify.assertEmpty(map);
+
+        map.putAll(Maps.mutable.with(1, "One", 2, "TWO", 3, "THREE", 4, "four"));
+        map.putAll(Maps.mutable.with(5, "Five", 6, "Six", 7, "Seven", 8, "Eight"));
+        Assert.assertTrue(map.removeIf((each, value) -> each % 2 == 0 && value.length() < 4));
+        Verify.denyContainsKey(2, map);
+        Verify.denyContainsKey(6, map);
+        MutableMapIterable<Integer, String> expected = this.newMapWithKeysValues(1, "One", 3, "THREE", 4, "four", 5, "Five");
+        expected.put(7, "Seven");
+        expected.put(8, "Eight");
+        Assert.assertEquals(expected, map);
+
+        Assert.assertTrue(map.removeIf((each, value) -> each % 2 != 0 && value.equals("THREE")));
+        Verify.denyContainsKey(3, map);
+        Verify.assertSize(5, map);
+
+        Assert.assertTrue(map.removeIf((each, value) -> each % 2 != 0));
+        Assert.assertFalse(map.removeIf((each, value) -> each % 2 != 0));
+        Assert.assertEquals(this.newMapWithKeysValues(4, "four", 8, "Eight"), map);
     }
 
     @Test

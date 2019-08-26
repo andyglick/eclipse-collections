@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,12 +10,14 @@
 
 package org.eclipse.collections.impl.set.sorted.immutable;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.ExecutorService;
 
 import org.eclipse.collections.api.LazyIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.function.primitive.BooleanFunction;
@@ -29,7 +31,6 @@ import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
-import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -94,7 +95,7 @@ import org.eclipse.collections.impl.utility.internal.SetIterables;
 import org.eclipse.collections.impl.utility.internal.SortedSetIterables;
 
 /**
- * This class is the parent class for all ImmutableSortedSets.  All implementations of ImmutableSortedSet must implement the SortedSet
+ * This class is the parent class for all ImmutableSortedSets. All implementations of ImmutableSortedSet must implement the SortedSet
  * interface so an TreeSet.equals(anImmutableSortedSet) can return true when the contents are the same.
  */
 abstract class AbstractImmutableSortedSet<T> extends AbstractImmutableCollection<T>
@@ -349,6 +350,12 @@ abstract class AbstractImmutableSortedSet<T> extends AbstractImmutableCollection
     @Override
     public <S> ImmutableList<Pair<T, S>> zip(Iterable<S> that)
     {
+        if (that instanceof Collection || that instanceof RichIterable)
+        {
+            int thatSize = Iterate.sizeOf(that);
+            FastList<Pair<T, S>> target = FastList.newList(Math.min(this.size(), thatSize));
+            return Iterate.zip(this, that, target).toImmutable();
+        }
         return Iterate.zip(this, that, FastList.newList()).toImmutable();
     }
 
@@ -498,18 +505,6 @@ abstract class AbstractImmutableSortedSet<T> extends AbstractImmutableCollection
             throw new IllegalArgumentException();
         }
         return new NonParallelSortedSetIterable<>(this);
-    }
-
-    @Override
-    public void reverseForEach(Procedure<? super T> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEach() not implemented yet");
-    }
-
-    @Override
-    public void reverseForEachWithIndex(ObjectIntProcedure<? super T> procedure)
-    {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + ".reverseForEachWithIndex() not implemented yet");
     }
 
     @Override

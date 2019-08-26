@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,12 +14,16 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.bag.ImmutableBagIterable;
+import org.eclipse.collections.api.bag.MutableBag;
 import org.eclipse.collections.api.bag.MutableBagIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.partition.PartitionMutableCollection;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 import org.eclipse.collections.impl.block.factory.IntegerPredicates;
 import org.eclipse.collections.impl.block.factory.Predicates;
@@ -36,6 +40,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.math.IntegerSum;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.test.Verify;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.junit.Assert;
 import org.junit.Test;
@@ -203,30 +208,33 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
         Assert.assertEquals(5, sum3.getIntSum());
     }
 
-    /**
-     * @since 9.1.
-     */
     @Test
     public void collectWithOccurrences()
     {
-        Bag<Integer> bag = this.newWith(3, 3, 3, 2, 2, 1);
-        Bag<ObjectIntPair<Integer>> actual =
-                bag.collectWithOccurrences(PrimitiveTuples::pair, Bags.mutable.empty());
-        Bag<ObjectIntPair<Integer>> expected =
+        Bag<Integer> bag1 = this.newWith(3, 3, 3, 2, 2, 1);
+        Bag<ObjectIntPair<Integer>> actual1 =
+                bag1.collectWithOccurrences(PrimitiveTuples::pair, Bags.mutable.empty());
+        Bag<ObjectIntPair<Integer>> expected1 =
                 Bags.immutable.with(
                         PrimitiveTuples.pair(Integer.valueOf(3), 3),
                         PrimitiveTuples.pair(Integer.valueOf(2), 2),
                         PrimitiveTuples.pair(Integer.valueOf(1), 1));
-        Assert.assertEquals(expected, actual);
+        Assert.assertEquals(expected1, actual1);
+        Assert.assertEquals(expected1, bag1.collectWithOccurrences(PrimitiveTuples::pair));
 
         Set<ObjectIntPair<Integer>> actual2 =
-                bag.collectWithOccurrences(PrimitiveTuples::pair, Sets.mutable.empty());
+                bag1.collectWithOccurrences(PrimitiveTuples::pair, Sets.mutable.empty());
         ImmutableSet<ObjectIntPair<Integer>> expected2 =
                 Sets.immutable.with(
                         PrimitiveTuples.pair(Integer.valueOf(3), 3),
                         PrimitiveTuples.pair(Integer.valueOf(2), 2),
                         PrimitiveTuples.pair(Integer.valueOf(1), 1));
         Assert.assertEquals(expected2, actual2);
+
+        Bag<Integer> bag2 = this.newWith(3, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 4, 5, 7);
+        Assert.assertEquals(
+                this.newWith(8, 5, 6, 5, 6, 8),
+                bag2.collectWithOccurrences((each, index) -> each + index));
     }
 
     @Override
@@ -433,6 +441,13 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
     }
 
     @Test
+    public void selectDuplicates()
+    {
+        MutableBagIterable<Integer> integers = this.newWith(0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5);
+        Assert.assertEquals(Iterables.iBag(1, 1, 1, 1, 2, 2, 2, 3, 3), integers.selectDuplicates());
+    }
+
+    @Test
     public void topOccurrences()
     {
         MutableBagIterable<String> strings = this.newWithOccurrences(
@@ -500,5 +515,27 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
         Verify.assertSize(0, this.newWith().bottomOccurrences(0));
         Verify.assertSize(0, this.newWith("one").bottomOccurrences(0));
         Verify.assertThrows(IllegalArgumentException.class, () -> this.newWith().bottomOccurrences(-1));
+    }
+
+    @Test
+    public void selectUnique()
+    {
+        MutableBag<String> bag = Bags.mutable.with("0", "1", "1", "1", "1", "2", "2", "2", "3", "3", "4", "5");
+        MutableSet<String> expected = Sets.mutable.with("0", "4", "5");
+        MutableSet<String> actual = bag.selectUnique();
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Override
+    @Test
+    public void zip()
+    {
+        super.zip();
+        RichIterable<String> bag = this.newWith("1", "2", "3");
+        Bag<Pair<String, String>> expected = this.newWith(
+                Tuples.pair("1", "1"),
+                Tuples.pair("2", "2"),
+                Tuples.pair("3", "3"));
+        Assert.assertEquals(expected, bag.zip(bag::iterator).toBag());
     }
 }

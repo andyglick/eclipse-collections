@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Goldman Sachs and others.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -32,6 +32,7 @@ import org.eclipse.collections.api.block.function.primitive.DoubleFunction;
 import org.eclipse.collections.api.block.function.primitive.FloatFunction;
 import org.eclipse.collections.api.block.function.primitive.IntFunction;
 import org.eclipse.collections.api.block.function.primitive.LongFunction;
+import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFunction;
 import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
@@ -140,6 +141,21 @@ public abstract class AbstractImmutableBag<T>
         return this.collectWith(function, parameter);
     }
 
+    /**
+     * @since 10.0.0
+     */
+    @Override
+    public <V> ImmutableBag<V> countByEach(Function<? super T, ? extends Iterable<V>> function)
+    {
+        return this.flatCollect(function);
+    }
+
+    @Override
+    public <V> ImmutableBag<V> collectWithOccurrences(ObjectIntToObjectFunction<? super T, ? extends V> function)
+    {
+        return this.collectWithOccurrences(function, Bags.mutable.<V>empty()).toImmutable();
+    }
+
     @Override
     public <P, V> ImmutableBag<V> collectWith(Function2<? super T, ? super P, ? extends V> function, P parameter)
     {
@@ -197,26 +213,27 @@ public abstract class AbstractImmutableBag<T>
     @Override
     public ImmutableList<ObjectIntPair<T>> topOccurrences(int n)
     {
-        return this.occurrencesSortingBy(n,
+        MutableList<ObjectIntPair<T>> result = this.occurrencesSortingBy(
+                n,
                 item -> -item.getTwo(),
-                Lists.fixedSize.empty()
-        ).toImmutable();
+                Lists.fixedSize.empty());
+        return result.toImmutable();
     }
 
     @Override
     public ImmutableList<ObjectIntPair<T>> bottomOccurrences(int n)
     {
-        return this.occurrencesSortingBy(
+        MutableList<ObjectIntPair<T>> result = this.occurrencesSortingBy(
                 n,
                 ObjectIntPair::getTwo,
-                Lists.fixedSize.empty()
-        ).toImmutable();
+                Lists.fixedSize.empty());
+        return result.toImmutable();
     }
 
     @Override
     public <V> ImmutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function)
     {
-        return this.groupByUniqueKey(function, UnifiedMap.<V, T>newMap()).toImmutable();
+        return this.groupByUniqueKey(function, UnifiedMap.<V, T>newMap(this.size())).toImmutable();
     }
 
     @Override

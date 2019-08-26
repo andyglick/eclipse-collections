@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2018 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -11,11 +11,13 @@
 package org.eclipse.collections.impl.bag.immutable;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.bag.ImmutableBag;
 import org.eclipse.collections.api.bag.MutableBag;
@@ -69,7 +71,7 @@ public class ImmutableArrayBag<T>
         return ImmutableArrayBag.copyFrom(Bags.mutable.with(elements));
     }
 
-    public static <T> ImmutableArrayBag<T> copyFrom(Bag<T> bag)
+    public static <T> ImmutableArrayBag<T> copyFrom(Bag<? extends T> bag)
     {
         int distinctItemCount = bag.sizeDistinct();
         T[] newKeys = (T[]) new Object[distinctItemCount];
@@ -456,6 +458,12 @@ public class ImmutableArrayBag<T>
     @Deprecated
     public <S> ImmutableBag<Pair<T, S>> zip(Iterable<S> that)
     {
+        if (that instanceof Collection || that instanceof RichIterable)
+        {
+            int thatSize = Iterate.sizeOf(that);
+            HashBag<Pair<T, S>> target = HashBag.newBag(Math.min(this.size(), thatSize));
+            return this.zip(that, target).toImmutable();
+        }
         return this.zip(that, HashBag.newBag()).toImmutable();
     }
 
@@ -466,7 +474,7 @@ public class ImmutableArrayBag<T>
     @Deprecated
     public ImmutableSet<Pair<T, Integer>> zipWithIndex()
     {
-        return this.zipWithIndex(UnifiedSet.newSet()).toImmutable();
+        return this.zipWithIndex(UnifiedSet.newSet(this.size())).toImmutable();
     }
 
     protected Object writeReplace()
@@ -482,7 +490,9 @@ public class ImmutableArrayBag<T>
 
         private ArrayBagIterator()
         {
-            this.remainingOccurrences = ImmutableArrayBag.this.sizeDistinct() > 0 ? ImmutableArrayBag.this.counts[0] : 0;
+            this.remainingOccurrences = ImmutableArrayBag.this.sizeDistinct() > 0
+                    ? ImmutableArrayBag.this.counts[0]
+                    : 0;
         }
 
         @Override

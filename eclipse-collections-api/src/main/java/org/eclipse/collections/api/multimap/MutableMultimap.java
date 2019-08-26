@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs and others.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -37,12 +37,11 @@ public interface MutableMultimap<K, V>
     /**
      * Modification operation similar to put, however, takes the key-value pair as the input.
      *
-     * @param keyValuePair
-     *         key value pair to add in the multimap
+     * @param keyValuePair key value pair to add in the multimap
      * @see #put(Object, Object)
      * @since 6.0
      */
-    default boolean add(Pair<K, V> keyValuePair)
+    default boolean add(Pair<? extends K, ? extends V> keyValuePair)
     {
         return this.put(keyValuePair.getOne(), keyValuePair.getTwo());
     }
@@ -50,20 +49,20 @@ public interface MutableMultimap<K, V>
     boolean remove(Object key, Object value);
 
     // Bulk Operations
-    default boolean putAllPairs(Pair<K, V>... pairs)
+    default boolean putAllPairs(Pair<? extends K, ? extends V>... pairs)
     {
         boolean changed = false;
-        for (Pair<K, V> pair : pairs)
+        for (Pair<? extends K, ? extends V> pair : pairs)
         {
             changed |= this.put(pair.getOne(), pair.getTwo());
         }
         return changed;
     }
 
-    default boolean putAllPairs(Iterable<Pair<K, V>> pairs)
+    default boolean putAllPairs(Iterable<? extends Pair<? extends K, ? extends V>> pairs)
     {
         boolean changed = false;
-        for (Pair<K, V> pair : pairs)
+        for (Pair<? extends K, ? extends V> pair : pairs)
         {
             changed |= this.put(pair.getOne(), pair.getTwo());
         }
@@ -77,6 +76,14 @@ public interface MutableMultimap<K, V>
     RichIterable<V> replaceValues(K key, Iterable<? extends V> values);
 
     RichIterable<V> removeAll(Object key);
+
+    /**
+     * Puts values into multimap if there are no values already associated with key.
+     * Then returns a view of the values associated with key, like the result of {@link Multimap#get(Object)}
+     *
+     * @since 10.0
+     */
+    MutableCollection<V> getIfAbsentPutAll(K key, Iterable<? extends V> values);
 
     void clear();
 
@@ -101,6 +108,9 @@ public interface MutableMultimap<K, V>
     @Override
     <V2> MutableMultimap<K, V2> collectValues(Function<? super V, ? extends V2> function);
 
+    @Override
+    <K2, V2> MutableMultimap<K2, V2> collectKeyMultiValues(Function<? super K, ? extends K2> keyFunction, Function<? super V, ? extends V2> valueFunction);
+
     /**
      * Returns a synchronized wrapper backed by this multimap.
      *
@@ -109,18 +119,18 @@ public interface MutableMultimap<K, V>
      * <pre>
      *  MutableMultimap synchedMultimap = multimap.asSynchronized();
      *
-     *  synchedMultimap.forEachKey(key -> ... );
-     *  synchedMultimap.forEachValue(value -> ... );
-     *  synchedMultimap.forEachKeyValue((key, value) -> ... );
-     *  synchedMultimap.forEachKeyMultiValues((key, values) -> ... );
+     *  synchedMultimap.forEachKey(key -&gt; ... );
+     *  synchedMultimap.forEachValue(value -&gt; ... );
+     *  synchedMultimap.forEachKeyValue((key, value) -&gt; ... );
+     *  synchedMultimap.forEachKeyMultiValues((key, values) -&gt; ... );
      * </pre>
      * <p>
      * If you want to iterate imperatively over the keySet(), keysView(), valuesView(), or other views, you will
      * need to protect the iteration by wrapping the code in a synchronized block on the multimap.
      * <p>
-     * @see MutableMapIterable#asSynchronized()
      *
      * @return a synchronized view of this multimap.
+     * @see MutableMapIterable#asSynchronized()
      * @since 8.0
      */
     MutableMultimap<K, V> asSynchronized();

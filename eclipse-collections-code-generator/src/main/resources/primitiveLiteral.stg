@@ -130,6 +130,19 @@ wideType ::= [
     "long": "long",
     "float": "double",
     "double": "double",
+    "boolean": "boolean",
+    default: "no matching wide type"
+]
+
+wideName ::= [
+    "byte": "Long",
+    "short": "Long",
+    "char": "Long",
+    "int": "Long",
+    "long": "Long",
+    "float": "Double",
+    "double": "Double",
+    "boolean": "Boolean",
     default: "no matching wide type"
 ]
 
@@ -147,6 +160,7 @@ castWideType ::= [
     "long": "",
     "float": "(double) ",
     "double": "",
+    "boolean": "",
     default: "no matching wide type"
 ]
 
@@ -188,6 +202,26 @@ castIntToNarrowType ::= [
     "short": "shortCast",
     "char": "charCast",
     "int": "noCast",
+    "long": "noCast",
+    "float": "noCast",
+    "double": "noCast"
+]
+
+castLongToNarrowType ::= [
+    "byte": "byteCast",
+    "short": "shortCast",
+    "char": "charCast",
+    "int": "intCast",
+    "long": "noCast",
+    "float": "noCast",
+    "double": "noCast"
+]
+
+castLongToNarrowTypeWithParens ::= [
+    "byte": "byteCastWithParens",
+    "short": "shortCastWithParens",
+    "char": "charCastWithParens",
+    "int": "intCastWithParens",
     "long": "noCast",
     "float": "noCast",
     "double": "noCast"
