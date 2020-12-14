@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Goldman Sachs and others.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -37,8 +37,10 @@ import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
+import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.ParallelListIterable;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
@@ -110,34 +112,6 @@ public class SynchronizedMutableList<T>
     protected MutableList<T> getDelegate()
     {
         return (MutableList<T>) super.getDelegate();
-    }
-
-    @Override
-    public MutableList<T> with(T element)
-    {
-        this.add(element);
-        return this;
-    }
-
-    @Override
-    public MutableList<T> without(T element)
-    {
-        this.remove(element);
-        return this;
-    }
-
-    @Override
-    public MutableList<T> withAll(Iterable<? extends T> elements)
-    {
-        this.addAllIterable(elements);
-        return this;
-    }
-
-    @Override
-    public MutableList<T> withoutAll(Iterable<? extends T> elements)
-    {
-        this.removeAllIterable(elements);
-        return this;
     }
 
     @Override
@@ -349,6 +323,16 @@ public class SynchronizedMutableList<T>
         synchronized (this.getLock())
         {
             return this.getDelegate().corresponds(other, predicate);
+        }
+    }
+
+    @Override
+    public <T2> void forEachInBoth(
+            ListIterable<T2> other, Procedure2<? super T, ? super T2> procedure)
+    {
+        synchronized (this.getLock())
+        {
+            this.getDelegate().forEachInBoth(other, procedure);
         }
     }
 

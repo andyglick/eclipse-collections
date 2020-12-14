@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.RandomAccess;
 
@@ -53,6 +54,7 @@ import org.eclipse.collections.api.collection.primitive.MutableFloatCollection;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
@@ -71,9 +73,7 @@ import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.partition.list.PartitionMutableList;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.block.factory.HashingStrategies;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.eclipse.collections.impl.partition.list.PartitionFastList;
@@ -115,7 +115,7 @@ public final class ListIterate
         int localSize = one.size();
         for (int i = 0; i < localSize; i++)
         {
-            if (!Comparators.nullSafeEquals(one.get(i), two.get(i)))
+            if (!Objects.equals(one.get(i), two.get(i)))
             {
                 return false;
             }
@@ -129,7 +129,7 @@ public final class ListIterate
         Iterator<?> twoIterator = two.iterator();
         for (int i = 0; i < localSize; i++)
         {
-            if (!twoIterator.hasNext() || !Comparators.nullSafeEquals(one.get(i), twoIterator.next()))
+            if (!twoIterator.hasNext() || !Objects.equals(one.get(i), twoIterator.next()))
             {
                 return false;
             }
@@ -143,7 +143,7 @@ public final class ListIterate
         Iterator<?> twoIterator = two.iterator();
         while (oneIterator.hasNext())
         {
-            if (!twoIterator.hasNext() || !Comparators.nullSafeEquals(oneIterator.next(), twoIterator.next()))
+            if (!twoIterator.hasNext() || !Objects.equals(oneIterator.next(), twoIterator.next()))
             {
                 return false;
             }
@@ -720,7 +720,7 @@ public final class ListIterate
      * Iterates over the section of the list covered by the specified indexes. The indexes are both inclusive. If the
      * from is less than the to, the list is iterated in forward order. If the from is greater than the to, then the
      * list is iterated in the reverse order.
-     * <p>
+     *
      * <pre>e.g.
      * MutableList&lt;People&gt; people = FastList.newListWith(ted, mary, bob, sally);
      * ListIterate.forEach(people, 0, 1, new Procedure&lt;Person&gt;()
@@ -768,7 +768,7 @@ public final class ListIterate
      * from is less than the to, the list is iterated in forward order. If the from is greater than the to, then the
      * list is iterated in the reverse order. The index passed into the ObjectIntProcedure is the actual index of the
      * range.
-     * <p>
+     *
      * <pre>e.g.
      * MutableList&lt;People&gt; people = FastList.newListWith(ted, mary, bob, sally);
      * ListIterate.forEachWithIndex(people, 0, 1, new ObjectIntProcedure&lt;Person&gt;()

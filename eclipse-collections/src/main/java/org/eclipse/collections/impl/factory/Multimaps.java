@@ -52,7 +52,12 @@ public final class Multimaps
         public final ImmutableSetMultimapFactory set = new ImmutableSetMultimapFactory();
         public final ImmutableSortedSetMultimapFactory sortedSet = new ImmutableSortedSetMultimapFactory();
         public final ImmutableBagMultimapFactory bag = new ImmutableBagMultimapFactory();
-        public final ImmutableSortedBagMultimapFactory multimap = new ImmutableSortedBagMultimapFactory();
+        public final ImmutableSortedBagMultimapFactory sortedBag = new ImmutableSortedBagMultimapFactory();
+        /**
+         * @deprecated Use {@link #sortedBag} instead.
+         */
+        @Deprecated
+        public final ImmutableSortedBagMultimapFactory multimap = this.sortedBag;
 
         private ImmutableMultimaps()
         {
@@ -301,9 +306,19 @@ public final class Multimaps
             {
             }
 
+            public <K, V> ImmutableSortedBagMultimap<K, V> of()
+            {
+                return this.of(null);
+            }
+
             public <K, V> ImmutableSortedBagMultimap<K, V> of(Comparator<? super V> comparator)
             {
                 return new ImmutableSortedBagMultimapImpl<>(Maps.immutable.empty(), comparator);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> with()
+            {
+                return this.of();
             }
 
             public <K, V> ImmutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator)
@@ -311,19 +326,57 @@ public final class Multimaps
                 return this.of(comparator);
             }
 
+            public <K, V> ImmutableSortedBagMultimap<K, V> of(K key, V value)
+            {
+                return this.with(key, value);
+            }
+
             public <K, V> ImmutableSortedBagMultimap<K, V> of(Comparator<? super V> comparator, K key, V value)
+            {
+                return this.with(comparator, key, value);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> with(K key, V value)
+            {
+                return this.with(null, key, value);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator, K key, V value)
             {
                 TreeBagMultimap<K, V> treeBagMultimap = new TreeBagMultimap<>(comparator);
                 treeBagMultimap.put(key, value);
                 return treeBagMultimap.toImmutable();
             }
 
-            public <K, V> ImmutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator, K key, V value)
+            public <K, V> ImmutableSortedBagMultimap<K, V> of(
+                    K key1,
+                    V value1,
+                    K key2,
+                    V value2)
             {
-                return this.of(comparator, key, value);
+                return this.with(key1, value1, key2, value2);
             }
 
             public <K, V> ImmutableSortedBagMultimap<K, V> of(
+                    Comparator<? super V> comparator,
+                    K key1,
+                    V value1,
+                    K key2,
+                    V value2)
+            {
+                return this.with(comparator, key1, value1, key2, value2);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> with(
+                    K key1,
+                    V value1,
+                    K key2,
+                    V value2)
+            {
+                return this.with(null, key1, value1, key2, value2);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> with(
                     Comparator<? super V> comparator,
                     K key1,
                     V value1,
@@ -336,17 +389,41 @@ public final class Multimaps
                 return treeBagMultimap.toImmutable();
             }
 
-            public <K, V> ImmutableSortedBagMultimap<K, V> with(
+            public <K, V> ImmutableSortedBagMultimap<K, V> of(
+                    K key1,
+                    V value1,
+                    K key2,
+                    V value2,
+                    K key3,
+                    V value3)
+            {
+                return this.with(key1, value1, key2, value2, key3, value3);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> of(
                     Comparator<? super V> comparator,
                     K key1,
                     V value1,
                     K key2,
-                    V value2)
+                    V value2,
+                    K key3,
+                    V value3)
             {
-                return this.of(comparator, key1, value1, key2, value2);
+                return this.with(comparator, key1, value1, key2, value2, key3, value3);
             }
 
-            public <K, V> ImmutableSortedBagMultimap<K, V> of(
+            public <K, V> ImmutableSortedBagMultimap<K, V> with(
+                    K key1,
+                    V value1,
+                    K key2,
+                    V value2,
+                    K key3,
+                    V value3)
+            {
+                return this.with(null, key1, value1, key2, value2, key3, value3);
+            }
+
+            public <K, V> ImmutableSortedBagMultimap<K, V> with(
                     Comparator<? super V> comparator,
                     K key1,
                     V value1,
@@ -360,18 +437,6 @@ public final class Multimaps
                 treeBagMultimap.put(key2, value2);
                 treeBagMultimap.put(key3, value3);
                 return treeBagMultimap.toImmutable();
-            }
-
-            public <K, V> ImmutableSortedBagMultimap<K, V> with(
-                    Comparator<? super V> comparator,
-                    K key1,
-                    V value1,
-                    K key2,
-                    V value2,
-                    K key3,
-                    V value3)
-            {
-                return this.of(comparator, key1, value1, key2, value2, key3, value3);
             }
         }
     }
@@ -659,29 +724,94 @@ public final class Multimaps
                 return TreeBagMultimap.newMultimap();
             }
 
+            public <K, V> MutableSortedBagMultimap<K, V> empty(Comparator<? super V> comparator)
+            {
+                return TreeBagMultimap.newMultimap(comparator);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> of()
+            {
+                return this.empty();
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> of(Comparator<? super V> comparator)
+            {
+                return this.empty(comparator);
+            }
+
             public <K, V> MutableSortedBagMultimap<K, V> with()
             {
                 return this.empty();
             }
 
+            public <K, V> MutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator)
+            {
+                return this.empty(comparator);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> of(K key, V value)
+            {
+                return this.with(key, value);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> of(Comparator<? super V> comparator, K key, V value)
+            {
+                return this.with(comparator, key, value);
+            }
+
             public <K, V> MutableSortedBagMultimap<K, V> with(K key, V value)
             {
-                TreeBagMultimap<K, V> treeBagMultimap = TreeBagMultimap.newMultimap();
+                return this.with(null, key, value);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator, K key, V value)
+            {
+                TreeBagMultimap<K, V> treeBagMultimap = TreeBagMultimap.newMultimap(comparator);
                 treeBagMultimap.put(key, value);
                 return treeBagMultimap;
             }
 
+            public <K, V> MutableSortedBagMultimap<K, V> of(K key1, V value1, K key2, V value2)
+            {
+                return this.with(key1, value1, key2, value2);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> of(Comparator<? super V> comparator, K key1, V value1, K key2, V value2)
+            {
+                return this.with(comparator, key1, value1, key2, value2);
+            }
+
             public <K, V> MutableSortedBagMultimap<K, V> with(K key1, V value1, K key2, V value2)
             {
-                TreeBagMultimap<K, V> treeBagMultimap = TreeBagMultimap.newMultimap();
+                return this.with(null, key1, value1, key2, value2);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator, K key1, V value1, K key2, V value2)
+            {
+                TreeBagMultimap<K, V> treeBagMultimap = TreeBagMultimap.newMultimap(comparator);
                 treeBagMultimap.put(key1, value1);
                 treeBagMultimap.put(key2, value2);
                 return treeBagMultimap;
             }
 
+            public <K, V> MutableSortedBagMultimap<K, V> of(K key1, V value1, K key2, V value2, K key3, V value3)
+            {
+                return this.with(key1, value1, key2, value2, key3, value3);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> of(Comparator<? super V> comparator, K key1, V value1, K key2, V value2, K key3, V value3)
+            {
+                return this.with(comparator, key1, value1, key2, value2, key3, value3);
+            }
+
             public <K, V> MutableSortedBagMultimap<K, V> with(K key1, V value1, K key2, V value2, K key3, V value3)
             {
-                TreeBagMultimap<K, V> treeBagMultimap = TreeBagMultimap.newMultimap();
+                return this.with(null, key1, value1, key2, value2, key3, value3);
+            }
+
+            public <K, V> MutableSortedBagMultimap<K, V> with(Comparator<? super V> comparator, K key1, V value1, K key2, V value2, K key3, V value3)
+            {
+                TreeBagMultimap<K, V> treeBagMultimap = TreeBagMultimap.newMultimap(comparator);
                 treeBagMultimap.put(key1, value1);
                 treeBagMultimap.put(key2, value2);
                 treeBagMultimap.put(key3, value3);

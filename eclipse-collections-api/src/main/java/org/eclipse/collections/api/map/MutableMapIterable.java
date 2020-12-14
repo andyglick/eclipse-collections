@@ -27,6 +27,7 @@ import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.collection.MutableCollection;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectLongMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -71,7 +72,7 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
     /**
      * Remove entries from the map at the specified {@code keys}.
      *
-     * @return <tt>true</tt> if this map changed as a result of the call
+     * @return {@code true} if this map changed as a result of the call
      * @since 10.0
      */
     default boolean removeAllKeys(Set<? extends K> keys)
@@ -88,7 +89,16 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
      * @return true if any entry is removed.
      * @since 10.0
      */
-    boolean removeIf(Predicate2<? super K, ? super V> predicate);
+    default boolean removeIf(Predicate2<? super K, ? super V> predicate)
+    {
+        return this.entrySet().removeIf(entry -> predicate.accept(entry.getKey(), entry.getValue()));
+    }
+
+    @Override
+    default V getOrDefault(Object key, V defaultValue)
+    {
+        return this.getIfAbsentValue((K) key, defaultValue);
+    }
 
     /**
      * Get and return the value in the Map at the specified key. Alternatively, if there is no value in the map at the key,
@@ -136,7 +146,7 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
      * keys and values of the original plus the additional key and value. In the case of mutable maps, the original map
      * is modified and then returned. In order to use this method properly with mutable and fixed size maps the
      * following approach must be taken:
-     * <p>
+     *
      * <pre>
      * map = map.withKeyValue("new key", "new value");
      * </pre>
@@ -150,12 +160,36 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
     MutableMapIterable<K, V> withKeyValue(K key, V value);
 
     /**
+     * Similar to {@link #putAll(Map)}, but returns this instead of void
+     *
+     * @see #putAll(Map)
+     *
+     * @since 10.3.0
+     */
+    default MutableMapIterable<K, V> withMap(Map<? extends K, ? extends V> map)
+    {
+        this.putAll(map);
+        return this;
+    }
+
+    default MutableMapIterable<K, V> withMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        this.putAllMapIterable(mapIterable);
+        return this;
+    }
+
+    default void putAllMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        mapIterable.forEachKeyValue(this::put);
+    }
+
+    /**
      * This method allows mutable, fixed size, and immutable maps the ability to add elements to their existing
      * elements. In order to support fixed size maps, a new instance of a map would have to be returned including the
      * keys and values of the original plus all of the additional keys and values. In the case of mutable maps, the
      * original map is modified and then returned. In order to use this method properly with mutable and fixed size
      * maps the following approach must be taken:
-     * <p>
+     *
      * <pre>
      * map = map.withAllKeyValues(FastList.newListWith(PairImpl.of("new key", "new value")));
      * </pre>
@@ -181,7 +215,7 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
      * keys and values of the original minus the key and value to be removed. In the case of mutable maps, the original
      * map is modified and then returned. In order to use this method properly with mutable and fixed size maps the
      * following approach must be taken:
-     * <p>
+     *
      * <pre>
      * map = map.withoutKey("key");
      * </pre>
@@ -200,7 +234,7 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
      * keys and values of the original minus all of the keys and values to be removed. In the case of mutable maps, the
      * original map is modified and then returned. In order to use this method properly with mutable and fixed size
      * maps the following approach must be taken:
-     * <p>
+     *
      * <pre>
      * map = map.withoutAllKeys(FastList.newListWith("key1", "key2"));
      * </pre>
@@ -354,9 +388,49 @@ public interface MutableMapIterable<K, V> extends MapIterable<K, V>, Map<K, V>
     @Override
     MutableCollection<Pair<V, Integer>> zipWithIndex();
 
+    // TODO: Return MutableMapIterable
     @Override
-    <KK, VV> MutableMap<KK, VV> aggregateInPlaceBy(Function<? super V, ? extends KK> groupBy, Function0<? extends VV> zeroValueFactory, Procedure2<? super VV, ? super V> mutatingAggregator);
+    default <KK, VV> MutableMap<KK, VV> aggregateInPlaceBy(
+            Function<? super V, ? extends KK> groupBy,
+            Function0<? extends VV> zeroValueFactory,
+            Procedure2<? super VV, ? super V> mutatingAggregator)
+    {
+        MutableMap<KK, VV> map = Maps.mutable.empty();
+        this.forEach(each ->
+        {
+            KK key = groupBy.valueOf(each);
+            VV value = map.getIfAbsentPut(key, zeroValueFactory);
+            mutatingAggregator.value(value, each);
+        });
+        return map;
+    }
 
+    // TODO: Return MutableMapIterable
     @Override
-    <KK, VV> MutableMap<KK, VV> aggregateBy(Function<? super V, ? extends KK> groupBy, Function0<? extends VV> zeroValueFactory, Function2<? super VV, ? super V, ? extends VV> nonMutatingAggregator);
+    default <KK, VV> MutableMap<KK, VV> aggregateBy(
+            Function<? super V, ? extends KK> groupBy,
+            Function0<? extends VV> zeroValueFactory,
+            Function2<? super VV, ? super V, ? extends VV> nonMutatingAggregator)
+    {
+        return this.aggregateBy(
+                groupBy,
+                zeroValueFactory,
+                nonMutatingAggregator,
+                Maps.mutable.empty());
+    }
+
+    // TODO: Return MutableMapIterable
+    @Override
+    default <K1, V1, V2> MutableMap<K1, V2> aggregateBy(
+            Function<? super K, ? extends K1> keyFunction,
+            Function<? super V, ? extends V1> valueFunction,
+            Function0<? extends V2> zeroValueFactory,
+            Function2<? super V2, ? super V1, ? extends V2> nonMutatingAggregator)
+    {
+        MutableMap<K1, V2> map = Maps.mutable.empty();
+        this.forEachKeyValue((key, value) -> {
+            map.updateValueWith(keyFunction.valueOf(key), zeroValueFactory, nonMutatingAggregator, valueFunction.valueOf(value));
+        });
+        return map;
+    }
 }

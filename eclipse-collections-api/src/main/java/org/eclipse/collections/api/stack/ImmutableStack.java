@@ -27,7 +27,9 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.ImmutableMap;
+import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectDoubleMap;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectLongMap;
 import org.eclipse.collections.api.multimap.list.ImmutableListMultimap;
@@ -175,7 +177,11 @@ public interface ImmutableStack<T> extends StackIterable<T>
     <V> ImmutableListMultimap<V, T> groupByEach(Function<? super T, ? extends Iterable<V>> function);
 
     @Override
-    <V> ImmutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function);
+    default <V> ImmutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function)
+    {
+        MutableMap<V, T> target = Maps.mutable.withInitialCapacity(this.size());
+        return this.groupByUniqueKey(function, target).toImmutable();
+    }
 
     @Override
     <S> ImmutableStack<Pair<T, S>> zip(Iterable<S> that);
@@ -184,10 +190,34 @@ public interface ImmutableStack<T> extends StackIterable<T>
     ImmutableStack<Pair<T, Integer>> zipWithIndex();
 
     @Override
-    <K, V> ImmutableMap<K, V> aggregateInPlaceBy(Function<? super T, ? extends K> groupBy, Function0<? extends V> zeroValueFactory, Procedure2<? super V, ? super T> mutatingAggregator);
+    default <K, V> ImmutableMap<K, V> aggregateInPlaceBy(
+            Function<? super T, ? extends K> groupBy,
+            Function0<? extends V> zeroValueFactory,
+            Procedure2<? super V, ? super T> mutatingAggregator)
+    {
+        MutableMap<K, V> map = Maps.mutable.empty();
+        this.forEach(each ->
+        {
+            K key = groupBy.valueOf(each);
+            V value = map.getIfAbsentPut(key, zeroValueFactory);
+            mutatingAggregator.value(value, each);
+        });
+        return map.toImmutable();
+    }
 
     @Override
-    <K, V> ImmutableMap<K, V> aggregateBy(Function<? super T, ? extends K> groupBy, Function0<? extends V> zeroValueFactory, Function2<? super V, ? super T, ? extends V> nonMutatingAggregator);
+    default <K, V> ImmutableMap<K, V> aggregateBy(
+            Function<? super T, ? extends K> groupBy,
+            Function0<? extends V> zeroValueFactory,
+            Function2<? super V, ? super T, ? extends V> nonMutatingAggregator)
+    {
+        MutableMap<K, V> map = this.aggregateBy(
+                groupBy,
+                zeroValueFactory,
+                nonMutatingAggregator,
+                Maps.mutable.empty());
+        return map.toImmutable();
+    }
 
     @Override
     <V> ImmutableObjectLongMap<V> sumByInt(Function<? super T, ? extends V> groupBy, IntFunction<? super T> function);

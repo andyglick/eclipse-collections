@@ -38,16 +38,15 @@ import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.function.Function3;
-import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.ConcurrentMutableMap;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.block.procedure.MapEntryToProcedure2;
-import org.eclipse.collections.impl.factory.Maps;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.MapIterate;
@@ -1889,7 +1888,7 @@ public class ConcurrentHashMapUnsafe<K, V>
             }
             Map.Entry<K, V> e = (Map.Entry<K, V>) o;
             Entry<K, V> candidate = ConcurrentHashMapUnsafe.this.getEntry(e.getKey());
-            return candidate != null && candidate.equals(e);
+            return e.equals(candidate);
         }
 
         @Override
@@ -2196,22 +2195,6 @@ public class ConcurrentHashMapUnsafe<K, V>
     public V removeKey(K key)
     {
         return this.remove(key);
-    }
-
-    @Override
-    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
-    {
-        int previousSize = this.size();
-        Iterator<Map.Entry<K, V>> iterator = this.entrySet().iterator();
-        while (iterator.hasNext())
-        {
-            Map.Entry<K, V> entry = iterator.next();
-            if (predicate.accept(entry.getKey(), entry.getValue()))
-            {
-                iterator.remove();
-            }
-        }
-        return previousSize > this.size();
     }
 
     @Override

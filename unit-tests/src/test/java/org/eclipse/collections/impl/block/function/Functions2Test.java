@@ -26,7 +26,10 @@ public class Functions2Test
         Verify.assertThrowsWithCause(
                 RuntimeException.class,
                 IOException.class,
-                () -> Functions2.throwing((a, b) -> { throw new IOException(); }).value(null, null));
+                () -> Functions2.throwing((a, b) ->
+                {
+                    throw new IOException();
+                }).value(null, null));
     }
 
     @Test
@@ -35,31 +38,43 @@ public class Functions2Test
         Verify.assertThrowsWithCause(
                 RuntimeException.class,
                 IOException.class,
-                () -> {
+                () ->
+                {
                     Functions2.throwing(
-                            (one, two) -> { throw new IOException(); },
+                            (one, two) ->
+                            {
+                                throw new IOException();
+                            },
                             (one, two, ce) -> new RuntimeException(ce)).value(null, null);
                 });
         Verify.assertThrowsWithCause(
                 MyRuntimeException.class,
                 IOException.class,
-                () -> {
+                () ->
+                {
                     Functions2.throwing(
-                            (one, two) -> { throw new IOException(); },
+                            (one, two) ->
+                            {
+                                throw new IOException();
+                            },
                             this::throwMyException).value(null, null);
                 });
-        Verify.assertThrows(
+        Assert.assertThrows(
                 NullPointerException.class,
-                () -> {
+                () ->
+                {
                     Functions2.throwing(
-                            (one, two) -> { throw new NullPointerException(); },
+                            (one, two) ->
+                            {
+                                throw new NullPointerException();
+                            },
                             this::throwMyException).value(null, null);
                 });
     }
 
     private MyRuntimeException throwMyException(Object one, Object two, Throwable exception)
     {
-        return new MyRuntimeException(String.valueOf(one) + String.valueOf(two), exception);
+        return new MyRuntimeException(String.valueOf(one) + two, exception);
     }
 
     @Test

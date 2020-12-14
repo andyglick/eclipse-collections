@@ -23,6 +23,7 @@ import java.util.DoubleSummaryStatistics;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.LongSummaryStatistics;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.RandomAccess;
 import java.util.Spliterator;
@@ -33,6 +34,14 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 
+import org.eclipse.collections.api.BooleanIterable;
+import org.eclipse.collections.api.ByteIterable;
+import org.eclipse.collections.api.CharIterable;
+import org.eclipse.collections.api.DoubleIterable;
+import org.eclipse.collections.api.FloatIterable;
+import org.eclipse.collections.api.IntIterable;
+import org.eclipse.collections.api.LongIterable;
+import org.eclipse.collections.api.ShortIterable;
 import org.eclipse.collections.api.block.HashingStrategy;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
@@ -774,6 +783,17 @@ public class FastList<T>
     }
 
     @Override
+    public <R extends MutableBooleanCollection> R flatCollectBoolean(
+            Function<? super T, ? extends BooleanIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
     public MutableByteList collectByte(ByteFunction<? super T> byteFunction)
     {
         return this.collectByte(byteFunction, new ByteArrayList(this.size));
@@ -785,6 +805,17 @@ public class FastList<T>
         for (int i = 0; i < this.size; i++)
         {
             target.add(byteFunction.byteValueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
+    public <R extends MutableByteCollection> R flatCollectByte(
+            Function<? super T, ? extends ByteIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
         }
         return target;
     }
@@ -806,6 +837,17 @@ public class FastList<T>
     }
 
     @Override
+    public <R extends MutableCharCollection> R flatCollectChar(
+            Function<? super T, ? extends CharIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
     public MutableDoubleList collectDouble(DoubleFunction<? super T> doubleFunction)
     {
         return this.collectDouble(doubleFunction, new DoubleArrayList(this.size));
@@ -817,6 +859,17 @@ public class FastList<T>
         for (int i = 0; i < this.size; i++)
         {
             target.add(doubleFunction.doubleValueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
+    public <R extends MutableDoubleCollection> R flatCollectDouble(
+            Function<? super T, ? extends DoubleIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
         }
         return target;
     }
@@ -838,6 +891,17 @@ public class FastList<T>
     }
 
     @Override
+    public <R extends MutableFloatCollection> R flatCollectFloat(
+            Function<? super T, ? extends FloatIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
     public MutableIntList collectInt(IntFunction<? super T> intFunction)
     {
         return this.collectInt(intFunction, new IntArrayList(this.size));
@@ -849,6 +913,17 @@ public class FastList<T>
         for (int i = 0; i < this.size; i++)
         {
             target.add(intFunction.intValueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
+    public <R extends MutableIntCollection> R flatCollectInt(
+            Function<? super T, ? extends IntIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
         }
         return target;
     }
@@ -870,6 +945,17 @@ public class FastList<T>
     }
 
     @Override
+    public <R extends MutableLongCollection> R flatCollectLong(
+            Function<? super T, ? extends LongIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
     public MutableShortList collectShort(ShortFunction<? super T> shortFunction)
     {
         return this.collectShort(shortFunction, new ShortArrayList(this.size));
@@ -881,6 +967,17 @@ public class FastList<T>
         for (int i = 0; i < this.size; i++)
         {
             target.add(shortFunction.shortValueOf(this.items[i]));
+        }
+        return target;
+    }
+
+    @Override
+    public <R extends MutableShortCollection> R flatCollectShort(
+            Function<? super T, ? extends ShortIterable> function, R target)
+    {
+        for (int i = 0; i < this.size; i++)
+        {
+            target.addAll(function.valueOf(this.items[i]));
         }
         return target;
     }
@@ -1542,7 +1639,7 @@ public class FastList<T>
         }
         for (int i = 0; i < this.size; i++)
         {
-            if (!Comparators.nullSafeEquals(this.items[i], that.items[i]))
+            if (!Objects.equals(this.items[i], that.items[i]))
             {
                 return false;
             }

@@ -33,6 +33,8 @@ import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -41,8 +43,6 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.procedure.MapCollectProcedure;
-import org.eclipse.collections.impl.factory.Maps;
-import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.parallel.BatchIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -1038,17 +1038,48 @@ public class UnifiedMap<K, V> extends AbstractMutableMap<K, V>
     @Override
     public boolean removeIf(Predicate2<? super K, ? super V> predicate)
     {
-        int previousSize = this.size();
-        Iterator<Entry<K, V>> iterator = this.entrySet().iterator();
-        while (iterator.hasNext())
+        int previousOccupied = this.occupied;
+        for (int index = 0; index < this.table.length; index += 2)
         {
-            Entry<K, V> entry = iterator.next();
-            if (predicate.accept(entry.getKey(), entry.getValue()))
+            Object cur = this.table[index];
+            if (cur == null)
             {
-                iterator.remove();
+                continue;
+            }
+            if (cur == CHAINED_KEY)
+            {
+                Object[] chain = (Object[]) this.table[index + 1];
+                for (int chIndex = 0; chIndex < chain.length; )
+                {
+                    if (chain[chIndex] == null)
+                    {
+                        break;
+                    }
+                    K key = this.nonSentinel(chain[chIndex]);
+                    V value = (V) chain[chIndex + 1];
+                    if (predicate.accept(key, value))
+                    {
+                        this.overwriteWithLastElementFromChain(chain, index, chIndex);
+                    }
+                    else
+                    {
+                        chIndex += 2;
+                    }
+                }
+            }
+            else
+            {
+                K key = this.nonSentinel(cur);
+                V value = (V) this.table[index + 1];
+                if (predicate.accept(key, value))
+                {
+                    this.table[index] = null;
+                    this.table[index + 1] = null;
+                    this.occupied--;
+                }
             }
         }
-        return previousSize > this.size();
+        return previousOccupied > this.occupied;
     }
 
     private void chainedForEachEntry(Object[] chain, Procedure2<? super K, ? super V> procedure)

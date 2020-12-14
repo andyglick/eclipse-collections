@@ -10,6 +10,8 @@
 
 package org.eclipse.collections.api.list;
 
+import java.util.Comparator;
+
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.collection.FixedSizeCollection;
 
@@ -22,8 +24,33 @@ public interface FixedSizeList<T>
         extends MutableList<T>, FixedSizeCollection<T>
 {
     @Override
+    MutableList<T> with(T element);
+
+    @Override
+    MutableList<T> without(T element);
+
+    @Override
+    MutableList<T> withAll(Iterable<? extends T> elements);
+
+    @Override
+    MutableList<T> withoutAll(Iterable<? extends T> elements);
+
+    @Override
     FixedSizeList<T> toReversed();
 
     @Override
     FixedSizeList<T> tap(Procedure<? super T> procedure);
+
+    @Override
+    default FixedSizeList<T> sortThis(Comparator<? super T> comparator)
+    {
+        this.sort(comparator);
+        return this;
+    }
+
+    @Override
+    default FixedSizeList<T> sortThis()
+    {
+        return this.sortThis(null);
+    }
 }

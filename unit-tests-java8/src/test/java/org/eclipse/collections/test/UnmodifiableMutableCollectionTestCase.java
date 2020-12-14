@@ -17,8 +17,8 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.test.collection.mutable.MutableCollectionTestCase;
 import org.junit.Test;
 
-import static org.eclipse.collections.impl.test.Verify.assertThrows;
 import static org.eclipse.collections.test.IterableTestCase.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public interface UnmodifiableMutableCollectionTestCase extends UnmodifiableCollectionTestCase, MutableCollectionTestCase
 {
@@ -63,7 +63,7 @@ public interface UnmodifiableMutableCollectionTestCase extends UnmodifiableColle
     default void MutableCollection_removeIfWith()
     {
         MutableCollection<Integer> collection = this.newWith(5, 4, 3, 2, 1);
-        assertThrows(UnsupportedOperationException.class, () -> collection.removeIfWith(Predicates2.<Integer>in(), Lists.immutable.with(5, 3, 1)));
+        assertThrows(UnsupportedOperationException.class, () -> Boolean.valueOf(collection.removeIfWith(Predicates2.in(), Lists.immutable.with(5, 3, 1))));
         assertThrows(UnsupportedOperationException.class, () -> this.newWith(7, 4, 5, 1).removeIfWith(null, this));
         assertThrows(UnsupportedOperationException.class, () -> this.newWith(9, 5, 1).removeIfWith(Predicates2.greaterThan(), 10));
         assertThrows(UnsupportedOperationException.class, () -> this.newWith(6, 4, 2).removeIfWith(Predicates2.greaterThan(), 2));

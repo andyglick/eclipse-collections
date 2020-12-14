@@ -36,6 +36,7 @@ import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
+import org.eclipse.collections.api.block.predicate.primitive.ObjectIntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.list.MutableList;
@@ -95,34 +96,6 @@ public class SynchronizedSortedBag<T>
     protected MutableSortedBag<T> getDelegate()
     {
         return (MutableSortedBag<T>) super.getDelegate();
-    }
-
-    @Override
-    public MutableSortedBag<T> with(T element)
-    {
-        this.add(element);
-        return this;
-    }
-
-    @Override
-    public MutableSortedBag<T> without(T element)
-    {
-        this.remove(element);
-        return this;
-    }
-
-    @Override
-    public MutableSortedBag<T> withAll(Iterable<? extends T> elements)
-    {
-        this.addAllIterable(elements);
-        return this;
-    }
-
-    @Override
-    public MutableSortedBag<T> withoutAll(Iterable<? extends T> elements)
-    {
-        this.removeAllIterable(elements);
-        return this;
     }
 
     @Override
@@ -235,6 +208,42 @@ public class SynchronizedSortedBag<T>
         synchronized (this.getLock())
         {
             this.getDelegate().forEachWithOccurrences(procedure);
+        }
+    }
+
+    @Override
+    public boolean anySatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().anySatisfyWithOccurrences(predicate);
+        }
+    }
+
+    @Override
+    public boolean allSatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().allSatisfyWithOccurrences(predicate);
+        }
+    }
+
+    @Override
+    public boolean noneSatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().noneSatisfyWithOccurrences(predicate);
+        }
+    }
+
+    @Override
+    public T detectWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().detectWithOccurrences(predicate);
         }
     }
 

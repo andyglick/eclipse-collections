@@ -66,4 +66,22 @@ public interface FixedSizeMap<K, V>
 
     @Override
     FixedSizeMap<K, V> tap(Procedure<? super V> procedure);
+
+    @Override
+    default FixedSizeMap<K, V> withMap(Map<? extends K, ? extends V> map)
+    {
+        throw new UnsupportedOperationException("Cannot call withMap() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    default FixedSizeMap<K, V> withMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        throw new UnsupportedOperationException("Cannot call withMapIterable() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    default void putAllMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        throw new UnsupportedOperationException("Cannot call putAllMapIterable() on " + this.getClass().getSimpleName());
+    }
 }

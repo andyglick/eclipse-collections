@@ -38,11 +38,36 @@ public interface Mutable<name>ListFactory
     Mutable<name>List with();
 
     /**
+     * Same as {@link #empty()}. but takes in an initial capacity
+     * @since 10.3
+     */
+    default Mutable<name>List withInitialCapacity(int capacity)
+    {
+        throw new UnsupportedOperationException("Default method to ensure backwards compatibility");
+    }
+
+    /**
      * Same as {@link #with(<type>[])}.
      */
     Mutable<name>List of(<type>... items);
 
+    /**
+     * Creates a new list using the passed {@code items} argument as the backing store.
+     * \<p>
+     * !!! WARNING: This method uses the passed in array, so can be very unsafe if the original
+     * array is held onto anywhere else. !!!
+     */
     Mutable<name>List with(<type>... items);
+
+    /**
+     * Creates a new list by first copying the array passed in.
+     */
+    default Mutable<name>List wrapCopy(<type>... array)
+    {
+        <type>[] newArray = new <type>[array.length];
+        System.arraycopy(array, 0, newArray, 0, array.length);
+        return this.with(newArray);
+    }
 
     /**
      * Same as {@link #withAll(<name>Iterable)}.
@@ -52,7 +77,7 @@ public interface Mutable<name>ListFactory
     Mutable<name>List withAll(<name>Iterable items);
 
     /**
-     * Same as {@link #withAll(Iterable<wrapperName>)}.
+     * Same as {@link #withAll(Iterable)}.
      */
     Mutable<name>List ofAll(Iterable\<<wrapperName>\> iterable);
 

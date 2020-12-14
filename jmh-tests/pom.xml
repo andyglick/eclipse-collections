@@ -16,7 +16,7 @@
     <parent>
         <artifactId>eclipse-collections-parent</artifactId>
         <groupId>org.eclipse.collections</groupId>
-        <version>10.1.0-SNAPSHOT</version>
+        <version>11.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -27,7 +27,7 @@
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <sonar.skip>true</sonar.skip>
-        <jmh.version>1.21</jmh.version>
+        <jmh.version>1.23</jmh.version>
     </properties>
 
     <dependencies>
@@ -137,7 +137,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
+                <version>3.2.2</version>
                 <configuration>
                     <finalName>microbenchmarks</finalName>
                     <transformers>
@@ -158,7 +158,7 @@
 
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.1.2</version>
                 <executions>
                     <execution>
                         <id>analyze</id>

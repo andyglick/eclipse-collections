@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
@@ -43,6 +44,7 @@ import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.ParallelListIterable;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
@@ -65,8 +67,6 @@ import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.block.factory.HashingStrategies;
 import org.eclipse.collections.impl.block.factory.Predicates2;
 import org.eclipse.collections.impl.collection.mutable.AbstractMutableCollection;
-import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.factory.Stacks;
 import org.eclipse.collections.impl.lazy.ReverseIterable;
 import org.eclipse.collections.impl.lazy.parallel.list.ListIterableParallelIterable;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
@@ -504,12 +504,6 @@ public abstract class AbstractMutableList<T>
     }
 
     @Override
-    public MutableStack<T> toStack()
-    {
-        return Stacks.mutable.withAll(this);
-    }
-
-    @Override
     public MutableList<T> asUnmodifiable()
     {
         return UnmodifiableMutableList.of(this);
@@ -599,7 +593,7 @@ public abstract class AbstractMutableList<T>
     {
         for (int i = 0; i < this.size(); i++)
         {
-            if (Comparators.nullSafeEquals(this.get(i), object))
+            if (Objects.equals(this.get(i), object))
             {
                 return i;
             }
@@ -612,7 +606,7 @@ public abstract class AbstractMutableList<T>
     {
         for (int i = this.size() - 1; i >= 0; i--)
         {
-            if (Comparators.nullSafeEquals(this.get(i), object))
+            if (Objects.equals(this.get(i), object))
             {
                 return i;
             }
@@ -976,34 +970,6 @@ public abstract class AbstractMutableList<T>
     public MutableList<Pair<T, Integer>> zipWithIndex()
     {
         return ListIterate.zipWithIndex(this);
-    }
-
-    @Override
-    public MutableList<T> with(T element)
-    {
-        this.add(element);
-        return this;
-    }
-
-    @Override
-    public MutableList<T> without(T element)
-    {
-        this.remove(element);
-        return this;
-    }
-
-    @Override
-    public MutableList<T> withAll(Iterable<? extends T> elements)
-    {
-        this.addAllIterable(elements);
-        return this;
-    }
-
-    @Override
-    public MutableList<T> withoutAll(Iterable<? extends T> elements)
-    {
-        this.removeAllIterable(elements);
-        return this;
     }
 
     @Override

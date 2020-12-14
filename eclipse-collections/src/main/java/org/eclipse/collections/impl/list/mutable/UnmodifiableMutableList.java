@@ -12,7 +12,6 @@ package org.eclipse.collections.impl.list.mutable;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
@@ -51,12 +50,10 @@ import org.eclipse.collections.api.list.primitive.MutableShortList;
 import org.eclipse.collections.api.multimap.list.MutableListMultimap;
 import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.partition.list.PartitionMutableList;
-import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.collection.mutable.AbstractUnmodifiableMutableCollection;
 import org.eclipse.collections.impl.collection.mutable.UnmodifiableCollectionSerializationProxy;
 import org.eclipse.collections.impl.lazy.ReverseIterable;
-import org.eclipse.collections.impl.stack.mutable.ArrayStack;
 
 /**
  * An unmodifiable view of a list.
@@ -208,12 +205,6 @@ public class UnmodifiableMutableList<T>
     public MutableList<T> shuffleThis(Random rnd)
     {
         throw new UnsupportedOperationException("Cannot call shuffleThis() on " + this.getClass().getSimpleName());
-    }
-
-    @Override
-    public MutableStack<T> toStack()
-    {
-        return ArrayStack.newStack(this.getMutableList());
     }
 
     @Override
@@ -562,18 +553,6 @@ public class UnmodifiableMutableList<T>
     public ParallelListIterable<T> asParallel(ExecutorService executorService, int batchSize)
     {
         return this.getMutableList().asParallel(executorService, batchSize);
-    }
-
-    @Override
-    public int binarySearch(T key, Comparator<? super T> comparator)
-    {
-        return Collections.binarySearch(this, key, comparator);
-    }
-
-    @Override
-    public int binarySearch(T key)
-    {
-        return Collections.binarySearch((List<? extends Comparable<? super T>>) this, key);
     }
 
     @Override

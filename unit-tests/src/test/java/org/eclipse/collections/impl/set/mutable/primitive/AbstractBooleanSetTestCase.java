@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Goldman Sachs.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -548,19 +548,19 @@ public abstract class AbstractBooleanSetTestCase extends AbstractMutableBooleanC
     {
         BooleanIterator booleanIterator0 = this.emptySet.booleanIterator();
         Assert.assertFalse(booleanIterator0.hasNext());
-        Verify.assertThrows(NoSuchElementException.class, (Runnable) booleanIterator0::next);
+        Assert.assertThrows(NoSuchElementException.class, booleanIterator0::next);
 
         BooleanIterator booleanIterator1 = this.setWithFalse.booleanIterator();
         Assert.assertTrue(booleanIterator1.hasNext());
         Assert.assertFalse(booleanIterator1.next());
         Assert.assertFalse(booleanIterator1.hasNext());
-        Verify.assertThrows(NoSuchElementException.class, (Runnable) booleanIterator1::next);
+        Assert.assertThrows(NoSuchElementException.class, booleanIterator1::next);
 
         BooleanIterator booleanIterator2 = this.setWithTrue.booleanIterator();
         Assert.assertTrue(booleanIterator2.hasNext());
         Assert.assertTrue(booleanIterator2.next());
         Assert.assertFalse(booleanIterator2.hasNext());
-        Verify.assertThrows(NoSuchElementException.class, (Runnable) booleanIterator2::next);
+        Assert.assertThrows(NoSuchElementException.class, booleanIterator2::next);
 
         BooleanIterator booleanIterator3 = this.setWithTrueFalse.booleanIterator();
         BooleanHashSet actual = new BooleanHashSet();
@@ -570,7 +570,7 @@ public abstract class AbstractBooleanSetTestCase extends AbstractMutableBooleanC
         actual.add(booleanIterator3.next());
         Assert.assertEquals(BooleanHashSet.newSetWith(true, false), actual);
         Assert.assertFalse(booleanIterator3.hasNext());
-        Verify.assertThrows(NoSuchElementException.class, (Runnable) booleanIterator3::next);
+        Assert.assertThrows(NoSuchElementException.class, booleanIterator3::next);
     }
 
     @Override
@@ -834,5 +834,131 @@ public abstract class AbstractBooleanSetTestCase extends AbstractMutableBooleanC
         Assert.assertEquals(new UnmodifiableBooleanSet(this.setWithFalse), this.setWithFalse.asUnmodifiable());
         Assert.assertEquals(new UnmodifiableBooleanSet(this.setWithTrue), this.setWithTrue.asUnmodifiable());
         Assert.assertEquals(new UnmodifiableBooleanSet(this.setWithTrueFalse), this.setWithTrueFalse.asUnmodifiable());
+    }
+
+    @Test
+    public void union()
+    {
+        MutableBooleanSet set11 = this.newWith(true);
+        MutableBooleanSet set21 = this.newWith(false);
+        MutableBooleanSet actual = set11.union(set21);
+        Assert.assertEquals(this.setWithTrueFalse, actual);
+
+        MutableBooleanSet set12 = this.newWith(false);
+        MutableBooleanSet set22 = this.newWith(false);
+        MutableBooleanSet actual2 = set12.union(set22);
+        Assert.assertEquals(this.setWithFalse, actual2);
+
+        MutableBooleanSet set13 = this.newWith(true);
+        MutableBooleanSet set23 = this.newWith(true);
+        MutableBooleanSet actual3 = set13.union(set23);
+        Assert.assertEquals(this.setWithTrue, actual3);
+
+        MutableBooleanSet set14 = this.setWithTrueFalse;
+        MutableBooleanSet set24 = this.newWith();
+        MutableBooleanSet actual4 = set14.union(set24);
+        Assert.assertEquals(this.setWithTrueFalse, actual4);
+
+        MutableBooleanSet set15 = this.newWith();
+        MutableBooleanSet set25 = this.newWith();
+        MutableBooleanSet actual5 = set15.union(set25);
+        Assert.assertEquals(this.emptySet, actual5);
+    }
+
+    @Test
+    public void intersect()
+    {
+        MutableBooleanSet set11 = this.newWith(true);
+        MutableBooleanSet set21 = this.newWith(false);
+        MutableBooleanSet actual = set11.intersect(set21);
+        Assert.assertEquals(this.emptySet, actual);
+
+        MutableBooleanSet set12 = this.newWith(false);
+        MutableBooleanSet set22 = this.newWith(false);
+        MutableBooleanSet actual2 = set12.intersect(set22);
+        Assert.assertEquals(this.setWithFalse, actual2);
+
+        MutableBooleanSet set13 = this.newWith(true);
+        MutableBooleanSet set23 = this.newWith(true);
+        MutableBooleanSet actual3 = set13.intersect(set23);
+        Assert.assertEquals(this.setWithTrue, actual3);
+
+        MutableBooleanSet set14 = this.setWithTrueFalse;
+        MutableBooleanSet set24 = this.newWith();
+        MutableBooleanSet actual4 = set14.intersect(set24);
+        Assert.assertEquals(this.emptySet, actual4);
+
+        MutableBooleanSet set15 = this.newWith();
+        MutableBooleanSet set25 = this.newWith();
+        MutableBooleanSet actual5 = set15.intersect(set25);
+        Assert.assertEquals(this.emptySet, actual5);
+    }
+
+    @Test
+    public void difference()
+    {
+        MutableBooleanSet set11 = this.newWith(true);
+        MutableBooleanSet set21 = this.newWith(false);
+        MutableBooleanSet actual = set11.difference(set21);
+        Assert.assertEquals(this.setWithTrue, actual);
+
+        MutableBooleanSet set12 = this.newWith(false);
+        MutableBooleanSet set22 = this.newWith(false);
+        MutableBooleanSet actual2 = set12.difference(set22);
+        Assert.assertEquals(this.emptySet, actual2);
+
+        MutableBooleanSet set13 = this.setWithTrueFalse;
+        MutableBooleanSet set23 = this.setWithTrueFalse;
+        MutableBooleanSet actual3 = set13.difference(set23);
+        Assert.assertEquals(this.emptySet, actual3);
+
+        MutableBooleanSet set14 = this.setWithTrueFalse;
+        MutableBooleanSet set24 = this.newWith();
+        MutableBooleanSet actual4 = set14.difference(set24);
+        Assert.assertEquals(this.setWithTrueFalse, actual4);
+
+        MutableBooleanSet set15 = this.newWith();
+        MutableBooleanSet set25 = this.setWithTrueFalse;
+        MutableBooleanSet actual5 = set15.difference(set25);
+        Assert.assertEquals(this.emptySet, actual5);
+
+        MutableBooleanSet set16 = this.newWith();
+        MutableBooleanSet set26 = this.newWith();
+        MutableBooleanSet actual6 = set16.difference(set26);
+        Assert.assertEquals(this.emptySet, actual6);
+    }
+
+    @Test
+    public void symmetricDifference()
+    {
+        MutableBooleanSet set11 = this.newWith(true);
+        MutableBooleanSet set21 = this.newWith(false);
+        MutableBooleanSet actual = set11.symmetricDifference(set21);
+        Assert.assertEquals(this.setWithTrueFalse, actual);
+
+        MutableBooleanSet set12 = this.newWith(false);
+        MutableBooleanSet set22 = this.newWith(false);
+        MutableBooleanSet actual2 = set12.symmetricDifference(set22);
+        Assert.assertEquals(this.emptySet, actual2);
+
+        MutableBooleanSet set13 = this.setWithTrueFalse;
+        MutableBooleanSet set23 = this.setWithTrueFalse;
+        MutableBooleanSet actual3 = set13.symmetricDifference(set23);
+        Assert.assertEquals(this.emptySet, actual3);
+
+        MutableBooleanSet set14 = this.setWithTrueFalse;
+        MutableBooleanSet set24 = this.newWith();
+        MutableBooleanSet actual4 = set14.symmetricDifference(set24);
+        Assert.assertEquals(this.setWithTrueFalse, actual4);
+
+        MutableBooleanSet set15 = this.newWith();
+        MutableBooleanSet set25 = this.setWithTrueFalse;
+        MutableBooleanSet actual5 = set15.symmetricDifference(set25);
+        Assert.assertEquals(this.setWithTrueFalse, actual5);
+
+        MutableBooleanSet set16 = this.newWith();
+        MutableBooleanSet set26 = this.newWith();
+        MutableBooleanSet actual6 = set16.symmetricDifference(set26);
+        Assert.assertEquals(this.emptySet, actual6);
     }
 }

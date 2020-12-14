@@ -24,6 +24,7 @@ import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.multimap.Multimap;
 import org.eclipse.collections.api.tuple.Pair;
 
@@ -61,7 +62,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
 
     /**
      * Executes the Procedure for each value of the map and returns {@code this}.
-     * <p>
+     *
      * <pre>
      * return peopleByCity.<b>tap</b>(person -&gt; LOGGER.info(person.getName()));
      * </pre>
@@ -107,6 +108,11 @@ public interface MapIterable<K, V> extends RichIterable<V>
      * @since 5.0
      */
     MapIterable<V, K> flipUniqueValues();
+
+    default V getOrDefault(Object key, V defaultValue)
+    {
+        return this.getIfAbsentValue((K) key, defaultValue);
+    }
 
     /**
      * Return the value in the Map that corresponds to the specified key, or if there is no value at the key, return the
@@ -163,7 +169,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
     /**
      * For each key and value of the map the predicate is evaluated, if the result of the evaluation is true,
      * that key and value are returned in a new map.
-     * <p>
+     *
      * <pre>
      * MapIterable&lt;City, Person&gt; selected =
      *     peopleByCity.select((city, person) -&gt; city.getName().equals("Anytown") &amp;&amp; person.getLastName().equals("Smith"));
@@ -174,7 +180,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
     /**
      * For each key and value of the map the predicate is evaluated, if the result of the evaluation is false,
      * that key and value are returned in a new map.
-     * <p>
+     *
      * <pre>
      * MapIterable&lt;City, Person&gt; rejected =
      *     peopleByCity.reject((city, person) -&gt; city.getName().equals("Anytown") &amp;&amp; person.getLastName().equals("Smith"));
@@ -185,7 +191,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
     /**
      * For each key and value of the map the function is evaluated. The results of these evaluations are returned in
      * a new map. The map returned will use the values projected from the function rather than the original values.
-     * <p>
+     *
      * <pre>
      * MapIterable&lt;String, String&gt; collected =
      *     peopleByCity.collect((City city, Person person) -&gt; Pair.of(city.getCountry(), person.getAddress().getCity()));
@@ -196,7 +202,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
     /**
      * For each key and value of the map the function is evaluated. The results of these evaluations are returned in
      * a new map. The map returned will use the values projected from the function rather than the original values.
-     * <p>
+     *
      * <pre>
      * MapIterable&lt;City, String&gt; collected =
      *     peopleByCity.collectValues((City city, Person person) -&gt; person.getFirstName() + " " + person.getLastName());
@@ -210,7 +216,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
      * values of the map have been used as arguments. That is, there may be keys and values of the map that are
      * never used as arguments to the predicate. The result is null if predicate does not evaluate to true for
      * any key/value combination.
-     * <p>
+     *
      * <pre>
      * Pair&lt;City, Person&gt; detected =
      *     peopleByCity.detect((City city, Person person) -&gt; city.getName().equals("Anytown") &amp;&amp; person.getLastName().equals("Smith"));
@@ -223,7 +229,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
      * they are given as arguments. The predicate will only be evaluated until such pair is found or until all
      * of the keys and values of the map have been used as arguments. That is, there may be keys and values of
      * the map that are never used as arguments to the predicate.
-     * <p>
+     *
      * <pre>
      * Optional&lt;Pair&lt;City, Person&gt;&gt; detected =
      *     peopleByCity.detectOptional((city, person)
@@ -247,7 +253,7 @@ public interface MapIterable<K, V> extends RichIterable<V>
     /**
      * Returns a string with the keys and values of this map separated by commas with spaces and
      * enclosed in curly braces. Each key and value is separated by an equals sign.
-     * <p>
+     *
      * <pre>
      * Assert.assertEquals("{1=1, 2=2, 3=3}", Maps.mutable.with(1, 1, 2, 2, 3, 3).toString());
      * </pre>
@@ -283,5 +289,46 @@ public interface MapIterable<K, V> extends RichIterable<V>
     default Spliterator<V> spliterator()
     {
         return Spliterators.spliterator(this.iterator(), (long) this.size(), 0);
+    }
+
+    /**
+     * Applies an aggregate function over the map grouping results into a map based on the specific key and value groupBy functions.
+     * Aggregate results are allowed to be immutable as they will be replaced in place in the map. A second function
+     * specifies the initial "zero" aggregate value to work with.
+     *
+     * <pre>
+     * MapIterable&lt;String, Interval&gt; map = Maps.mutable.with("oneToFive", Interval.fromTo(1, 5), "sixToNine", Interval.fromTo(6, 9));
+     *
+     * MapIterable&lt;String, Long&gt; result = map.aggregateBy(
+     *         eachKey -&gt; {
+     *             return eachKey.equals("oneToFive")  ? "lessThanSix" : "greaterOrEqualsToSix";
+     *         },
+     *         each -&gt; each.sumOfInt(Integer::intValue),
+     *         () -&gt; 0L,
+     *         (argument1, argument2) -&gt; argument1 + argument2);
+     *
+     * MapIterable&lt;String, Long&gt; expected =
+     *         Maps.mutable.with("lessThanSix", Interval.fromTo(1, 5).sumOfInt(Integer::intValue),
+     *                 "greaterOrEqualsToSix", Interval.fromTo(6, 9).sumOfInt(Integer::intValue));
+     * Assert.assertEquals(expected, result);
+     * </pre>
+     *
+     * @since 10.3.0
+     */
+    default <K1, V1, V2> MapIterable<K1, V2> aggregateBy(
+            Function<? super K, ? extends K1> keyFunction,
+            Function<? super V, ? extends V1> valueFunction,
+            Function0<? extends V2> zeroValueFactory,
+            Function2<? super V2, ? super V1, ? extends V2> nonMutatingAggregator)
+    {
+        MutableMap<K1, V2> map = Maps.mutable.empty();
+        this.forEachKeyValue((key, value) -> {
+            map.updateValueWith(
+                    keyFunction.valueOf(key),
+                    zeroValueFactory,
+                    nonMutatingAggregator,
+                    valueFunction.valueOf(value));
+        });
+        return map;
     }
 }

@@ -28,10 +28,10 @@ import org.eclipse.collections.api.block.HashingStrategy;
 import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.function.Function2;
-import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -41,7 +41,6 @@ import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.procedure.MapCollectProcedure;
 import org.eclipse.collections.impl.factory.HashingStrategyMaps;
-import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.AbstractMutableMap;
 import org.eclipse.collections.impl.parallel.BatchIterable;
@@ -1077,22 +1076,6 @@ public class UnifiedMapWithHashingStrategy<K, V> extends AbstractMutableMap<K, V
     public V removeKey(K key)
     {
         return this.remove(key);
-    }
-
-    @Override
-    public boolean removeIf(Predicate2<? super K, ? super V> predicate)
-    {
-        int previousSize = this.size();
-        Iterator<Entry<K, V>> iterator = this.entrySet().iterator();
-        while (iterator.hasNext())
-        {
-            Entry<K, V> entry = iterator.next();
-            if (predicate.accept(entry.getKey(), entry.getValue()))
-            {
-                iterator.remove();
-            }
-        }
-        return previousSize > this.size();
     }
 
     private void chainedForEachEntry(Object[] chain, Procedure2<? super K, ? super V> procedure)

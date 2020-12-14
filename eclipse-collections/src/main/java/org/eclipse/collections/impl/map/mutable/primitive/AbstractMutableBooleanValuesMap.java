@@ -24,6 +24,7 @@ import org.eclipse.collections.api.block.procedure.primitive.BooleanProcedure;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.collection.primitive.ImmutableBooleanCollection;
 import org.eclipse.collections.api.collection.primitive.MutableBooleanCollection;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.iterator.BooleanIterator;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
@@ -32,7 +33,6 @@ import org.eclipse.collections.api.set.primitive.MutableBooleanSet;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.collection.mutable.primitive.SynchronizedBooleanCollection;
 import org.eclipse.collections.impl.collection.mutable.primitive.UnmodifiableBooleanCollection;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.BooleanBags;
 import org.eclipse.collections.impl.factory.primitive.BooleanLists;
 import org.eclipse.collections.impl.lazy.primitive.LazyBooleanIterableAdapter;
@@ -470,6 +470,40 @@ public abstract class AbstractMutableBooleanValuesMap extends AbstractBooleanIte
         return array;
     }
 
+    @Override
+    public boolean[] toArray(boolean[] array)
+    {
+        if (array.length < this.size())
+        {
+            array = new boolean[this.size()];
+        }
+        int index = 0;
+
+        if (this.getSentinelValues() != null)
+        {
+            if (this.getSentinelValues().containsZeroKey)
+            {
+                array[index] = this.getSentinelValues().zeroValue;
+                index++;
+            }
+            if (this.getSentinelValues().containsOneKey)
+            {
+                array[index] = this.getSentinelValues().oneValue;
+                index++;
+            }
+        }
+        for (int i = 0; i < this.getTableSize(); i++)
+        {
+            if (this.isNonSentinelAtIndex(i))
+            {
+                array[index] = this.getValueAtIndex(i);
+                index++;
+            }
+        }
+
+        return array;
+    }
+
     protected static class SentinelValues extends AbstractSentinelValues
     {
         protected boolean zeroValue;
@@ -748,6 +782,12 @@ public abstract class AbstractMutableBooleanValuesMap extends AbstractBooleanIte
         public boolean[] toArray()
         {
             return AbstractMutableBooleanValuesMap.this.toArray();
+        }
+
+        @Override
+        public boolean[] toArray(boolean[] target)
+        {
+            return AbstractMutableBooleanValuesMap.this.toArray(target);
         }
     }
 }

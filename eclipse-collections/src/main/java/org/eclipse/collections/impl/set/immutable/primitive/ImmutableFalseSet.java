@@ -22,6 +22,8 @@ import org.eclipse.collections.api.block.function.primitive.BooleanToObjectFunct
 import org.eclipse.collections.api.block.function.primitive.ObjectBooleanToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.BooleanPredicate;
 import org.eclipse.collections.api.block.procedure.primitive.BooleanProcedure;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.iterator.BooleanIterator;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -29,8 +31,6 @@ import org.eclipse.collections.api.set.primitive.BooleanSet;
 import org.eclipse.collections.api.set.primitive.ImmutableBooleanSet;
 import org.eclipse.collections.api.set.primitive.MutableBooleanSet;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
-import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.lazy.primitive.LazyBooleanIterableAdapter;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.BooleanHashSet;
@@ -163,6 +163,20 @@ final class ImmutableFalseSet implements ImmutableBooleanSet, Serializable
     public boolean[] toArray()
     {
         return new boolean[]{false};
+    }
+
+    @Override
+    public boolean[] toArray(boolean[] target)
+    {
+        if (target.length < 1)
+        {
+            target = new boolean[]{false};
+        }
+        else
+        {
+            target[0] = false;
+        }
+        return target;
     }
 
     @Override

@@ -26,6 +26,7 @@ import org.eclipse.collections.api.block.function.primitive.ByteToObjectFunction
 import org.eclipse.collections.api.block.function.primitive.ObjectByteToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.BytePredicate;
 import org.eclipse.collections.api.block.procedure.primitive.ByteProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.iterator.ByteIterator;
 import org.eclipse.collections.api.iterator.MutableByteIterator;
 import org.eclipse.collections.api.list.MutableList;
@@ -37,7 +38,6 @@ import org.eclipse.collections.api.set.primitive.ImmutableByteSet;
 import org.eclipse.collections.api.set.primitive.MutableByteSet;
 import org.eclipse.collections.impl.bag.mutable.primitive.ByteHashBag;
 import org.eclipse.collections.impl.block.procedure.checked.primitive.CheckedByteProcedure;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.ByteSets;
 import org.eclipse.collections.impl.lazy.primitive.LazyByteIterableAdapter;
 import org.eclipse.collections.impl.list.mutable.primitive.ByteArrayList;
@@ -544,6 +544,27 @@ public final class ByteHashSet implements MutableByteSet, Externalizable
     public byte[] toArray()
     {
         byte[] array = new byte[this.size()];
+        int index = 0;
+
+        ByteIterator iterator = this.byteIterator();
+
+        while (iterator.hasNext())
+        {
+            byte nextByte = iterator.next();
+            array[index] = nextByte;
+            index++;
+        }
+
+        return array;
+    }
+
+    @Override
+    public byte[] toArray(byte[] array)
+    {
+        if (array.length < this.size())
+        {
+            array = new byte[this.size()];
+        }
         int index = 0;
 
         ByteIterator iterator = this.byteIterator();
@@ -1168,6 +1189,27 @@ public final class ByteHashSet implements MutableByteSet, Externalizable
         public byte[] toArray()
         {
             byte[] array = new byte[this.size()];
+            int index = 0;
+
+            ByteIterator iterator = this.byteIterator();
+
+            while (iterator.hasNext())
+            {
+                byte nextByte = iterator.next();
+                array[index] = nextByte;
+                index++;
+            }
+
+            return array;
+        }
+
+        @Override
+        public byte[] toArray(byte[] array)
+        {
+            if (array.length < this.size())
+            {
+                array = new byte[this.size()];
+            }
             int index = 0;
 
             ByteIterator iterator = this.byteIterator();

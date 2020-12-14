@@ -23,6 +23,7 @@ import org.eclipse.collections.api.block.predicate.primitive.CharPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.CharProcedure;
 import org.eclipse.collections.api.collection.MutableCollection;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
@@ -34,7 +35,6 @@ import org.eclipse.collections.impl.block.function.primitive.CharFunction;
 import org.eclipse.collections.impl.block.function.primitive.CodePointFunction;
 import org.eclipse.collections.impl.block.predicate.CodePointPredicate;
 import org.eclipse.collections.impl.block.procedure.primitive.CodePointProcedure;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -224,7 +224,7 @@ public final class StringIterate
         {
             String token = tokenizer.nextToken();
             String key = token.substring(0, token.indexOf(keyValueSeparator));
-            String value = token.substring(token.indexOf(keyValueSeparator) + 1, token.length());
+            String value = token.substring(token.indexOf(keyValueSeparator) + 1);
             map.put(key, value);
         }
         return map;
@@ -247,7 +247,7 @@ public final class StringIterate
         {
             String token = tokenizer.nextToken();
             String key = token.substring(0, token.indexOf(keyValueSeparator));
-            String value = token.substring(token.indexOf(keyValueSeparator) + 1, token.length());
+            String value = token.substring(token.indexOf(keyValueSeparator) + 1);
             map.put(keyFunction.valueOf(key), valueFunction.valueOf(value));
         }
         return map;
@@ -1247,7 +1247,7 @@ public final class StringIterate
 
     public static Twin<String> splitAtIndex(String aString, int index)
     {
-        return Tuples.twin(aString.substring(0, index), aString.substring(index, aString.length()));
+        return Tuples.twin(aString.substring(0, index), aString.substring(index));
     }
 
     private static final class AddCharacterToCollection implements CharProcedure

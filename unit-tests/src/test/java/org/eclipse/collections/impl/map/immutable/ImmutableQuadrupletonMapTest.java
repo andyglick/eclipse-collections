@@ -83,6 +83,18 @@ public class ImmutableQuadrupletonMapTest extends ImmutableMemoryEfficientMapTes
 
     @Override
     @Test
+    public void getOrDefault()
+    {
+        super.getOrDefault();
+
+        ImmutableMap<Integer, String> map = this.classUnderTest();
+        Assert.assertNull(map.get(5));
+        Assert.assertEquals("5", map.getOrDefault(5, "5"));
+        Assert.assertNull(map.get(5));
+    }
+
+    @Override
+    @Test
     public void getIfAbsent()
     {
         super.getIfAbsent();
@@ -131,7 +143,8 @@ public class ImmutableQuadrupletonMapTest extends ImmutableMemoryEfficientMapTes
         super.forEachWithIndex();
         MutableList<String> result = Lists.mutable.of();
         ImmutableMap<Integer, String> map = new ImmutableQuadrupletonMap<>(1, "One", 2, "Two", 3, "Three", 4, "Four");
-        map.forEachWithIndex((value, index) -> {
+        map.forEachWithIndex((value, index) ->
+        {
             result.add(value);
             result.add(String.valueOf(index));
         });
@@ -191,7 +204,7 @@ public class ImmutableQuadrupletonMapTest extends ImmutableMemoryEfficientMapTes
     @Test
     public void getOnly()
     {
-        Verify.assertThrows(IllegalStateException.class, () -> this.classUnderTest().getOnly());
+        Assert.assertThrows(IllegalStateException.class, () -> this.classUnderTest().getOnly());
     }
 
     @Override

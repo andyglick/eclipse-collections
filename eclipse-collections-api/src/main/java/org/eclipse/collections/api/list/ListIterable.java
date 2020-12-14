@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Goldman Sachs and others.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import org.eclipse.collections.api.annotation.Beta;
@@ -32,6 +33,7 @@ import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
+import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.list.primitive.BooleanList;
 import org.eclipse.collections.api.list.primitive.ByteList;
 import org.eclipse.collections.api.list.primitive.CharList;
@@ -43,7 +45,6 @@ import org.eclipse.collections.api.list.primitive.ShortList;
 import org.eclipse.collections.api.multimap.list.ListMultimap;
 import org.eclipse.collections.api.ordered.ReversibleIterable;
 import org.eclipse.collections.api.partition.list.PartitionList;
-import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.api.tuple.Pair;
 
 /**
@@ -93,14 +94,6 @@ public interface ListIterable<T>
      * @since 1.0.
      */
     ListIterator<T> listIterator(int index);
-
-    /**
-     * Converts the list to a mutable MutableStack implementation.
-     *
-     * @since 2.0
-     */
-    @Override
-    MutableStack<T> toStack();
 
     /**
      * Converts the ListIterable to an immutable implementation. Returns this for immutable lists.
@@ -183,7 +176,9 @@ public interface ListIterable<T>
      * @since 9.2
      */
     @Override
-    default <P, V> ListIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
+    default <P, V> ListIterable<V> flatCollectWith(
+            Function2<? super T, ? super P, ? extends Iterable<V>> function,
+            P parameter)
     {
         return this.flatCollect(each -> function.apply(each, parameter));
     }
@@ -279,7 +274,10 @@ public interface ListIterable<T>
      *
      * @see Collections#binarySearch(List, Object, Comparator)
      */
-    int binarySearch(T key, Comparator<? super T> comparator);
+    default int binarySearch(T key, Comparator<? super T> comparator)
+    {
+        return Collections.binarySearch((List<? extends T>) this, key, comparator);
+    }
 
     /**
      * Searches for the specified object using the binary search algorithm. The elements in this list must implement
@@ -309,4 +307,26 @@ public interface ListIterable<T>
      * @since 6.0
      */
     ListIterable<T> subList(int fromIndex, int toIndex);
+
+    /**
+     * Iterates over this ListIterable and the other ListIterable together passing
+     * the elements of each list as parameters to the specified procedure.
+     *
+     * @since 10.3
+     */
+    default <T2> void forEachInBoth(ListIterable<T2> other, Procedure2<? super T, ? super T2> procedure)
+    {
+        Objects.requireNonNull(other);
+        if (this.size() == other.size())
+        {
+            this.forEachWithIndex((each, index) -> procedure.value(each, other.get(index)));
+        }
+        else
+        {
+            throw new IllegalArgumentException("Attempt to call forEachInBoth with two Lists of different sizes :"
+                    + this.size()
+                    + ':'
+                    + other.size());
+        }
+    }
 }

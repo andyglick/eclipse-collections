@@ -199,6 +199,25 @@ public abstract class Abstract<name>IterableTestCase
         Assert.assertTrue(iterable2.containsAll(<["0", "1", "2"]:(literal.(type))(); separator=", ">));
         Assert.assertFalse(iterable2.containsAll(<["0", "1", "2", "3", "4"]:(literal.(type))(); separator=", ">));
         Assert.assertFalse(iterable2.containsAll(<["3", "4"]:(literal.(type))(); separator=", ">));
+
+        int size = 33;
+        <type>[] array = new <type>[size];
+        for (int i = 0; i \< size; i++)
+        {
+            array[i] = <(castIntToNarrowTypeWithParens.(type))("i + 1")>;
+        }
+
+        <name>Iterable iterable3 = this.newWith(array);
+        Assert.assertTrue(iterable3.containsAll(<["1", "2", "3"]:(literal.(type))(); separator=", ">));
+        Assert.assertTrue(iterable3.containsAll());
+        Assert.assertFalse(iterable3.containsAll(<["3", "4", "5", "33", "34"]:(literal.(type))(); separator=", ">));
+        Assert.assertTrue(iterable3.containsAll(array));
+
+        <name>Iterable iterable4 = <name>Sets.mutable.with(array);
+        Assert.assertTrue(iterable4.containsAll(<["1", "2", "3"]:(literal.(type))(); separator=", ">));
+        Assert.assertTrue(iterable4.containsAll());
+        Assert.assertFalse(iterable4.containsAll(<["3", "4", "5", "33", "34"]:(literal.(type))(); separator=", ">));
+        Assert.assertTrue(iterable4.containsAll(array));
     }
 
     @Test
@@ -234,6 +253,25 @@ public abstract class Abstract<name>IterableTestCase
         Assert.assertTrue(iterable2.containsAll(<name>ArrayList.newListWith(<["0", "1", "2"]:(literal.(type))(); separator=", ">)));
         Assert.assertFalse(iterable2.containsAll(<name>ArrayList.newListWith(<["0", "1", "2", "3", "4"]:(literal.(type))(); separator=", ">)));
         Assert.assertFalse(iterable2.containsAll(<name>ArrayList.newListWith(<["3", "4"]:(literal.(type))(); separator=", ">)));
+
+        int size = 33;
+        <type>[] array = new <type>[size];
+        for (int i = 0; i \< size; i++)
+        {
+            array[i] = <(castIntToNarrowTypeWithParens.(type))("i + 1")>;
+        }
+
+        <name>Iterable iterable3 = this.newWith(array);
+        Assert.assertTrue(iterable3.containsAll(<name>Lists.immutable.with(<["1", "2", "3"]:(literal.(type))(); separator=", ">)));
+        Assert.assertTrue(iterable3.containsAll(<name>Lists.mutable.empty()));
+        Assert.assertFalse(iterable3.containsAll(<name>Lists.mutable.with(<["3", "4", "5", "33", "34"]:(literal.(type))(); separator=", ">)));
+        Assert.assertTrue(iterable3.containsAll(<name>Lists.immutable.with(array)));
+
+        <name>Iterable iterable4 = <name>Sets.mutable.with(array);
+        Assert.assertTrue(iterable4.containsAll(<name>Lists.immutable.with(<["1", "2", "3"]:(literal.(type))(); separator=", ">)));
+        Assert.assertTrue(iterable4.containsAll(<name>Lists.mutable.empty()));
+        Assert.assertFalse(iterable4.containsAll(<name>Lists.mutable.with(<["3", "4", "5", "33", "34"]:(literal.(type))(); separator=", ">)));
+        Assert.assertTrue(iterable4.containsAll(<name>Lists.immutable.with(array)));
     }
 
     @Test
@@ -707,6 +745,36 @@ public void sumConsistentRounding()
     }
 
     @Test
+    public void toArrayWithTargetArray()
+    {
+        <type>[] originalAsSortedArray = this.classUnderTest().toSortedArray();
+
+        <type>[] target = new <type>[this.classUnderTest().size()];
+
+        Assert.assertSame(target, this.classUnderTest().toArray(target));
+        Arrays.sort(target);
+        Assert.assertTrue(Arrays.equals(originalAsSortedArray, target));
+
+        if (this.classUnderTest().size() > 0)
+        {
+            <type>[] targetTooSmall = new <type>[this.classUnderTest().size() - 1];
+            <type>[] result = this.classUnderTest().toArray(targetTooSmall);
+            Assert.assertNotSame(targetTooSmall, result);
+            Arrays.sort(result);
+            Assert.assertTrue(Arrays.equals(this.classUnderTest().toSortedArray(), result));
+        }
+
+        <type>[] targetTooBig = new <type>[this.classUnderTest().size() + 1];
+        <type>[] bigResult = this.classUnderTest().toArray(targetTooBig);
+        Assert.assertSame(targetTooBig, bigResult);
+        Arrays.sort(targetTooBig);
+        for (int i = 0; i \< originalAsSortedArray.length; i++)
+        {
+            Assert.assertEquals(originalAsSortedArray[i], bigResult[i + 1]<(delta.(type))>);
+        }
+    }
+
+    @Test
     public void toSortedArray()
     {
         <name>Iterable iterable = this.classUnderTest();
@@ -1028,6 +1096,27 @@ public void sumConsistentRounding()
     }
 
     @Test
+    public void reduceIfEmpty()
+    {
+        <(wideType.(type))> empty1 = this.newWith().reduceIfEmpty((<(wideType.(type))> result, <type> value) -> <(castWideType.(type))>result + <(castWideType.(type))>value + <(wideLiteral.(type))("1")>, <(wideLiteral.(type))("1")>);
+        Assert.assertEquals(<(wideLiteral.(type))("1")>, empty1<if(primitive.floatingPoint)>, 0.001<endif>);
+        <(wideType.(type))> empty2 = this.newWith().reduceIfEmpty((<(wideType.(type))> result, <type> value) -> <(castWideType.(type))>result + <(castWideType.(type))>value + <(wideLiteral.(type))("1")>, <(wideLiteral.(type))("0")>);
+        Assert.assertEquals(<(wideLiteral.(type))("0")>, empty2<if(primitive.floatingPoint)>, 0.001<endif>);
+
+        <name>Iterable iterable1 = this.newWith(<["0", "2", "31"]:(literal.(type))(); separator=", ">);
+        <(wideType.(type))> sum1 = iterable1.reduceIfEmpty((<(wideType.(type))> result, <type> value) -> <(castWideType.(type))>result + <(castWideType.(type))>value + <(wideLiteral.(type))("1")>, <(wideLiteral.(type))("0")>);
+        Assert.assertEquals(<(wideLiteral.(type))("35")>, sum1<if(primitive.floatingPoint)>, 0.001<endif>);
+
+        <name>Iterable iterable2 = this.newWith(<[ "1", "2", "31"]:(literal.(type))(); separator=", ">);
+        <(wideType.(type))> sum2 = iterable2.reduceIfEmpty((<(wideType.(type))> result, <type> value) -> <(castWideType.(type))>result + <(castWideType.(type))>value + <(wideLiteral.(type))("1")>, <(wideLiteral.(type))("0")>);
+        Assert.assertEquals(<(wideLiteral.(type))("36")>, sum2<if(primitive.floatingPoint)>, 0.001<endif>);
+
+        <name>Iterable iterable3 = this.newWith(<["0", "1", "2", "31"]:(literal.(type))(); separator=", ">);
+        <(wideType.(type))> sum3 = iterable3.reduceIfEmpty((<(wideType.(type))> result, <type> value) -> <(castWideType.(type))>result + <(castWideType.(type))>value + <(wideLiteral.(type))("1")>, <(wideLiteral.(type))("0")>);
+        Assert.assertEquals(<(wideLiteral.(type))("37")>, sum3<if(primitive.floatingPoint)>, 0.001<endif>);
+    }
+
+    @Test
     public void chunk()
     {
         <name>Iterable iterable = this.newWith(<["0", "1", "2", "3", "4", "5"]:(literal.(type))(); separator=", ">);
@@ -1066,9 +1155,9 @@ public void sumConsistentRounding()
         Assert.assertEquals(Lists.mutable.with(this.newMutableCollectionWith(<["0"]:(literal.(type))(); separator=", ">)), this.newWith(<["0"]:(literal.(type))(); separator=", ">).chunk(1));
         Assert.assertEquals(Lists.mutable.with(), this.newWith().chunk(1));
 
-        Verify.assertThrows(IllegalArgumentException.class, () -> iterable.chunk(0));
-        Verify.assertThrows(IllegalArgumentException.class, () -> iterable.chunk(-1));
-        Verify.assertThrows(IllegalArgumentException.class, () -> this.newMutableCollectionWith().chunk(-1));
+        Assert.assertThrows(IllegalArgumentException.class, () -> iterable.chunk(0));
+        Assert.assertThrows(IllegalArgumentException.class, () -> iterable.chunk(-1));
+        Assert.assertThrows(IllegalArgumentException.class, () -> this.newMutableCollectionWith().chunk(-1));
     }
 }
 

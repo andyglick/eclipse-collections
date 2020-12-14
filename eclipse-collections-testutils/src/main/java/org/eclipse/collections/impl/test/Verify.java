@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
@@ -53,7 +54,6 @@ import org.eclipse.collections.api.multimap.sortedbag.SortedBagMultimap;
 import org.eclipse.collections.api.multimap.sortedset.SortedSetMultimap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.procedure.CollectionAddProcedure;
 import org.eclipse.collections.impl.factory.Lists;
@@ -146,7 +146,7 @@ public final class Verify extends Assert
      * <p>
      * Without the {@code try ... catch} block around lines 11-13 the stack trace following a test failure
      * would look a little like:
-     * <p>
+     *
      * <pre>
      * java.lang.AssertionError: ...
      *  at TestFoo.assertFoo(TestFoo.java:11)
@@ -164,7 +164,7 @@ public final class Verify extends Assert
      * <p>
      * With the {@code try ... catch} block around lines 11-13 the stack trace would look like the
      * following:
-     * <p>
+     *
      * <pre>
      * java.lang.AssertionError: ...
      *  at TestFoo.testFoo(TestFoo.java:5)
@@ -196,376 +196,6 @@ public final class Verify extends Assert
     {
         AssertionError failedException = new AssertionError(message, cause);
         Verify.throwMangledException(failedException);
-    }
-
-    /**
-     * Assert that two items are not the same. If one item is null, the the other must be non-null.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(String, Object, Object)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(String itemsName, Object item1, Object item2)
-    {
-        try
-        {
-            if (Comparators.nullSafeEquals(item1, item2) || Comparators.nullSafeEquals(item2, item1))
-            {
-                Assert.fail(itemsName + " should not be equal, item1:<" + item1 + ">, item2:<" + item2 + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Assert that two items are not the same. If one item is null, the the other must be non-null.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(Object, Object)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(Object item1, Object item2)
-    {
-        try
-        {
-            Verify.assertNotEquals("items", item1, item2);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two Strings are not equal.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(String, Object, Object)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(String itemName, String notExpected, String actual)
-    {
-        try
-        {
-            if (Comparators.nullSafeEquals(notExpected, actual))
-            {
-                Assert.fail(itemName + " should not equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two Strings are not equal.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(Object, Object)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(String notExpected, String actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("string", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two doubles are not equal concerning a delta. If the expected value is infinity then the delta value
-     * is ignored.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(String, double, double, double)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(String itemName, double notExpected, double actual, double delta)
-    {
-        // handle infinity specially since subtracting to infinite values gives NaN and the
-        // the following test fails
-        try
-        {
-            //noinspection FloatingPointEquality
-            if (Double.isInfinite(notExpected) && notExpected == actual || Math.abs(notExpected - actual) <= delta)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two doubles are not equal concerning a delta. If the expected value is infinity then the delta value
-     * is ignored.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(double, double, double)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(double notExpected, double actual, double delta)
-    {
-        try
-        {
-            Verify.assertNotEquals("double", notExpected, actual, delta);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two floats are not equal concerning a delta. If the expected value is infinity then the delta value
-     * is ignored.
-     */
-    public static void assertNotEquals(String itemName, float notExpected, float actual, float delta)
-    {
-        try
-        {
-            // handle infinity specially since subtracting to infinite values gives NaN and the
-            // the following test fails
-            //noinspection FloatingPointEquality
-            if (Float.isInfinite(notExpected) && notExpected == actual || Math.abs(notExpected - actual) <= delta)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two floats are not equal concerning a delta. If the expected value is infinity then the delta value
-     * is ignored.
-     */
-    public static void assertNotEquals(float expected, float actual, float delta)
-    {
-        try
-        {
-            Verify.assertNotEquals("float", expected, actual, delta);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two longs are not equal.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(String, long, long)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(String itemName, long notExpected, long actual)
-    {
-        try
-        {
-            if (notExpected == actual)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two longs are not equal.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(long, long)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(long notExpected, long actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("long", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two booleans are not equal.
-     */
-    public static void assertNotEquals(String itemName, boolean notExpected, boolean actual)
-    {
-        try
-        {
-            if (notExpected == actual)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two booleans are not equal.
-     */
-    public static void assertNotEquals(boolean notExpected, boolean actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("boolean", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two bytes are not equal.
-     */
-    public static void assertNotEquals(String itemName, byte notExpected, byte actual)
-    {
-        try
-        {
-            if (notExpected == actual)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two bytes are not equal.
-     */
-    public static void assertNotEquals(byte notExpected, byte actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("byte", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two chars are not equal.
-     */
-    public static void assertNotEquals(String itemName, char notExpected, char actual)
-    {
-        try
-        {
-            if (notExpected == actual)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two chars are not equal.
-     */
-    public static void assertNotEquals(char notExpected, char actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("char", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two shorts are not equal.
-     */
-    public static void assertNotEquals(String itemName, short notExpected, short actual)
-    {
-        try
-        {
-            if (notExpected == actual)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two shorts are not equal.
-     */
-    public static void assertNotEquals(short notExpected, short actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("short", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two ints are not equal.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(String, long, long)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(String itemName, int notExpected, int actual)
-    {
-        try
-        {
-            if (notExpected == actual)
-            {
-                Assert.fail(itemName + " should not be equal:<" + notExpected + '>');
-            }
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Asserts that two ints are not equal.
-     *
-     * @deprecated in 3.0. Use {@link Assert#assertNotEquals(long, long)} in JUnit 4.11 instead.
-     */
-    @Deprecated
-    public static void assertNotEquals(int notExpected, int actual)
-    {
-        try
-        {
-            Verify.assertNotEquals("int", notExpected, actual);
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
     }
 
     /**
@@ -1159,7 +789,7 @@ public final class Verify extends Assert
         try
         {
             Verify.assertObjectNotNull(itemsName, items);
-            Verify.assertNotEquals(itemsName, 0, items.length);
+            Assert.assertNotEquals(itemsName, 0, items.length);
         }
         catch (AssertionError e)
         {
@@ -2055,7 +1685,7 @@ public final class Verify extends Assert
             {
                 Object eachExpected = expectedList.get(index);
                 Object eachActual = actualList.get(index);
-                if (!Comparators.nullSafeEquals(eachExpected, eachActual))
+                if (!Objects.equals(eachExpected, eachActual))
                 {
                     junit.framework.Assert.failNotEquals(listName + " first differed at element [" + index + "];", eachExpected, eachActual);
                 }
@@ -2236,7 +1866,7 @@ public final class Verify extends Assert
                     Object eachExpected = expectedIterator.next();
                     Object eachActual = actualIterator.next();
 
-                    if (!Comparators.nullSafeEquals(eachExpected, eachActual))
+                    if (!Objects.equals(eachExpected, eachActual))
                     {
                         //noinspection UseOfObsoleteAssert
                         junit.framework.Assert.failNotEquals(iterableName + " first differed at element [" + index + "];", eachExpected, eachActual);
@@ -2284,7 +1914,7 @@ public final class Verify extends Assert
                 Object expectedKey = expectedEntry.getKey();
                 Object expectedValue = expectedEntry.getValue();
                 Object actualValue = actualMap.get(expectedKey);
-                if (!Comparators.nullSafeEquals(actualValue, expectedValue))
+                if (!Objects.equals(actualValue, expectedValue))
                 {
                     Assert.fail("Values differ at key " + expectedKey + " expected " + expectedValue + " but was " + actualValue);
                 }
@@ -2571,7 +2201,7 @@ public final class Verify extends Assert
                 Object expectedKey = expectedKeyValues[i++];
                 Object expectedValue = expectedKeyValues[i++];
                 Object actualValue = actualMap.get(expectedKey);
-                if (!Comparators.nullSafeEquals(expectedValue, actualValue))
+                if (!Objects.equals(expectedValue, actualValue))
                 {
                     missingEntries.put(
                             expectedKey,
@@ -3076,7 +2706,7 @@ public final class Verify extends Assert
             Verify.assertContainsKey(mapName, expectedKey, actualMap);
 
             Object actualValue = actualMap.get(expectedKey);
-            if (!Comparators.nullSafeEquals(actualValue, expectedValue))
+            if (!Objects.equals(actualValue, expectedValue))
             {
                 Assert.fail(
                         mapName
@@ -3129,7 +2759,7 @@ public final class Verify extends Assert
             Verify.assertContainsKey(mapIterableName, expectedKey, mapIterable);
 
             Object actualValue = mapIterable.get(expectedKey);
-            if (!Comparators.nullSafeEquals(actualValue, expectedValue))
+            if (!Objects.equals(actualValue, expectedValue))
             {
                 Assert.fail(
                         mapIterableName
@@ -3182,7 +2812,7 @@ public final class Verify extends Assert
             Verify.assertContainsKey(mapIterableName, expectedKey, mutableMapIterable);
 
             Object actualValue = mutableMapIterable.get(expectedKey);
-            if (!Comparators.nullSafeEquals(actualValue, expectedValue))
+            if (!Objects.equals(actualValue, expectedValue))
             {
                 Assert.fail(
                         mapIterableName
@@ -3235,7 +2865,7 @@ public final class Verify extends Assert
             Verify.assertContainsKey(mapIterableName, expectedKey, immutableMapIterable);
 
             Object actualValue = immutableMapIterable.get(expectedKey);
-            if (!Comparators.nullSafeEquals(actualValue, expectedValue))
+            if (!Objects.equals(actualValue, expectedValue))
             {
                 Assert.fail(
                         mapIterableName
@@ -3397,7 +3027,7 @@ public final class Verify extends Assert
         try
         {
             Verify.assertObjectNotNull(listName, actualList);
-            Verify.assertNotEquals(
+            Assert.assertNotEquals(
                     "Bad test, formerItem and latterItem are equal, listName:<" + listName + '>',
                     formerItem,
                     latterItem);
@@ -3563,7 +3193,7 @@ public final class Verify extends Assert
             Verify.assertObjectNotNull(listName, list);
 
             Object actualItem = list.get(index);
-            if (!Comparators.nullSafeEquals(expectedItem, actualItem))
+            if (!Objects.equals(expectedItem, actualItem))
             {
                 Assert.assertEquals(
                         listName + " has incorrect element at index:<" + index + '>',
@@ -3590,7 +3220,7 @@ public final class Verify extends Assert
         {
             Assert.assertNotNull(array);
             Object actualItem = array[index];
-            if (!Comparators.nullSafeEquals(expectedItem, actualItem))
+            if (!Objects.equals(expectedItem, actualItem))
             {
                 Assert.assertEquals(
                         arrayName + " has incorrect element at index:<" + index + '>',
@@ -3838,8 +3468,8 @@ public final class Verify extends Assert
 
             Assert.assertFalse("Neither item should equal null", objectA.equals(null));
             Assert.assertFalse("Neither item should equal null", objectB.equals(null));
-            Verify.assertNotEquals("Neither item should equal new Object()", objectA.equals(new Object()));
-            Verify.assertNotEquals("Neither item should equal new Object()", objectB.equals(new Object()));
+            Assert.assertNotEquals("Neither item should equal new Object()", objectA.equals(new Object()));
+            Assert.assertNotEquals("Neither item should equal new Object()", objectB.equals(new Object()));
             Assert.assertEquals("Expected " + itemNames + " to be equal.", objectA, objectA);
             Assert.assertEquals("Expected " + itemNames + " to be equal.", objectB, objectB);
             Assert.assertEquals("Expected " + itemNames + " to be equal.", objectA, objectB);
@@ -3980,7 +3610,7 @@ public final class Verify extends Assert
      * <p>
      * {@code Callable} is most appropriate when a checked exception will be thrown.
      * If a subclass of {@link RuntimeException} will be thrown, the form
-     * {@link #assertThrows(Class, Runnable)} may be more convenient.
+     * {@link Assert#assertThrows(Class, org.junit.function.ThrowingRunnable)} may be more convenient.
      * <p>
      * e.g.
      * <pre>
@@ -3993,7 +3623,7 @@ public final class Verify extends Assert
      * });
      * </pre>
      *
-     * @see #assertThrows(Class, Runnable)
+     * @see Assert#assertThrows(Class, org.junit.function.ThrowingRunnable)
      */
     public static void assertThrows(
             Class<? extends Exception> expectedExceptionClass,
@@ -4004,69 +3634,6 @@ public final class Verify extends Assert
             code.call();
         }
         catch (Exception ex)
-        {
-            try
-            {
-                Assert.assertSame(
-                        "Caught exception of type <"
-                                + ex.getClass().getName()
-                                + ">, expected one of type <"
-                                + expectedExceptionClass.getName()
-                                + '>'
-                                + '\n'
-                                + "Exception Message: " + ex.getMessage()
-                                + '\n',
-                        expectedExceptionClass,
-                        ex.getClass());
-                return;
-            }
-            catch (AssertionError e)
-            {
-                Verify.throwMangledException(e);
-            }
-        }
-
-        try
-        {
-            Assert.fail("Block did not throw an exception of type " + expectedExceptionClass.getName());
-        }
-        catch (AssertionError e)
-        {
-            Verify.throwMangledException(e);
-        }
-    }
-
-    /**
-     * Runs the {@link Runnable} {@code code} and asserts that it throws an {@code Exception} of the type
-     * {@code expectedExceptionClass}.
-     * <p>
-     * {@code Runnable} is most appropriate when a subclass of {@link RuntimeException} will be thrown.
-     * If a checked exception will be thrown, the form {@link #assertThrows(Class, Callable)} may be more
-     * convenient.
-     * <p>
-     * e.g.
-     * <pre>
-     * Verify.<b>assertThrows</b>(NullPointerException.class, new Runnable()
-     * {
-     *    public void run()
-     *    {
-     *        final Integer integer = null;
-     *        LOGGER.info(integer.toString());
-     *    }
-     * });
-     * </pre>
-     *
-     * @see #assertThrows(Class, Callable)
-     */
-    public static void assertThrows(
-            Class<? extends Exception> expectedExceptionClass,
-            Runnable code)
-    {
-        try
-        {
-            code.run();
-        }
-        catch (RuntimeException ex)
         {
             try
             {

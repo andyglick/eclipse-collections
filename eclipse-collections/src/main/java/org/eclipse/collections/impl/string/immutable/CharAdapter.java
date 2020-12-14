@@ -26,6 +26,7 @@ import org.eclipse.collections.api.block.function.primitive.ObjectCharToObjectFu
 import org.eclipse.collections.api.block.predicate.primitive.CharPredicate;
 import org.eclipse.collections.api.block.procedure.primitive.CharIntProcedure;
 import org.eclipse.collections.api.block.procedure.primitive.CharProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.iterator.CharIterator;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -36,7 +37,6 @@ import org.eclipse.collections.api.set.primitive.MutableCharSet;
 import org.eclipse.collections.api.tuple.primitive.CharCharPair;
 import org.eclipse.collections.api.tuple.primitive.CharObjectPair;
 import org.eclipse.collections.impl.bag.mutable.primitive.CharHashBag;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.CharLists;
 import org.eclipse.collections.impl.lazy.primitive.ReverseCharIterable;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -98,6 +98,12 @@ public class CharAdapter
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return this.length() == 0;
+    }
+
+    @Override
     public String subSequence(int start, int end)
     {
         return this.adapted.substring(start, end);
@@ -127,6 +133,23 @@ public class CharAdapter
     public char[] toArray()
     {
         return this.adapted.toCharArray();
+    }
+
+    @Override
+    public char[] toArray(char[] target)
+    {
+        int size = this.adapted.length();
+        if (target.length < size)
+        {
+            target = new char[size];
+        }
+
+        for (int i = 0; i < size; i++)
+        {
+            target[i] = this.adapted.charAt(i);
+        }
+
+        return target;
     }
 
     @Override

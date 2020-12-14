@@ -12,11 +12,11 @@ package org.eclipse.collections.impl.list.immutable;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
 import java.util.function.UnaryOperator;
@@ -43,6 +43,7 @@ import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
 import org.eclipse.collections.api.collection.MutableCollection;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.ParallelListIterable;
@@ -60,7 +61,6 @@ import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.partition.list.PartitionImmutableList;
 import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.block.factory.HashingStrategies;
 import org.eclipse.collections.impl.block.procedure.CollectIfProcedure;
@@ -78,7 +78,6 @@ import org.eclipse.collections.impl.block.procedure.primitive.CollectIntProcedur
 import org.eclipse.collections.impl.block.procedure.primitive.CollectLongProcedure;
 import org.eclipse.collections.impl.block.procedure.primitive.CollectShortProcedure;
 import org.eclipse.collections.impl.collection.immutable.AbstractImmutableCollection;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.lazy.ReverseIterable;
 import org.eclipse.collections.impl.lazy.parallel.list.ListIterableParallelIterable;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -138,7 +137,7 @@ abstract class AbstractImmutableList<T>
         int localSize = this.size();
         for (int i = 0; i < localSize; i++)
         {
-            if (!Comparators.nullSafeEquals(this.get(i), list.get(i)))
+            if (!Objects.equals(this.get(i), list.get(i)))
             {
                 return false;
             }
@@ -156,7 +155,7 @@ abstract class AbstractImmutableList<T>
             {
                 return false;
             }
-            if (!Comparators.nullSafeEquals(this.get(i), iterator.next()))
+            if (!Objects.equals(this.get(i), iterator.next()))
             {
                 return false;
             }
@@ -844,12 +843,6 @@ abstract class AbstractImmutableList<T>
     }
 
     @Override
-    public MutableStack<T> toStack()
-    {
-        return ArrayStack.newStack(this);
-    }
-
-    @Override
     public ReverseIterable<T> asReversed()
     {
         return ReverseIterable.adapt(this);
@@ -865,18 +858,6 @@ abstract class AbstractImmutableList<T>
     public ParallelListIterable<T> asParallel(ExecutorService executorService, int batchSize)
     {
         return new ListIterableParallelIterable<>(this, executorService, batchSize);
-    }
-
-    @Override
-    public int binarySearch(T key, Comparator<? super T> comparator)
-    {
-        return Collections.binarySearch(this, key, comparator);
-    }
-
-    @Override
-    public int binarySearch(T key)
-    {
-        return Collections.binarySearch((List<? extends Comparable<? super T>>) this, key);
     }
 
     @Override

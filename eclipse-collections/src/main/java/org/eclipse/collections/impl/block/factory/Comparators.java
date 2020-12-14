@@ -29,10 +29,10 @@ import org.eclipse.collections.impl.block.comparator.FunctionComparator;
 
 public final class Comparators
 {
-    private static final SerializableComparator<?> COMPARABLE_COMPARATOR = new ComparableComparator();
-    private static final SerializableComparator<?> NATURAL_ORDER_COMPARATOR = new NaturalOrderComparator();
-    private static final SerializableComparator<?> REVERSE_NATURAL_ORDER_COMPARATOR = new ReverseComparator(NATURAL_ORDER_COMPARATOR);
-    private static final SerializableComparator<?> POWER_SET_COMPARATOR = new PowerSetComparator();
+    private static final SerializableComparator<?> COMPARABLE_COMPARATOR = new ComparableComparator<>();
+    private static final SerializableComparator<?> NATURAL_ORDER_COMPARATOR = new NaturalOrderComparator<>();
+    private static final SerializableComparator<?> REVERSE_NATURAL_ORDER_COMPARATOR = new ReverseComparator<>(NATURAL_ORDER_COMPARATOR);
+    private static final SerializableComparator<?> POWER_SET_COMPARATOR = new PowerSetComparator<>();
     private static final SerializableComparator<Collection<?>> ASCENDING_COLLECTION_SIZE_COMPARATOR = new AscendingCollectionSizeComparator();
     private static final SerializableComparator<Collection<?>> DESCENDING_COLLECTION_SIZE_COMPARATOR = new DescendingCollectionSizeComparator();
 
@@ -96,6 +96,7 @@ public final class Comparators
         return new SafeNullsHighComparator<>(notNullSafeComparator);
     }
 
+    @SafeVarargs
     public static <T> SerializableComparator<T> chain(Comparator<T>... comparators)
     {
         if (comparators.length == 0)
@@ -357,6 +358,20 @@ public final class Comparators
             return Functions.toShortComparator((ShortFunction<T>) function);
         }
         return Comparators.byFunction(function, naturalOrder());
+    }
+
+    public static <T, V extends Comparable<? super V>> SerializableComparator<T> byFunctionNullsLast(Function<? super T, ? extends V> function)
+    {
+        return Comparators.byFunction(
+                function,
+                Comparator.nullsLast(Comparator.naturalOrder()));
+    }
+
+    public static <T, V extends Comparable<? super V>> SerializableComparator<T> byFunctionNullsFirst(Function<? super T, ? extends V> function)
+    {
+        return Comparators.byFunction(
+                function,
+                Comparator.nullsFirst(Comparator.naturalOrder()));
     }
 
     public static <T> SerializableComparator<T> byBooleanFunction(BooleanFunction<T> function)

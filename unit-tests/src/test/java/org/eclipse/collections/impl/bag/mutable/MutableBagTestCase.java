@@ -104,14 +104,14 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
 
         Iterator<Integer> iterator = bag.iterator();
         MutableBagIterable<Integer> expected = this.newWith(1, 1, 2);
-        Verify.assertThrows(IllegalStateException.class, iterator::remove);
+        Assert.assertThrows(IllegalStateException.class, iterator::remove);
 
         this.assertIteratorRemove(bag, iterator, expected);
         this.assertIteratorRemove(bag, iterator, expected);
         this.assertIteratorRemove(bag, iterator, expected);
         Verify.assertEmpty(bag);
         Assert.assertFalse(iterator.hasNext());
-        Verify.assertThrows(NoSuchElementException.class, (Runnable) iterator::next);
+        Assert.assertThrows(NoSuchElementException.class, iterator::next);
     }
 
     private void assertIteratorRemove(MutableBagIterable<Integer> bag, Iterator<Integer> iterator, MutableBagIterable<Integer> expected)
@@ -121,7 +121,7 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
         iterator.remove();
         expected.remove(first);
         Assert.assertEquals(expected, bag);
-        Verify.assertThrows(IllegalStateException.class, iterator::remove);
+        Assert.assertThrows(IllegalStateException.class, iterator::remove);
     }
 
     @Test
@@ -450,7 +450,7 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
     @Test
     public void topOccurrences()
     {
-        MutableBagIterable<String> strings = this.newWithOccurrences(
+        MutableBagIterable<String> strings = Bags.mutable.withOccurrences(
                 PrimitiveTuples.pair("one", 1),
                 PrimitiveTuples.pair("two", 2),
                 PrimitiveTuples.pair("three", 3),
@@ -479,13 +479,64 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
         Verify.assertSize(3, this.newWith("one", "one", "two", "two", "three", "three").topOccurrences(1));
         Verify.assertSize(0, this.newWith().topOccurrences(0));
         Verify.assertSize(0, this.newWith("one").topOccurrences(0));
-        Verify.assertThrows(IllegalArgumentException.class, () -> this.newWith().topOccurrences(-1));
+        Assert.assertThrows(IllegalArgumentException.class, () -> this.newWith().topOccurrences(-1));
+    }
+
+    @Test
+    public void anySatisfyWithOccurrences()
+    {
+        Bag<Integer> bag = this.newWith(3, 3, 3, 2, 2, 1);
+        Assert.assertTrue(bag.anySatisfyWithOccurrences((object, value) -> object.equals(3) && value == 3));
+        Assert.assertTrue(bag.anySatisfyWithOccurrences((object, value) -> object.equals(2) && value == 2));
+        Assert.assertTrue(bag.anySatisfyWithOccurrences((object, value) -> object.equals(3)));
+
+        Assert.assertFalse(bag.anySatisfyWithOccurrences((object, value) -> object.equals(2) && value == 5));
+        Assert.assertFalse(bag.anySatisfyWithOccurrences((object, value) -> object.equals(1) && value == 7));
+        Assert.assertFalse(bag.anySatisfyWithOccurrences((object, value) -> object.equals(10)));
+    }
+
+    @Test
+    public void noneSatisfyWithOccurrences()
+    {
+        Bag<Integer> bag = this.newWith(3, 3, 3, 2, 2, 1);
+        Assert.assertTrue(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(3) && value == 1));
+        Assert.assertTrue(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(30)));
+        Assert.assertFalse(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(3) && value == 3));
+        Assert.assertTrue(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(1) && value == 0));
+        Assert.assertFalse(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(1) && value == 1));
+        Assert.assertFalse(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(2)));
+    }
+
+    @Test
+    public void allSatisfyWithOccurrences()
+    {
+        Bag<Integer> bag = this.newWith(3, 3, 3);
+        Assert.assertTrue(bag.allSatisfyWithOccurrences((object, value) -> object.equals(3) && value == 3));
+        Assert.assertTrue(bag.allSatisfyWithOccurrences((object, value) -> object.equals(3)));
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(4) && value == 3));
+        bag = this.newWith(3, 3, 3, 1);
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(3) && value == 3));
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(1) && value == 3));
+        Assert.assertTrue(bag.allSatisfyWithOccurrences((object, value) -> object.equals(3) || object == 1));
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(300) || object == 1));
+    }
+
+    @Test
+    public void detectWithOccurrences()
+    {
+        Bag<Integer> bag = this.newWith(3, 3, 3, 2, 2, 1);
+        Assert.assertEquals((Integer) 3, bag.detectWithOccurrences((object, value) -> object.equals(3) && value == 3));
+        Assert.assertEquals((Integer) 3, bag.detectWithOccurrences((object, value) -> object.equals(3)));
+        Assert.assertEquals((Integer) 1, bag.detectWithOccurrences((object, value) -> object.equals(1) && value == 1));
+        Assert.assertNull(bag.detectWithOccurrences((object, value) -> object.equals(1) && value == 10));
+        Assert.assertNull(bag.detectWithOccurrences((object, value) -> object.equals(10) && value == 5));
+        Assert.assertNull(bag.detectWithOccurrences((object, value) -> object.equals(100)));
     }
 
     @Test
     public void bottomOccurrences()
     {
-        MutableBagIterable<String> strings = this.newWithOccurrences(
+        MutableBagIterable<String> strings = Bags.mutable.ofOccurrences(
                 PrimitiveTuples.pair("one", 1),
                 PrimitiveTuples.pair("two", 2),
                 PrimitiveTuples.pair("three", 3),
@@ -514,7 +565,7 @@ public abstract class MutableBagTestCase extends AbstractCollectionTestCase
         Verify.assertSize(3, this.newWith("one", "one", "two", "two", "three", "three").bottomOccurrences(1));
         Verify.assertSize(0, this.newWith().bottomOccurrences(0));
         Verify.assertSize(0, this.newWith("one").bottomOccurrences(0));
-        Verify.assertThrows(IllegalArgumentException.class, () -> this.newWith().bottomOccurrences(-1));
+        Assert.assertThrows(IllegalArgumentException.class, () -> this.newWith().bottomOccurrences(-1));
     }
 
     @Test

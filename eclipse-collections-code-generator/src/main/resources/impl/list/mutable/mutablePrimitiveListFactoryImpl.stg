@@ -49,11 +49,23 @@ public enum Mutable<name>ListFactoryImpl implements Mutable<name>ListFactory
     }
 
     @Override
+    public Mutable<name>List withInitialCapacity(int capacity)
+    {
+        return new <name>ArrayList(capacity);
+    }
+
+    @Override
     public Mutable<name>List of(<type>... items)
     {
         return this.with(items);
     }
 
+    /**
+     * Creates a new list using the passed {@code items} argument as the backing store.
+     * \<p>
+     * !!! WARNING: This method uses the passed in array, so can be very unsafe if the original
+     * array is held onto anywhere else. !!!
+     */
     @Override
     public Mutable<name>List with(<type>... items)
     {

@@ -38,6 +38,7 @@ import org.eclipse.collections.api.collection.primitive.MutableFloatCollection;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
@@ -66,7 +67,7 @@ public interface MutableCollection<T>
      * the original collection and appending the new element to form the new collection. In the case of mutable
      * collections, the original collection is modified, and is returned. In order to use this method properly with
      * mutable and fixed size collections the following approach must be taken:
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;String&gt; list = list.with("1");
      * list = list.with("2");
@@ -87,7 +88,7 @@ public interface MutableCollection<T>
      * that would be left from the original collection after calling remove. In the case of mutable collections, the
      * original collection is modified, and is returned. In order to use this method properly with mutable and fixed
      * size collections the following approach must be taken:
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;String&gt; list = list.without("1");
      * list = list.without("2");
@@ -108,7 +109,7 @@ public interface MutableCollection<T>
      * elements of  the original collection and appending the new elements to form the new collection. In the case of
      * mutable collections, the original collection is modified, and is returned. In order to use this method properly
      * with mutable and fixed size collections the following approach must be taken:
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;String&gt; list = list.withAll(FastList.newListWith("1", "2"));
      * </pre>
@@ -127,7 +128,7 @@ public interface MutableCollection<T>
      * elements that would be left from the original collection after calling removeAll. In the case of mutable
      * collections, the original collection is modified, and is returned. In order to use this method properly with
      * mutable and fixed size collections the following approach must be taken:
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;String&gt; list = list.withoutAll(FastList.newListWith("1", "2"));
      * </pre>
@@ -152,7 +153,7 @@ public interface MutableCollection<T>
 
     /**
      * Returns a MutableCollection with all elements that evaluate to true for the specified predicate.
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;Integer&gt; livesInLondon =
      *     people.select(person -&gt; person.getAddress().getCity().equals("London"));
@@ -163,7 +164,7 @@ public interface MutableCollection<T>
 
     /**
      * Returns a MutableCollection with all elements that evaluate to true for the specified predicate2 and parameter.
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;Integer&gt; fives =
      *     integers.selectWith(Predicates2.equal(), Integer.valueOf(5));
@@ -174,13 +175,13 @@ public interface MutableCollection<T>
 
     /**
      * Returns a MutableCollection with all elements that evaluate to false for the specified predicate.
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;Person&gt; notSmiths =
      *     people.reject(person -&gt; person.person.getLastName().equals("Smith"));
      * </pre>
      * Using the {@code Predicates} factory:
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;Person&gt; notSmiths = people.reject(Predicates.attributeEqual("lastName", "Smith"));
      * </pre>
@@ -190,7 +191,7 @@ public interface MutableCollection<T>
 
     /**
      * Returns a MutableCollection with all elements that evaluate to false for the specified predicate2 and parameter.
-     * <p>
+     *
      * <pre>e.g.
      * MutableCollection&lt;Integer&gt; selected =
      *     integers.rejectWith(Predicates2.equal(), Integer.valueOf(5));
@@ -201,7 +202,7 @@ public interface MutableCollection<T>
 
     /**
      * Filters a collection into two separate collections based on a predicate returned via a Pair.
-     * <p>
+     *
      * <pre>e.g.
      * return lastNames.<b>selectAndRejectWith</b>(Predicates2.lessThan(), "Mason");
      * </pre>
@@ -248,7 +249,7 @@ public interface MutableCollection<T>
 
     /**
      * Removes all elements in the collection that evaluate to true for the specified predicate.
-     * <p>
+     *
      * <pre>e.g.
      * return lastNames.<b>removeIf</b>(Predicates.isNull());
      * </pre>
@@ -257,7 +258,7 @@ public interface MutableCollection<T>
 
     /**
      * Removes all elements in the collection that evaluate to true for the specified predicate2 and parameter.
-     * <p>
+     *
      * <pre>
      * return lastNames.<b>removeIfWith</b>(Predicates2.isNull(), null);
      * </pre>
@@ -267,7 +268,7 @@ public interface MutableCollection<T>
     /**
      * Returns a new MutableCollection with the results of applying the specified function to each element of the source
      * collection.
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;String&gt; names =
      *     people.collect(person -&gt; person.getFirstName() + " " + person.getLastName());
@@ -371,7 +372,6 @@ public interface MutableCollection<T>
      * MutableCollection&lt;Integer&gt; integers =
      *     Lists.mutable.with(1, 2, 3).collectWith((each, parameter) -&gt; each + parameter, Integer.valueOf(1));
      * </pre>
-     * <p>
      */
     @Override
     <P, V> MutableCollection<V> collectWith(Function2<? super T, ? super P, ? extends V> function, P parameter);
@@ -379,7 +379,7 @@ public interface MutableCollection<T>
     /**
      * Returns a new MutableCollection with the results of applying the specified function to each element of the source
      * collection, but only for elements that evaluate to true for the specified predicate.
-     * <p>
+     *
      * <pre>
      * MutableCollection&lt;String&gt; collected =
      *     Lists.mutable.of().with(1, 2, 3).collectIf(Predicates.notNull(), Functions.getToString())
@@ -414,6 +414,14 @@ public interface MutableCollection<T>
         return this.flatCollect(each -> function.apply(each, parameter));
     }
 
+    /**
+     * Returns the final result of evaluating function using each element of the iterable, the previous evaluation
+     * result and the parameters. The injected value is used for the first parameter of the first evaluation, and the current
+     * item in the iterable is used as the second parameter. The parameter value is always used as the third parameter
+     * to the function call.
+     *
+     * @see #injectInto(Object, Function2)
+     */
     <IV, P> IV injectIntoWith(
             IV injectValue,
             Function3<? super IV, ? super T, ? super P, ? extends IV> function,
@@ -518,7 +526,10 @@ public interface MutableCollection<T>
     <V> MutableMultimap<V, T> groupByEach(Function<? super T, ? extends Iterable<V>> function);
 
     @Override
-    <V> MutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function);
+    default <V> MutableMap<V, T> groupByUniqueKey(Function<? super T, ? extends V> function)
+    {
+        return this.groupByUniqueKey(function, Maps.mutable.withInitialCapacity(this.size()));
+    }
 
     /**
      * @deprecated in 6.0. Use {@link OrderedIterable#zip(Iterable)} instead.
@@ -553,14 +564,31 @@ public interface MutableCollection<T>
     boolean retainAllIterable(Iterable<?> iterable);
 
     @Override
-    <K, V> MutableMap<K, V> aggregateInPlaceBy(
+    default <K, V> MutableMap<K, V> aggregateInPlaceBy(
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
-            Procedure2<? super V, ? super T> mutatingAggregator);
+            Procedure2<? super V, ? super T> mutatingAggregator)
+    {
+        MutableMap<K, V> map = Maps.mutable.empty();
+        this.forEach(each ->
+        {
+            K key = groupBy.valueOf(each);
+            V value = map.getIfAbsentPut(key, zeroValueFactory);
+            mutatingAggregator.value(value, each);
+        });
+        return map;
+    }
 
     @Override
-    <K, V> MutableMap<K, V> aggregateBy(
+    default <K, V> MutableMap<K, V> aggregateBy(
             Function<? super T, ? extends K> groupBy,
             Function0<? extends V> zeroValueFactory,
-            Function2<? super V, ? super T, ? extends V> nonMutatingAggregator);
+            Function2<? super V, ? super T, ? extends V> nonMutatingAggregator)
+    {
+        return this.aggregateBy(
+                groupBy,
+                zeroValueFactory,
+                nonMutatingAggregator,
+                Maps.mutable.empty());
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Goldman Sachs and others.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -56,8 +56,17 @@ import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.multimap.Multimap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
+import org.eclipse.collections.api.multimap.list.MutableListMultimap;
 import org.eclipse.collections.api.partition.PartitionIterable;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.primitive.BooleanBooleanPair;
+import org.eclipse.collections.api.tuple.primitive.ByteBytePair;
+import org.eclipse.collections.api.tuple.primitive.CharCharPair;
+import org.eclipse.collections.api.tuple.primitive.DoubleDoublePair;
+import org.eclipse.collections.api.tuple.primitive.FloatFloatPair;
+import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.LongLongPair;
+import org.eclipse.collections.api.tuple.primitive.ShortShortPair;
 import org.eclipse.collections.impl.Counter;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
@@ -79,20 +88,30 @@ import org.eclipse.collections.impl.block.function.AddFunction;
 import org.eclipse.collections.impl.collector.Collectors2;
 import org.eclipse.collections.impl.factory.Bags;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Multimaps;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.SortedSets;
 import org.eclipse.collections.impl.factory.primitive.ObjectDoubleMaps;
 import org.eclipse.collections.impl.factory.primitive.ObjectLongMaps;
 import org.eclipse.collections.impl.list.Interval;
+import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
+import org.eclipse.collections.impl.list.mutable.primitive.ByteArrayList;
+import org.eclipse.collections.impl.list.mutable.primitive.CharArrayList;
+import org.eclipse.collections.impl.list.mutable.primitive.FloatArrayList;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
+import org.eclipse.collections.impl.list.mutable.primitive.LongArrayList;
+import org.eclipse.collections.impl.list.mutable.primitive.ShortArrayList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.map.sorted.mutable.TreeSortedMap;
 import org.eclipse.collections.impl.multimap.bag.HashBagMultimap;
+import org.eclipse.collections.impl.set.mutable.primitive.DoubleHashSet;
 import org.eclipse.collections.impl.tuple.Tuples;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.eclipse.collections.impl.test.Verify.assertThrows;
 import static org.eclipse.collections.test.IterableTestCase.assertEquals;
 import static org.eclipse.collections.test.IterableTestCase.assertNotEquals;
 import static org.hamcrest.Matchers.is;
@@ -102,6 +121,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -215,12 +235,9 @@ public interface RichIterableTestCase extends IterableTestCase
     @Test
     default void RichIterable_tap()
     {
-        Procedure<Object> noop = each -> {
-        };
-
         RichIterable<Integer> iterable = this.newWith(3, 3, 3, 2, 2, 1);
         MutableCollection<Integer> result = this.newMutableForFilter();
-        iterable.tap(result::add).forEach(noop);
+        iterable.tap(result::add).forEach(Procedures.noop());
         assertEquals(this.newMutableForFilter(3, 3, 3, 2, 2, 1), result);
         this.newWith().tap(Procedures.cast(each -> fail()));
     }
@@ -382,6 +399,133 @@ public interface RichIterableTestCase extends IterableTestCase
     }
 
     @Test
+    default void RichIterable_flatCollectBoolean()
+    {
+        RichIterable<BooleanBooleanPair> iterable = this.newWith(
+                PrimitiveTuples.pair(true, false),
+                PrimitiveTuples.pair(false, true));
+
+        BooleanHashBag result = new BooleanHashBag();
+        iterable.flatCollectBoolean(each -> BooleanArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(BooleanHashBag.newBagWith(true, false, false, true), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectByte()
+    {
+        RichIterable<ByteBytePair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair((byte) 1, (byte) 2),
+                        PrimitiveTuples.pair((byte) 3, (byte) 4));
+
+        ByteHashBag result = new ByteHashBag();
+        iterable.flatCollectByte(each -> ByteArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(ByteHashBag.newBagWith((byte) 1, (byte) 2, (byte) 3, (byte) 4), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectShort()
+    {
+        RichIterable<ShortShortPair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair((short) 1, (short) 2),
+                        PrimitiveTuples.pair((short) 3, (short) 4));
+
+        ShortHashBag result = new ShortHashBag();
+        iterable.flatCollectShort(each -> ShortArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(ShortHashBag.newBagWith((short) 1, (short) 2, (short) 3, (short) 4), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectInt()
+    {
+        RichIterable<IntIntPair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair(1, 2),
+                        PrimitiveTuples.pair(3, 4));
+
+        IntHashBag result = new IntHashBag();
+        iterable.flatCollectInt(each -> IntArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(IntHashBag.newBagWith(1, 2, 3, 4), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectChar()
+    {
+        RichIterable<CharCharPair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair('a', 'b'),
+                        PrimitiveTuples.pair('c', 'd'));
+
+        CharHashBag result = new CharHashBag();
+        iterable.flatCollectChar(each -> CharArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(CharHashBag.newBagWith('a', 'b', 'c', 'd'), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectLong()
+    {
+        RichIterable<LongLongPair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair(1L, 2L),
+                        PrimitiveTuples.pair(3L, 4L));
+
+        LongHashBag result = new LongHashBag();
+        iterable.flatCollectLong(each -> LongArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(LongHashBag.newBagWith(1, 2, 3, 4), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectDouble()
+    {
+        RichIterable<DoubleDoublePair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair((double) 1, (double) 2),
+                        PrimitiveTuples.pair((double) 3, (double) 4));
+
+        DoubleHashBag result = new DoubleHashBag();
+        iterable.flatCollectDouble(each -> DoubleHashSet.newSetWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(DoubleHashBag.newBagWith(1, 2, 3, 4), result);
+    }
+
+    @Test
+    default void RichIterable_flatCollectFloat()
+    {
+        RichIterable<FloatFloatPair> iterable =
+                this.newWith(
+                        PrimitiveTuples.pair((float) 1, (float) 2),
+                        PrimitiveTuples.pair((float) 3, (float) 4));
+
+        FloatHashBag result = new FloatHashBag();
+        iterable.flatCollectFloat(each -> FloatArrayList.newListWith(
+                each.getOne(),
+                each.getTwo()), result);
+
+        assertEquals(FloatHashBag.newBagWith(1, 2, 3, 4), result);
+    }
+
+    @Test
     default void RichIterable_containsAll()
     {
         RichIterable<Integer> iterable3 = this.newWith(3, 2, 1);
@@ -491,8 +635,7 @@ public interface RichIterableTestCase extends IterableTestCase
     {
         MutableCollection<Integer> expectedIterationOrder = this.expectedIterationOrder();
 
-        Procedure<Object> noop = each -> {
-        };
+        Procedure<Object> noop = Procedures.noop();
 
         MutableCollection<Integer> selectIterationOrder = this.newMutableForFilter();
         this.getInstanceUnderTest().select(selectIterationOrder::add).forEach(noop);
@@ -855,7 +998,7 @@ public interface RichIterableTestCase extends IterableTestCase
         assertEquals(expectedIterationOrder, sumOfLongIterationOrder);
 
         /*
-         * TODO: Fix sumByPrimitive methods for bags, to only iterate once per item, not per occurrence.
+         * TODO: Fix sumByDouble and sumByFloat methods for bags, to only iterate once per item, not per occurrence.
         MutableCollection<Integer> sumByDoubleIterationOrder1 = this.newMutableForFilter();
         MutableCollection<Integer> sumByDoubleIterationOrder2 = this.newMutableForFilter();
         this.getInstanceUnderTest().sumByDouble(
@@ -883,6 +1026,7 @@ public interface RichIterableTestCase extends IterableTestCase
                 });
         assertEquals(expectedIterationOrder, sumByFloatIterationOrder1);
         assertEquals(expectedIterationOrder, sumByFloatIterationOrder2);
+        */
 
         MutableCollection<Integer> sumByIntIterationOrder1 = this.newMutableForFilter();
         MutableCollection<Integer> sumByIntIterationOrder2 = this.newMutableForFilter();
@@ -911,7 +1055,6 @@ public interface RichIterableTestCase extends IterableTestCase
                 });
         assertEquals(expectedIterationOrder, sumByLongIterationOrder1);
         assertEquals(expectedIterationOrder, sumByLongIterationOrder2);
-        */
 
         MutableCollection<Integer> expectedInjectIntoIterationOrder = this.allowsDuplicates()
                 ? this.newMutableForFilter(4, 4, 4, 4, 3, 3, 3, 2, 2, 1)
@@ -2046,7 +2189,7 @@ public interface RichIterableTestCase extends IterableTestCase
 
         assertEquals(
                 jdkMap,
-                iterable.toMap(Object::toString, each -> each % 10, new HashMap<String, Integer>()));
+                iterable.toMap(Object::toString, each -> each % 10, new HashMap<>()));
     }
 
     @Test
@@ -2085,6 +2228,22 @@ public interface RichIterableTestCase extends IterableTestCase
     {
         Object[] array = this.newWith(3, 3, 3, 2, 2, 1).toArray();
         assertEquals(Bags.immutable.with(3, 3, 3, 2, 2, 1), HashBag.newBagWith(array));
+    }
+
+    @Test
+    default void RichIterable_groupByAndCollect()
+    {
+        RichIterable<Integer> iterable = this.newWith(10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+        Function<Integer, Boolean> groupByFunction = integer -> IntegerPredicates.isOdd().accept(integer);
+        Function<Integer, Integer> collectFunction = integer -> integer + 2;
+
+        FastList<Integer> expectedOddNumberList = FastList.newListWith(3, 5, 7, 9, 11);
+        FastList<Integer> expectedEvenNumberList = FastList.newListWith(4, 6, 8, 10, 12);
+
+        MutableListMultimap<Boolean, Integer> targetResult = iterable.groupByAndCollect(groupByFunction, collectFunction, Multimaps.mutable.list.empty());
+
+        assertTrue(expectedOddNumberList.containsAll(targetResult.get(Boolean.TRUE)));
+        assertTrue(expectedEvenNumberList.containsAll(targetResult.get(Boolean.FALSE)));
     }
 
     class Holder<T extends Comparable<? super T>> implements Comparable<Holder<T>>

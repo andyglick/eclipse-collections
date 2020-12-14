@@ -17,6 +17,7 @@ import java.util.IntSummaryStatistics;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -57,6 +58,7 @@ import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.factory.Bags;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -177,6 +179,20 @@ public interface RichIterable<T>
      * @since 1.0
      */
     boolean contains(Object object);
+
+    /**
+     * Returns true if the iterable has an element which responds true to element.equals(value)
+     * after applying the specified function to the element.
+     *
+     * @since 10.3
+     */
+    default <V> boolean containsBy(
+            Function<? super T, ? extends V> function,
+            V value)
+    {
+        Objects.requireNonNull(function);
+        return this.anySatisfy(each -> Objects.equals(value, function.valueOf(each)));
+    }
 
     /**
      * Returns true if all elements in source are contained in this collection.
@@ -551,7 +567,7 @@ public interface RichIterable<T>
 
     /**
      * Returns all elements of the source collection that are instances of the Class {@code clazz}.
-     * <p>
+     *
      * <pre>
      * RichIterable&lt;Integer&gt; integers =
      *     List.mutable.with(new Integer(0), new Long(0L), new Double(0.0)).selectInstancesOf(Integer.class);
@@ -1182,6 +1198,118 @@ public interface RichIterable<T>
     <V> RichIterable<V> flatCollect(Function<? super T, ? extends Iterable<V>> function);
 
     /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableByteCollection> R flatCollectByte(Function<? super T, ? extends ByteIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableCharCollection> R flatCollectChar(Function<? super T, ? extends CharIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableIntCollection> R flatCollectInt(Function<? super T, ? extends IntIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableShortCollection> R flatCollectShort(Function<? super T, ? extends ShortIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableDoubleCollection> R flatCollectDouble(Function<? super T, ? extends DoubleIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableFloatCollection> R flatCollectFloat(Function<? super T, ? extends FloatIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableLongCollection> R flatCollectLong(Function<? super T, ? extends LongIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
+     * Same as flatCollect, only the results are collected into the target collection.
+     *
+     * @param function The {@link Function} to apply
+     * @param target   The collection into which results should be added.
+     * @return {@code target}, which will contain a flattened collection of results produced by applying the given {@code function}
+     * @see #flatCollect(Function)
+     */
+    default <R extends MutableBooleanCollection> R flatCollectBoolean(Function<? super T, ? extends BooleanIterable> function, R target)
+    {
+        this.forEach(each -> target.addAll(function.valueOf(each)));
+        return target;
+    }
+
+    /**
      * @since 9.2
      */
     default <P, V> RichIterable<V> flatCollectWith(Function2<? super T, ? super P, ? extends Iterable<V>> function, P parameter)
@@ -1339,7 +1467,7 @@ public interface RichIterable<T>
 
     /**
      * Returns the total number of elements that evaluate to true for the specified predicate.
-     * <p>
+     *
      * <pre>e.g.
      * return lastNames.<b>countWith</b>(Predicates2.equal(), "Smith");
      * </pre>
@@ -1822,7 +1950,7 @@ public interface RichIterable<T>
     /**
      * Returns the result of summarizing the value returned from applying the IntFunction to
      * each element of the iterable.
-     * <p>
+     *
      * <pre>
      * IntSummaryStatistics stats =
      *     Lists.mutable.with(1, 2, 3).summarizeInt(Integer::intValue);
@@ -1840,7 +1968,7 @@ public interface RichIterable<T>
     /**
      * Returns the result of summarizing the value returned from applying the FloatFunction to
      * each element of the iterable.
-     * <p>
+     *
      * <pre>
      * DoubleSummaryStatistics stats =
      *     Lists.mutable.with(1, 2, 3).summarizeFloat(Integer::floatValue);
@@ -1858,7 +1986,7 @@ public interface RichIterable<T>
     /**
      * Returns the result of summarizing the value returned from applying the LongFunction to
      * each element of the iterable.
-     * <p>
+     *
      * <pre>
      * LongSummaryStatistics stats =
      *     Lists.mutable.with(1, 2, 3).summarizeLong(Integer::longValue);
@@ -1876,7 +2004,7 @@ public interface RichIterable<T>
     /**
      * Returns the result of summarizing the value returned from applying the DoubleFunction to
      * each element of the iterable.
-     * <p>
+     *
      * <pre>
      * DoubleSummaryStatistics stats =
      *     Lists.mutable.with(1, 2, 3).summarizeDouble(Integer::doubleValue);
@@ -1893,7 +2021,7 @@ public interface RichIterable<T>
 
     /**
      * This method produces the equivalent result as {@link Stream#collect(Collector)}.
-     * <p>
+     *
      * <pre>
      * MutableObjectLongMap&lt;Integer&gt; map2 =
      *     Lists.mutable.with(1, 2, 3, 4, 5).reduceInPlace(Collectors2.sumByInt(i -&gt; Integer.valueOf(i % 2), Integer::intValue));
@@ -2205,7 +2333,7 @@ public interface RichIterable<T>
     /**
      * Returns a string with the elements of this iterable separated by commas with spaces and
      * enclosed in square brackets.
-     * <p>
+     *
      * <pre>
      * Assert.assertEquals("[]", Lists.mutable.empty().toString());
      * Assert.assertEquals("[1]", Lists.mutable.with(1).toString());
@@ -2282,7 +2410,20 @@ public interface RichIterable<T>
      *
      * @since 3.0
      */
-    <K, V> MapIterable<K, V> aggregateInPlaceBy(Function<? super T, ? extends K> groupBy, Function0<? extends V> zeroValueFactory, Procedure2<? super V, ? super T> mutatingAggregator);
+    default <K, V> MapIterable<K, V> aggregateInPlaceBy(
+            Function<? super T, ? extends K> groupBy,
+            Function0<? extends V> zeroValueFactory,
+            Procedure2<? super V, ? super T> mutatingAggregator)
+    {
+        MutableMap<K, V> map = Maps.mutable.empty();
+        this.forEach(each ->
+        {
+            K key = groupBy.valueOf(each);
+            V value = map.getIfAbsentPut(key, zeroValueFactory);
+            mutatingAggregator.value(value, each);
+        });
+        return map;
+    }
 
     /**
      * Applies an aggregate function over the iterable grouping results into a map based on the specific groupBy function.
@@ -2291,5 +2432,59 @@ public interface RichIterable<T>
      *
      * @since 3.0
      */
-    <K, V> MapIterable<K, V> aggregateBy(Function<? super T, ? extends K> groupBy, Function0<? extends V> zeroValueFactory, Function2<? super V, ? super T, ? extends V> nonMutatingAggregator);
+    default <K, V> MapIterable<K, V> aggregateBy(
+            Function<? super T, ? extends K> groupBy,
+            Function0<? extends V> zeroValueFactory,
+            Function2<? super V, ? super T, ? extends V> nonMutatingAggregator)
+    {
+        return this.aggregateBy(
+                groupBy,
+                zeroValueFactory,
+                nonMutatingAggregator,
+                Maps.mutable.empty());
+    }
+
+    /**
+     * Applies an aggregate function over the iterable grouping results into the target map based on the specific
+     * groupBy function. Aggregate results are allowed to be immutable as they will be replaced in place in the map. A
+     * second function specifies the initial "zero" aggregate value to work with (i.e. Integer.valueOf(0)).
+     *
+     * @since 10.3
+     */
+    default <K, V, R extends MutableMapIterable<K, V>> R aggregateBy(
+            Function<? super T, ? extends K> groupBy,
+            Function0<? extends V> zeroValueFactory,
+            Function2<? super V, ? super T, ? extends V> nonMutatingAggregator,
+            R target)
+    {
+        this.forEach(each ->
+        {
+            K key = groupBy.valueOf(each);
+            target.updateValueWith(key, zeroValueFactory, nonMutatingAggregator, each);
+        });
+        return target;
+    }
+
+    /**
+     * Applies a groupBy function over the iterable, followed by a collect function.
+     *
+     * @param groupByFunction a {@link Function} to use as the groupBy transformation function
+     * @param collectFunction a {@link Function} to use as the collect transformation function
+     *
+     * @return The {@code target} collection where the key is the transformed result from applying the groupBy function
+     * and the value is the transformed result from applying the collect function.
+     *
+     * @see #groupBy(Function)
+     * @see Multimap#collectValues(Function)
+     *
+     * @since 10.1.0
+     */
+    default <K, V, R extends MutableMultimap<K, V>> R groupByAndCollect(
+            Function<? super T, ? extends K> groupByFunction,
+            Function<? super T, ? extends V> collectFunction,
+            R target)
+    {
+        this.forEach(each -> target.put(groupByFunction.apply(each), collectFunction.apply(each)));
+        return target;
+    }
 }

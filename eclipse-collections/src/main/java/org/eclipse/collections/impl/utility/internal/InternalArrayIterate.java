@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.RandomAccess;
 import java.util.function.BiConsumer;
@@ -41,6 +42,7 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMapIterable;
@@ -50,14 +52,12 @@ import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Twin;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.block.procedure.CountProcedure;
 import org.eclipse.collections.impl.block.procedure.FastListCollectIfProcedure;
 import org.eclipse.collections.impl.block.procedure.FastListCollectProcedure;
 import org.eclipse.collections.impl.block.procedure.FastListRejectProcedure;
 import org.eclipse.collections.impl.block.procedure.FastListSelectProcedure;
 import org.eclipse.collections.impl.block.procedure.MultimapPutProcedure;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.ObjectDoubleMaps;
 import org.eclipse.collections.impl.factory.primitive.ObjectLongMaps;
 import org.eclipse.collections.impl.list.mutable.FastList;
@@ -93,7 +93,7 @@ public final class InternalArrayIterate
     {
         for (int i = 0; i < size; i++)
         {
-            if (!Comparators.nullSafeEquals(array[i], list.get(i)))
+            if (!Objects.equals(array[i], list.get(i)))
             {
                 return false;
             }
@@ -110,7 +110,7 @@ public final class InternalArrayIterate
             {
                 return false;
             }
-            if (!Comparators.nullSafeEquals(array[i], iterator.next()))
+            if (!Objects.equals(array[i], iterator.next()))
             {
                 return false;
             }
@@ -355,7 +355,7 @@ public final class InternalArrayIterate
     {
         for (int i = 0; i < size; i++)
         {
-            if (Comparators.nullSafeEquals(array[i], object))
+            if (Objects.equals(array[i], object))
             {
                 return i;
             }
@@ -367,7 +367,7 @@ public final class InternalArrayIterate
     {
         for (int i = size - 1; i >= 0; i--)
         {
-            if (Comparators.nullSafeEquals(array[i], object))
+            if (Objects.equals(array[i], object))
             {
                 return i;
             }

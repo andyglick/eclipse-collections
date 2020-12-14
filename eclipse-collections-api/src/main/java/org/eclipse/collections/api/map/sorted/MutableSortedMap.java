@@ -10,6 +10,7 @@
 
 package org.eclipse.collections.api.map.sorted;
 
+import java.util.Map;
 import java.util.SortedMap;
 
 import org.eclipse.collections.api.block.function.Function;
@@ -27,6 +28,7 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.collection.MutableCollection;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableByteList;
@@ -36,6 +38,7 @@ import org.eclipse.collections.api.list.primitive.MutableFloatList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.list.primitive.MutableShortList;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.multimap.list.MutableListMultimap;
@@ -236,13 +239,30 @@ public interface MutableSortedMap<K, V>
     <VV> MutableListMultimap<VV, V> groupByEach(Function<? super V, ? extends Iterable<VV>> function);
 
     @Override
-    <VV> MutableMap<VV, V> groupByUniqueKey(Function<? super V, ? extends VV> function);
+    default <VV> MutableMap<VV, V> groupByUniqueKey(Function<? super V, ? extends VV> function)
+    {
+        return this.groupByUniqueKey(function, Maps.mutable.withInitialCapacity(this.size()));
+    }
 
     // TODO: When we have implementations of linked hash maps
     // MutableOrderedMap<V, K> flipUniqueValues();
 
     @Override
     MutableSortedMap<K, V> withKeyValue(K key, V value);
+
+    @Override
+    default MutableSortedMap<K, V> withMap(Map<? extends K, ? extends V> map)
+    {
+        this.putAll(map);
+        return this;
+    }
+
+    @Override
+    default MutableSortedMap<K, V> withMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        this.putAllMapIterable(mapIterable);
+        return this;
+    }
 
     @Override
     MutableSortedMap<K, V> withAllKeyValues(Iterable<? extends Pair<? extends K, ? extends V>> keyValues);

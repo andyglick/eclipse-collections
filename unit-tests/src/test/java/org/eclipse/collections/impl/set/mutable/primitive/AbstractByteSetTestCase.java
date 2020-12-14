@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Goldman Sachs.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -220,7 +220,7 @@ public abstract class AbstractByteSetTestCase extends AbstractMutableByteCollect
         actual.add(iterator.next());
         Assert.assertFalse(iterator.hasNext());
         Assert.assertEquals(expected, actual);
-        Verify.assertThrows(NoSuchElementException.class, (Runnable) iterator::next);
+        Assert.assertThrows(NoSuchElementException.class, iterator::next);
     }
 
     @Override
@@ -387,5 +387,155 @@ public abstract class AbstractByteSetTestCase extends AbstractMutableByteCollect
     public void classIsNonInstantiable()
     {
         Verify.assertClassNonInstantiable(ByteSets.class);
+    }
+
+    @Test
+    public void union()
+    {
+        this.assertUnion(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 1, (byte) 2, (byte) 3, (byte) 4, (byte) 5));
+
+        this.assertUnion(
+                this.newWith((byte) 1, (byte) 2, (byte) 3, (byte) 6),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 1, (byte) 2, (byte) 3, (byte) 4, (byte) 5, (byte) 6));
+
+        this.assertUnion(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 3, (byte) 4, (byte) 5, (byte) 6),
+                this.newWith((byte) 1, (byte) 2, (byte) 3, (byte) 4, (byte) 5, (byte) 6));
+
+        this.assertUnion(
+                this.newWith(),
+                this.newWith(),
+                this.newWith());
+
+        this.assertUnion(
+                this.newWith(),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 3, (byte) 4, (byte) 5));
+
+        this.assertUnion(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith(),
+                this.newWith((byte) 1, (byte) 2, (byte) 3));
+    }
+
+    private void assertUnion(MutableByteSet set1, MutableByteSet set2, MutableByteSet expected)
+    {
+        MutableByteSet actual = set1.union(set2);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void intersect()
+    {
+        this.assertIntersect(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 3));
+
+        this.assertIntersect(
+                this.newWith((byte) 1, (byte) 2, (byte) 3, (byte) 6),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 3));
+
+        this.assertIntersect(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 3, (byte) 4, (byte) 5, (byte) 6),
+                this.newWith((byte) 3));
+
+        this.assertIntersect(
+                this.newWith(),
+                this.newWith(),
+                this.newWith());
+
+        this.assertIntersect(
+                this.newWith(),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith());
+
+        this.assertIntersect(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith(),
+                this.newWith());
+    }
+
+    private void assertIntersect(MutableByteSet set1, MutableByteSet set2, MutableByteSet expected)
+    {
+        MutableByteSet actual = set1.intersect(set2);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void difference()
+    {
+        this.assertDifference(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 1, (byte) 2));
+
+        this.assertDifference(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith());
+
+        this.assertDifference(
+                this.newWith(),
+                this.newWith(),
+                this.newWith());
+
+        this.assertDifference(
+                this.newWith(),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith());
+
+        this.assertDifference(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith(),
+                this.newWith((byte) 1, (byte) 2, (byte) 3));
+    }
+
+    private void assertDifference(MutableByteSet set1, MutableByteSet set2, MutableByteSet expected)
+    {
+        MutableByteSet actual = set1.difference(set2);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void symmetricDifference()
+    {
+        this.assertSymmetricDifference(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 2, (byte) 3, (byte) 4),
+                this.newWith((byte) 1, (byte) 4));
+
+        this.assertSymmetricDifference(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith());
+
+        this.assertSymmetricDifference(
+                this.newWith(),
+                this.newWith(),
+                this.newWith());
+
+        this.assertSymmetricDifference(
+                this.newWith(),
+                this.newWith((byte) 3, (byte) 4, (byte) 5),
+                this.newWith((byte) 3, (byte) 4, (byte) 5));
+
+        this.assertSymmetricDifference(
+                this.newWith((byte) 1, (byte) 2, (byte) 3),
+                this.newWith(),
+                this.newWith((byte) 1, (byte) 2, (byte) 3));
+    }
+
+    private void assertSymmetricDifference(MutableByteSet set1, MutableByteSet set2, MutableByteSet expected)
+    {
+        MutableByteSet actual = set1.symmetricDifference(set2);
+        Assert.assertEquals(expected, actual);
     }
 }

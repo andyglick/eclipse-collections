@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.eclipse.collections</groupId>
-    <version>10.0.0-SNAPSHOT</version>
+    <version>11.0.0-SNAPSHOT</version>
     <artifactId>p2-feature</artifactId>
     <packaging>pom</packaging>
 
@@ -28,8 +28,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- versions used for plug-ins below -->
-        <tycho-version>1.2.0</tycho-version>
-        <tycho-extras-version>1.2.0</tycho-extras-version>
+        <tycho-version>1.7.0</tycho-version>
+        <tycho-extras-version>1.7.0</tycho-extras-version>
 
         <!-- pattern/format used for the qualifier -->
         <qualifier.format>'v'yyyyMMdd-HHmm</qualifier.format>
@@ -37,7 +37,7 @@
         <!-- by default complain if working tree is dirty (error|warning|ignore) -->
         <dirtyWorkingTree>warning</dirtyWorkingTree>
 
-        <collections.repository.url>file://${project.basedir}/../p2-repository/org.eclipse.collections/target/repository</collections.repository.url>
+        <collections.repository.url>file:///${project.basedir}/../../p2-repository/org.eclipse.collections/target/repository</collections.repository.url>
     </properties>
 
     <build>
@@ -176,7 +176,7 @@
     <repositories>
         <repository>
             <id>eclipse.license</id>
-            <url>http://download.eclipse.org/cbi/updates/license/</url>
+            <url>https://download.eclipse.org/cbi/updates/license/</url>
             <layout>p2</layout>
         </repository>
         <repository>
@@ -185,5 +185,12 @@
             <layout>p2</layout>
         </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>cbi-releases</id>
+            <url>https://repo.eclipse.org/content/repositories/cbi-releases/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>

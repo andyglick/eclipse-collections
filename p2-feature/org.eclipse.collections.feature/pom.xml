@@ -15,13 +15,10 @@
     <parent>
         <groupId>org.eclipse.collections</groupId>
         <artifactId>p2-feature</artifactId>
-        <version>10.0.0-SNAPSHOT</version>
+        <version>11.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>org.eclipse.collections.feature</artifactId>
     <packaging>eclipse-feature</packaging>
-    <properties>
-       <collections.repository.url>file://${project.basedir}/../../p2-repository/org.eclipse.collections/target/repository</collections.repository.url>
-    </properties>
     <build>
         <plugins>
             <plugin>
@@ -49,6 +46,20 @@
                         <goals>
                             <goal>p2-metadata</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.cbi.maven.plugins</groupId>
+                <artifactId>eclipse-jarsigner-plugin</artifactId>
+                <version>1.1.3</version>
+                <executions>
+                  <execution>
+                      <id>sign</id>
+                      <phase>verify</phase>
+                      <goals>
+                          <goal>sign</goal>
+                      </goals>
                     </execution>
                 </executions>
             </plugin>

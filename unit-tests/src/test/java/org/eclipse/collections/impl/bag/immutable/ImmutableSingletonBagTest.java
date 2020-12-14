@@ -96,6 +96,52 @@ public class ImmutableSingletonBagTest extends ImmutableBagTestCase
 
     @Override
     @Test
+    public void anySatisfyWithOccurrences()
+    {
+        ImmutableBag<String> bag = this.newBag();
+        Assert.assertTrue(bag.anySatisfyWithOccurrences((object, value) -> object.equals(VAL)));
+        Assert.assertTrue(bag.anySatisfyWithOccurrences((object, value) -> object.equals(VAL) && value == 1));
+        Assert.assertFalse(bag.anySatisfyWithOccurrences((object, value) -> object.equals(VAL) && value == 10));
+        Assert.assertFalse(bag.anySatisfyWithOccurrences((object, value) -> object.equals(NOT_VAL) && value == 10));
+        Assert.assertFalse(bag.anySatisfyWithOccurrences((object, value) -> object.equals(NOT_VAL)));
+    }
+
+    @Override
+    @Test
+    public void allSatisfyWithOccurrences()
+    {
+        ImmutableBag<String> bag = this.newBag();
+        Assert.assertTrue(bag.allSatisfyWithOccurrences((object, value) -> object.equals(VAL)));
+        Assert.assertTrue(bag.allSatisfyWithOccurrences((object, value) -> object.equals(VAL) && value == 1));
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(VAL) && value == 10));
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(NOT_VAL) && value == 10));
+        Assert.assertFalse(bag.allSatisfyWithOccurrences((object, value) -> object.equals(NOT_VAL)));
+    }
+
+    @Override
+    @Test
+    public void noneSatisfyWithOccurrences()
+    {
+        ImmutableBag<String> bag = this.newBag();
+        Assert.assertFalse(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(VAL)));
+        Assert.assertFalse(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(VAL) && value == 1));
+        Assert.assertTrue(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(NOT_VAL)));
+        Assert.assertTrue(bag.noneSatisfyWithOccurrences((object, value) -> object.equals(NOT_VAL) && value == 1));
+    }
+
+    @Override
+    @Test
+    public void detectWithOccurrences()
+    {
+        ImmutableBag<String> bag = this.newBag();
+        Assert.assertEquals(VAL, bag.detectWithOccurrences((object, value) -> object.equals(VAL)));
+        Assert.assertEquals(VAL, bag.detectWithOccurrences((object, value) -> object.equals(VAL) && value == 1));
+        Assert.assertNull(bag.detectWithOccurrences((object, value) -> object.equals(NOT_VAL)));
+        Assert.assertNull(bag.detectWithOccurrences((object, value) -> object.equals(NOT_VAL) && value == 1));
+    }
+
+    @Override
+    @Test
     public void allSatisfy()
     {
         super.allSatisfy();
@@ -420,7 +466,7 @@ public class ImmutableSingletonBagTest extends ImmutableBagTestCase
     {
         Assert.assertEquals("1", this.newBag().detectOptional("1"::equals).get());
         Assert.assertNotNull(this.newBag().detectOptional("2"::equals));
-        Verify.assertThrows(NoSuchElementException.class, () -> this.newBag().detectOptional("2"::equals).get());
+        Assert.assertThrows(NoSuchElementException.class, () -> this.newBag().detectOptional("2"::equals).get());
     }
 
     @Override
@@ -438,7 +484,7 @@ public class ImmutableSingletonBagTest extends ImmutableBagTestCase
     {
         Assert.assertEquals("1", this.newBag().detectWithOptional(Object::equals, "1").get());
         Assert.assertNotNull(this.newBag().detectWithOptional(Object::equals, "2"));
-        Verify.assertThrows(NoSuchElementException.class, () -> this.newBag().detectWithOptional(Object::equals, "2").get());
+        Assert.assertThrows(NoSuchElementException.class, () -> this.newBag().detectWithOptional(Object::equals, "2").get());
     }
 
     @Override
@@ -530,7 +576,8 @@ public class ImmutableSingletonBagTest extends ImmutableBagTestCase
     public void testForEachWithOccurrences()
     {
         Object[] results = new Object[2];
-        this.newBag().forEachWithOccurrences((each, index) -> {
+        this.newBag().forEachWithOccurrences((each, index) ->
+        {
             results[0] = each;
             results[1] = index;
         });
@@ -573,7 +620,8 @@ public class ImmutableSingletonBagTest extends ImmutableBagTestCase
     {
         super.forEachWithIndex();
         Object[] results = new Object[2];
-        this.newBag().forEachWithIndex((each, index) -> {
+        this.newBag().forEachWithIndex((each, index) ->
+        {
             results[0] = each;
             results[1] = index;
         });
@@ -608,7 +656,8 @@ public class ImmutableSingletonBagTest extends ImmutableBagTestCase
     {
         super.forEachWith();
         Object[] results = new Object[2];
-        this.newBag().forEachWith((each, index) -> {
+        this.newBag().forEachWith((each, index) ->
+        {
             results[0] = each;
             results[1] = index;
         }, "second");

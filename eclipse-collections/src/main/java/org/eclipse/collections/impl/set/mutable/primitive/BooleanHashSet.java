@@ -24,6 +24,7 @@ import org.eclipse.collections.api.block.function.primitive.BooleanToObjectFunct
 import org.eclipse.collections.api.block.function.primitive.ObjectBooleanToObjectFunction;
 import org.eclipse.collections.api.block.predicate.primitive.BooleanPredicate;
 import org.eclipse.collections.api.block.procedure.primitive.BooleanProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.iterator.BooleanIterator;
 import org.eclipse.collections.api.iterator.MutableBooleanIterator;
 import org.eclipse.collections.api.list.MutableList;
@@ -34,7 +35,6 @@ import org.eclipse.collections.api.set.primitive.ImmutableBooleanSet;
 import org.eclipse.collections.api.set.primitive.MutableBooleanSet;
 import org.eclipse.collections.impl.bag.mutable.primitive.BooleanHashBag;
 import org.eclipse.collections.impl.block.factory.primitive.BooleanPredicates;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.BooleanSets;
 import org.eclipse.collections.impl.lazy.primitive.LazyBooleanIterableAdapter;
 import org.eclipse.collections.impl.list.mutable.primitive.BooleanArrayList;
@@ -218,6 +218,15 @@ public class BooleanHashSet implements MutableBooleanSet, Externalizable
         }
 
         return BooleanHashSet.newSetWith(source.toArray());
+    }
+
+    /**
+     * @since 11.0.
+     */
+    @Override
+    public BooleanHashSet newEmpty()
+    {
+        return new BooleanHashSet();
     }
 
     @Override
@@ -599,6 +608,43 @@ public class BooleanHashSet implements MutableBooleanSet, Externalizable
                 return new boolean[]{true};
             case 3:
                 return new boolean[]{false, true};
+            default:
+                throw new AssertionError("Invalid state");
+        }
+    }
+
+    @Override
+    public boolean[] toArray(boolean[] target)
+    {
+        int requiredSize = 0;
+        if (this.state == 1 || this.state == 2)
+        {
+            requiredSize = 1;
+        }
+        else if (this.state == 3)
+        {
+            requiredSize = 2;
+        }
+
+        if (target.length < requiredSize)
+        {
+            target = new boolean[requiredSize];
+        }
+
+        switch (this.state)
+        {
+            case 0:
+                return target;
+            case 1:
+                target[0] = false;
+                return target;
+            case 2:
+                target[0] = true;
+                return target;
+            case 3:
+                target[0] = false;
+                target[1] = true;
+                return target;
             default:
                 throw new AssertionError("Invalid state");
         }

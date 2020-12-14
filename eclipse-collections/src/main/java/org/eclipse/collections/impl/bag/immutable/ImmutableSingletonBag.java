@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.collections.api.bag.Bag;
@@ -27,9 +28,12 @@ import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFun
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
+import org.eclipse.collections.api.block.predicate.primitive.ObjectIntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Bags;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.api.multimap.bag.ImmutableBagMultimap;
@@ -37,11 +41,8 @@ import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.procedure.MultimapEachPutProcedure;
-import org.eclipse.collections.impl.factory.Bags;
-import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.multimap.bag.HashBagMultimap;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -186,7 +187,7 @@ final class ImmutableSingletonBag<T>
     @Override
     public boolean contains(Object object)
     {
-        return Comparators.nullSafeEquals(this.value, object);
+        return Objects.equals(this.value, object);
     }
 
     @Override
@@ -393,13 +394,37 @@ final class ImmutableSingletonBag<T>
     @Override
     public int occurrencesOf(Object item)
     {
-        return Comparators.nullSafeEquals(this.value, item) ? 1 : 0;
+        return Objects.equals(this.value, item) ? 1 : 0;
     }
 
     @Override
     public void forEachWithOccurrences(ObjectIntProcedure<? super T> objectIntProcedure)
     {
         objectIntProcedure.value(this.value, 1);
+    }
+
+    @Override
+    public boolean anySatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        return predicate.accept(this.value, 1);
+    }
+
+    @Override
+    public boolean allSatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        return predicate.accept(this.value, 1);
+    }
+
+    @Override
+    public boolean noneSatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        return !predicate.accept(this.value, 1);
+    }
+
+    @Override
+    public T detectWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        return predicate.accept(this.value, 1) ? this.value : null;
     }
 
     @Override

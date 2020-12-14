@@ -1,5 +1,10 @@
+# maven
 target/
-.maven
+.maven/
+.m2/
+dependency-reduced-pom.xml
+pom.xml.versionsBackup
+>>>>>>> parent/master
 .mvn/wrapper/
 mvnw
 mvnw.cmd
@@ -11,6 +16,8 @@ test-coverage/**
 *.ipr
 *.iws
 .idea/
+
+*.log
 
 # https://raw.githubusercontent.com/github/gitignore/master/Global/JetBrains.gitignore
 

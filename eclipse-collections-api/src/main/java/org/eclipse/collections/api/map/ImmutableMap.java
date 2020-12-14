@@ -10,6 +10,8 @@
 
 package org.eclipse.collections.api.map;
 
+import java.util.Map;
+
 import org.eclipse.collections.api.bag.ImmutableBag;
 import org.eclipse.collections.api.bag.primitive.ImmutableBooleanBag;
 import org.eclipse.collections.api.bag.primitive.ImmutableByteBag;
@@ -34,6 +36,7 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.Procedure2;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.multimap.bag.ImmutableBagMultimap;
 import org.eclipse.collections.api.multimap.set.ImmutableSetMultimap;
 import org.eclipse.collections.api.ordered.OrderedIterable;
@@ -53,6 +56,12 @@ public interface ImmutableMap<K, V>
 
     @Override
     ImmutableMap<K, V> newWithAllKeyValues(Iterable<? extends Pair<? extends K, ? extends V>> keyValues);
+
+    @Override
+    ImmutableMap<K, V> newWithMap(Map<? extends K, ? extends V> map);
+
+    @Override
+    ImmutableMap<K, V> newWithMapIterable(MapIterable<? extends K, ? extends V> mapIterable);
 
     @Override
     ImmutableMap<K, V> newWithAllKeyValueArguments(Pair<? extends K, ? extends V>... keyValuePairs);
@@ -170,19 +179,55 @@ public interface ImmutableMap<K, V>
     <VV> ImmutableBagMultimap<VV, V> groupByEach(Function<? super V, ? extends Iterable<VV>> function);
 
     @Override
-    <V1> ImmutableMap<V1, V> groupByUniqueKey(Function<? super V, ? extends V1> function);
+    default <V1> ImmutableMap<V1, V> groupByUniqueKey(Function<? super V, ? extends V1> function)
+    {
+        MutableMap<V1, V> target = Maps.mutable.withInitialCapacity(this.size());
+        return this.groupByUniqueKey(function, target).toImmutable();
+    }
 
     @Override
-    <K2, V2> ImmutableMap<K2, V2> aggregateInPlaceBy(
-            Function<? super V, ? extends K2> groupBy,
-            Function0<? extends V2> zeroValueFactory,
-            Procedure2<? super V2, ? super V> mutatingAggregator);
+    default <KK, VV> ImmutableMap<KK, VV> aggregateInPlaceBy(
+            Function<? super V, ? extends KK> groupBy,
+            Function0<? extends VV> zeroValueFactory,
+            Procedure2<? super VV, ? super V> mutatingAggregator)
+    {
+        MutableMap<KK, VV> map = Maps.mutable.empty();
+        this.forEach(each ->
+        {
+            KK key = groupBy.valueOf(each);
+            VV value = map.getIfAbsentPut(key, zeroValueFactory);
+            mutatingAggregator.value(value, each);
+        });
+        return map.toImmutable();
+    }
 
     @Override
-    <K2, V2> ImmutableMap<K2, V2> aggregateBy(
-            Function<? super V, ? extends K2> groupBy,
+    default <KK, VV> ImmutableMap<KK, VV> aggregateBy(
+            Function<? super V, ? extends KK> groupBy,
+            Function0<? extends VV> zeroValueFactory,
+            Function2<? super VV, ? super V, ? extends VV> nonMutatingAggregator)
+    {
+        MutableMap<KK, VV> map = this.aggregateBy(
+                groupBy,
+                zeroValueFactory,
+                nonMutatingAggregator,
+                Maps.mutable.empty());
+        return map.toImmutable();
+    }
+
+    @Override
+    default <K1, V1, V2> ImmutableMap<K1, V2> aggregateBy(
+            Function<? super K, ? extends K1> keyFunction,
+            Function<? super V, ? extends V1> valueFunction,
             Function0<? extends V2> zeroValueFactory,
-            Function2<? super V2, ? super V, ? extends V2> nonMutatingAggregator);
+            Function2<? super V2, ? super V1, ? extends V2> nonMutatingAggregator)
+    {
+        MutableMap<K1, V2> map = Maps.mutable.empty();
+        this.forEachKeyValue((key, value) -> {
+            map.updateValueWith(keyFunction.valueOf(key), zeroValueFactory, nonMutatingAggregator, valueFunction.valueOf(value));
+        });
+        return map.toImmutable();
+    }
 
     @Override
     ImmutableMap<V, K> flipUniqueValues();

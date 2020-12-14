@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Goldman Sachs.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -24,6 +24,7 @@ import org.eclipse.collections.api.LazyIterable;
 import org.eclipse.collections.api.block.function.Function0;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Twin;
@@ -116,9 +117,13 @@ public class FastListTest extends AbstractListTestCase
     }
 
     @Test
-    public void testWrapCopy()
+    public void wrapCopy()
     {
-        Assert.assertEquals(this.newWith(1, 2, 3, 4), FastList.wrapCopy(1, 2, 3, 4));
+        Integer[] integers = {1, 2, 3, 4};
+        FastList<Integer> actual = FastList.wrapCopy(integers);
+        FastList<Integer> expected = this.newWith(1, 2, 3, 4);
+        integers[0] = Integer.valueOf(4);
+        Assert.assertEquals(expected, actual);
     }
 
     @Override
@@ -503,6 +508,7 @@ public class FastListTest extends AbstractListTestCase
         Verify.assertContainsAll(objects6, 1, 3);
     }
 
+    @SuppressWarnings("StringOperationCanBeSimplified")
     @Test
     public void testRemoveAllWithWeakReference()
     {
@@ -695,7 +701,7 @@ public class FastListTest extends AbstractListTestCase
         Assert.assertTrue(integers2.addAll(mSet(5)));
         Verify.assertListsEqual(FastList.newListWith(0, 1, 2, 3, 4, 1, 2, 3, 4, 5), integers2);
 
-        Verify.assertThrows(IndexOutOfBoundsException.class, () -> FastList.newList().addAll(1, null));
+        Assert.assertThrows(IndexOutOfBoundsException.class, () -> FastList.newList().addAll(1, null));
     }
 
     @Override
@@ -789,7 +795,7 @@ public class FastListTest extends AbstractListTestCase
         FastList<Integer> midList = FastList.<Integer>newList(2).with(1, 3);
         midList.add(1, 2);
         Verify.assertStartsWith(midList, 1, 2, 3);
-        Verify.assertThrows(IndexOutOfBoundsException.class, () -> midList.add(-1, -1));
+        Assert.assertThrows(IndexOutOfBoundsException.class, () -> midList.add(-1, -1));
     }
 
     @Test
@@ -875,7 +881,7 @@ public class FastListTest extends AbstractListTestCase
     public void testOutOfBoundsCondition()
     {
         MutableList<Integer> integers = this.newWith(1, 2, 3, 4);
-        Verify.assertThrows(IndexOutOfBoundsException.class, () -> integers.get(4));
+        Assert.assertThrows(IndexOutOfBoundsException.class, () -> integers.get(4));
     }
 
     @Override
@@ -1196,6 +1202,15 @@ public class FastListTest extends AbstractListTestCase
         Assert.assertEquals(
                 FastList.newListWith(42, 10, 11, 12),
                 FastList.newListWith(42).withAll(Interval.from(10).to(12).toList()));
+    }
+
+    @Test
+    public void unoptimizedListToImmutable()
+    {
+        FastList<String> list = FastList.newListWith(
+                "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15");
+        ImmutableList<String> immutableList = list.toImmutable();
+        Verify.assertIterablesEqual(immutableList, list);
     }
 
     @Test(expected = NoSuchElementException.class)

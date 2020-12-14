@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Goldman Sachs and others.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -62,6 +62,7 @@ import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.collection.primitive.MutableLongCollection;
 import org.eclipse.collections.api.collection.primitive.MutableShortCollection;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.map.MutableMapIterable;
 import org.eclipse.collections.api.map.primitive.MutableObjectDoubleMap;
@@ -328,12 +329,6 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
-    public void forEach(Procedure<? super V> procedure)
-    {
-        this.each(procedure);
-    }
-
-    @Override
     public void forEachWithIndex(ObjectIntProcedure<? super V> objectIntProcedure)
     {
         this.delegate.forEachWithIndex(objectIntProcedure);
@@ -586,6 +581,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
+    public <R extends MutableBooleanCollection> R flatCollectBoolean(
+            Function<? super V, ? extends BooleanIterable> function, R target)
+    {
+        return this.delegate.flatCollectBoolean(function, target);
+    }
+
+    @Override
     public ByteIterable collectByte(ByteFunction<? super V> byteFunction)
     {
         return this.delegate.collectByte(byteFunction);
@@ -595,6 +597,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public <R extends MutableByteCollection> R collectByte(ByteFunction<? super V> byteFunction, R target)
     {
         return this.delegate.collectByte(byteFunction, target);
+    }
+
+    @Override
+    public <R extends MutableByteCollection> R flatCollectByte(
+            Function<? super V, ? extends ByteIterable> function, R target)
+    {
+        return this.delegate.flatCollectByte(function, target);
     }
 
     @Override
@@ -610,6 +619,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
+    public <R extends MutableCharCollection> R flatCollectChar(
+            Function<? super V, ? extends CharIterable> function, R target)
+    {
+        return this.delegate.flatCollectChar(function, target);
+    }
+
+    @Override
     public DoubleIterable collectDouble(DoubleFunction<? super V> doubleFunction)
     {
         return this.delegate.collectDouble(doubleFunction);
@@ -619,6 +635,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public <R extends MutableDoubleCollection> R collectDouble(DoubleFunction<? super V> doubleFunction, R target)
     {
         return this.delegate.collectDouble(doubleFunction, target);
+    }
+
+    @Override
+    public <R extends MutableDoubleCollection> R flatCollectDouble(
+            Function<? super V, ? extends DoubleIterable> function, R target)
+    {
+        return this.delegate.flatCollectDouble(function, target);
     }
 
     @Override
@@ -634,6 +657,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
+    public <R extends MutableFloatCollection> R flatCollectFloat(
+            Function<? super V, ? extends FloatIterable> function, R target)
+    {
+        return this.delegate.flatCollectFloat(function, target);
+    }
+
+    @Override
     public IntIterable collectInt(IntFunction<? super V> intFunction)
     {
         return this.delegate.collectInt(intFunction);
@@ -643,6 +673,14 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public <R extends MutableIntCollection> R collectInt(IntFunction<? super V> intFunction, R target)
     {
         return this.delegate.collectInt(intFunction, target);
+    }
+
+    @Override
+    public <R extends MutableIntCollection> R flatCollectInt(
+            Function<? super V, ? extends IntIterable> function,
+            R target)
+    {
+        return this.delegate.flatCollectInt(function, target);
     }
 
     @Override
@@ -658,6 +696,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
+    public <R extends MutableLongCollection> R flatCollectLong(
+            Function<? super V, ? extends LongIterable> function, R target)
+    {
+        return this.delegate.flatCollectLong(function, target);
+    }
+
+    @Override
     public ShortIterable collectShort(ShortFunction<? super V> shortFunction)
     {
         return this.delegate.collectShort(shortFunction);
@@ -667,6 +712,13 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public <R extends MutableShortCollection> R collectShort(ShortFunction<? super V> shortFunction, R target)
     {
         return this.delegate.collectShort(shortFunction, target);
+    }
+
+    @Override
+    public <R extends MutableShortCollection> R flatCollectShort(
+            Function<? super V, ? extends ShortIterable> function, R target)
+    {
+        return this.delegate.flatCollectShort(function, target);
     }
 
     @Override
@@ -1018,6 +1070,16 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     }
 
     @Override
+    public <K1, V1, V2> MutableMap<K1, V2> aggregateBy(
+            Function<? super K, ? extends K1> keyFunction,
+            Function<? super V, ? extends V1> valueFunction,
+            Function0<? extends V2> zeroValueFactory,
+            Function2<? super V2, ? super V1, ? extends V2> nonMutatingAggregator)
+    {
+        return this.delegate.aggregateBy(keyFunction, valueFunction, zeroValueFactory, nonMutatingAggregator);
+    }
+
+    @Override
     public <V1> MutableSetMultimap<V1, V> groupBy(Function<? super V, ? extends V1> function)
     {
         return this.delegate.groupBy(function);
@@ -1153,6 +1215,24 @@ public class UnmodifiableBiMap<K, V> implements MutableBiMap<K, V>, Serializable
     public MutableBiMap<K, V> withKeyValue(K key, V value)
     {
         throw new UnsupportedOperationException("Cannot call withKeyValue() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public MutableBiMap<K, V> withMap(Map<? extends K, ? extends V> map)
+    {
+        throw new UnsupportedOperationException("Cannot call withMap() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public MutableBiMap<K, V> withMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        throw new UnsupportedOperationException("Cannot call withMapIterable() on " + this.getClass().getSimpleName());
+    }
+
+    @Override
+    public void putAllMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        throw new UnsupportedOperationException("Cannot call putAllMapIterable() on " + this.getClass().getSimpleName());
     }
 
     @Override

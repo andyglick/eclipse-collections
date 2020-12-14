@@ -15,7 +15,6 @@ import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.block.factory.Predicates2;
 import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.test.Verify;
 import org.eclipse.collections.test.IterableTestCase;
 import org.eclipse.collections.test.RichIterableUniqueTestCase;
 import org.junit.Assert;
@@ -43,7 +42,7 @@ public interface MutableCollectionUniqueTestCase extends MutableCollectionTestCa
         Assert.assertFalse(collection3.removeIf(Predicates.equal(5)));
 
         Predicate<Object> predicate = null;
-        Verify.assertThrows(NullPointerException.class, () -> this.newWith(7, 4, 5, 1).removeIf(predicate));
+        Assert.assertThrows(NullPointerException.class, () -> this.newWith(7, 4, 5, 1).removeIf(predicate));
     }
 
     @Override
@@ -51,7 +50,7 @@ public interface MutableCollectionUniqueTestCase extends MutableCollectionTestCa
     default void MutableCollection_removeIfWith()
     {
         MutableCollection<Integer> collection = this.newWith(5, 4, 3, 2, 1);
-        collection.removeIfWith(Predicates2.<Integer>in(), Lists.immutable.with(5, 3, 1));
+        collection.removeIfWith(Predicates2.in(), Lists.immutable.with(5, 3, 1));
         IterableTestCase.assertEquals(this.getExpectedFiltered(4, 2), collection);
 
         MutableCollection<Integer> collection2 = this.newWith(1, 2, 3, 4);
@@ -62,7 +61,7 @@ public interface MutableCollectionUniqueTestCase extends MutableCollectionTestCa
         MutableCollection<Integer> collection3 = this.newWith();
         Assert.assertFalse(collection3.removeIf(Predicates.equal(5)));
 
-        Verify.assertThrows(NullPointerException.class, () -> this.newWith(7, 4, 5, 1).removeIf(Predicates.cast(null)));
+        Assert.assertThrows(NullPointerException.class, () -> this.newWith(7, 4, 5, 1).removeIf(Predicates.cast(null)));
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Goldman Sachs.
+ * Copyright (c) 2019 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -10,6 +10,8 @@
 
 package org.eclipse.collections.impl.list;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -35,6 +37,7 @@ import org.eclipse.collections.api.block.procedure.primitive.IntIntProcedure;
 import org.eclipse.collections.api.block.procedure.primitive.IntObjectProcedure;
 import org.eclipse.collections.api.block.procedure.primitive.IntProcedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
@@ -42,7 +45,6 @@ import org.eclipse.collections.impl.block.procedure.CollectProcedure;
 import org.eclipse.collections.impl.block.procedure.CollectionAddProcedure;
 import org.eclipse.collections.impl.block.procedure.RejectProcedure;
 import org.eclipse.collections.impl.block.procedure.SelectProcedure;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.lazy.AbstractLazyIterable;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.mutable.MutableListIterator;
@@ -61,12 +63,14 @@ public final class Interval
     private final int from;
     private final int to;
     private final int step;
+    private transient int size;
 
     private Interval(int from, int to, int step)
     {
         this.from = from;
         this.to = to;
         this.step = step;
+        this.size = IntervalUtils.intSize(this.from, this.to, this.step);
     }
 
     /**
@@ -177,6 +181,29 @@ public final class Interval
     }
 
     /**
+     * Returns an Interval starting from the value from until the specified value to (exclusive) with a step value of 1
+     */
+    public static Interval fromToExclusive(int from, int to)
+    {
+        if (from == to)
+        {
+            if (to == Integer.MIN_VALUE)
+            {
+                throw new IllegalArgumentException("to cannot be the Integer minimum value " + Integer.MIN_VALUE);
+            }
+
+            return Interval.fromToBy(from, to - 1, -1);
+        }
+
+        if (from < to)
+        {
+            return Interval.fromToBy(from, to - 1, 1);
+        }
+
+        return Interval.fromToBy(from, to + 1, -1);
+    }
+
+    /**
      * Returns an Interval representing the even values from the value from to the value to.
      */
     public static Interval evensFromTo(int from, int to)
@@ -273,14 +300,7 @@ public final class Interval
      */
     public static Interval fromToBy(int from, int to, int stepBy)
     {
-        if (stepBy == 0)
-        {
-            throw new IllegalArgumentException("Cannot use a step by of 0");
-        }
-        if (from > to && stepBy > 0 || from < to && stepBy < 0)
-        {
-            throw new IllegalArgumentException("Step by is incorrect for the range");
-        }
+        IntervalUtils.checkArguments(from, to, stepBy);
         return new Interval(from, to, stepBy);
     }
 
@@ -325,13 +345,7 @@ public final class Interval
      */
     public boolean contains(int value)
     {
-        return this.isWithinBoundaries(value) && (value - this.from) % this.step == 0;
-    }
-
-    private boolean isWithinBoundaries(int value)
-    {
-        return this.step > 0 && this.from <= value && value <= this.to
-                || this.step < 0 && this.to <= value && value <= this.from;
+        return IntervalUtils.contains(value, this.from, this.to, this.step);
     }
 
     /**
@@ -372,16 +386,16 @@ public final class Interval
         int index = 0;
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                procedure.value(i, index++);
+                procedure.value((int) i, index++);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                procedure.value(i, index++);
+                procedure.value((int) i, index++);
             }
         }
     }
@@ -396,16 +410,16 @@ public final class Interval
     {
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                procedure.value(i, parameter);
+                procedure.value((int) i, parameter);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                procedure.value(i, parameter);
+                procedure.value((int) i, parameter);
             }
         }
     }
@@ -425,16 +439,16 @@ public final class Interval
     {
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                procedure.value(i);
+                procedure.value((int) i);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                procedure.value(i);
+                procedure.value((int) i);
             }
         }
     }
@@ -455,17 +469,17 @@ public final class Interval
         if (this.goForward())
         {
             // Iterates in forward direction because step value is negative
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                this.executeAndCountdown(procedure, executor, latch, i);
+                this.executeAndCountdown(procedure, executor, latch, (int) i);
             }
         }
         else
         {
             // Iterates in reverse because step value is negative
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                this.executeAndCountdown(procedure, executor, latch, i);
+                this.executeAndCountdown(procedure, executor, latch, (int) i);
             }
         }
         try
@@ -503,14 +517,14 @@ public final class Interval
     {
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
                 runnable.run();
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
                 runnable.run();
             }
@@ -525,14 +539,14 @@ public final class Interval
     {
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
                 executor.execute(runnable);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
                 executor.execute(runnable);
             }
@@ -545,16 +559,16 @@ public final class Interval
         R result = injectValue;
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                result = function.value(result, i);
+                result = function.value(result, (int) i);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                result = function.value(result, i);
+                result = function.value(result, (int) i);
             }
         }
         return result;
@@ -566,16 +580,16 @@ public final class Interval
         int result = injectedValue;
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                result = function.intValueOf(result, i);
+                result = function.intValueOf(result, (int) i);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                result = function.intValueOf(result, i);
+                result = function.intValueOf(result, (int) i);
             }
         }
         return result;
@@ -587,16 +601,16 @@ public final class Interval
         long result = injectedValue;
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                result = function.longValueOf(result, i);
+                result = function.longValueOf(result, (int) i);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                result = function.longValueOf(result, i);
+                result = function.longValueOf(result, (int) i);
             }
         }
         return result;
@@ -608,16 +622,16 @@ public final class Interval
         double result = injectedValue;
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                result = function.doubleValueOf(result, i);
+                result = function.doubleValueOf(result, (int) i);
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                result = function.doubleValueOf(result, i);
+                result = function.doubleValueOf(result, (int) i);
             }
         }
         return result;
@@ -688,10 +702,10 @@ public final class Interval
         ListIterator<?> listIterator = ((List<?>) otherList).listIterator();
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to && listIterator.hasNext(); i += this.step)
+            for (long i = this.from; i <= this.to && listIterator.hasNext(); i += this.step)
             {
                 Object object = listIterator.next();
-                if (this.intObjectNotEqual(i, object))
+                if (this.intObjectNotEqual((int) i, object))
                 {
                     return false;
                 }
@@ -699,10 +713,10 @@ public final class Interval
         }
         else
         {
-            for (int i = this.from; i >= this.to && listIterator.hasNext(); i += this.step)
+            for (long i = this.from; i >= this.to && listIterator.hasNext(); i += this.step)
             {
                 Object object = listIterator.next();
-                if (this.intObjectNotEqual(i, object))
+                if (this.intObjectNotEqual((int) i, object))
                 {
                     return false;
                 }
@@ -723,16 +737,16 @@ public final class Interval
         int hashCode = 1;
         if (this.goForward())
         {
-            for (int i = this.from; i <= this.to; i += this.step)
+            for (long i = this.from; i <= this.to; i += this.step)
             {
-                hashCode = 31 * hashCode + i;
+                hashCode = 31 * hashCode + (int) i;
             }
         }
         else
         {
-            for (int i = this.from; i >= this.to; i += this.step)
+            for (long i = this.from; i >= this.to; i += this.step)
             {
-                hashCode = 31 * hashCode + i;
+                hashCode = 31 * hashCode + (int) i;
             }
         }
         return hashCode;
@@ -747,12 +761,12 @@ public final class Interval
     }
 
     /**
-     * Calculates and returns the size of the interval.
+     * Returns the size of the interval.
      */
     @Override
     public int size()
     {
-        return (this.to - this.from) / this.step + 1;
+        return this.size;
     }
 
     @Override
@@ -764,7 +778,7 @@ public final class Interval
     }
 
     /**
-     * Converts the interval to an Integer array
+     * Converts the interval to an Integer array.
      */
     public int[] toIntArray()
     {
@@ -787,16 +801,16 @@ public final class Interval
 
     private class IntegerIterator implements Iterator<Integer>
     {
-        private int current = Interval.this.from;
+        private long current = Interval.this.from;
 
         @Override
         public boolean hasNext()
         {
             if (Interval.this.from <= Interval.this.to)
             {
-                return this.current <= Interval.this.to;
+                return this.current <= (long) Interval.this.to;
             }
-            return this.current >= Interval.this.to;
+            return this.current >= (long) Interval.this.to;
         }
 
         @Override
@@ -804,7 +818,7 @@ public final class Interval
         {
             if (this.hasNext())
             {
-                Integer result = this.current;
+                Integer result = (int) this.current;
                 this.current += Interval.this.step;
                 return result;
             }
@@ -827,7 +841,7 @@ public final class Interval
     @Override
     public Integer getLast()
     {
-        return this.locationAfterN(this.size() - 1);
+        return this.valueAtIndex(this.size() - 1);
     }
 
     public void forEach(Procedure<? super Integer> procedure, int startIndex, int endIndex)
@@ -839,14 +853,14 @@ public final class Interval
         {
             for (int i = startIndex; i <= endIndex; i++)
             {
-                procedure.value(this.locationAfterN(i));
+                procedure.value(this.valueAtIndex(i));
             }
         }
         else
         {
             for (int i = startIndex; i >= endIndex; i--)
             {
-                procedure.value(this.locationAfterN(i));
+                procedure.value(this.valueAtIndex(i));
             }
         }
     }
@@ -860,14 +874,14 @@ public final class Interval
         {
             for (int i = startIndex; i <= endIndex; i++)
             {
-                objectIntProcedure.value(this.locationAfterN(i), i);
+                objectIntProcedure.value(this.valueAtIndex(i), i);
             }
         }
         else
         {
             for (int i = startIndex; i >= endIndex; i--)
             {
-                objectIntProcedure.value(this.locationAfterN(i), i);
+                objectIntProcedure.value(this.valueAtIndex(i), i);
             }
         }
     }
@@ -876,7 +890,7 @@ public final class Interval
     public Integer get(int index)
     {
         this.checkBounds("index", index);
-        return this.locationAfterN(index);
+        return this.valueAtIndex(index);
     }
 
     private void checkBounds(String name, int index)
@@ -887,17 +901,9 @@ public final class Interval
         }
     }
 
-    private int locationAfterN(int index)
+    private int valueAtIndex(int index)
     {
-        if (index <= 0)
-        {
-            return this.from;
-        }
-        if (this.step > 0)
-        {
-            return (int) Math.min((long) this.from + (long) this.step * (long) index, this.to);
-        }
-        return (int) Math.max((long) this.from + (long) this.step * (long) index, this.to);
+        return (int) IntervalUtils.valueAtIndex(index, this.from, this.to, this.step);
     }
 
     @Override
@@ -908,18 +914,7 @@ public final class Interval
             return -1;
         }
         Integer value = (Integer) object;
-        if (!this.isWithinBoundaries(value))
-        {
-            return -1;
-        }
-
-        int diff = value - this.from;
-        if (diff % this.step == 0)
-        {
-            return diff / this.step;
-        }
-
-        return -1;
+        return IntervalUtils.indexOf(value.longValue(), this.from, this.to, this.step);
     }
 
     @Override
@@ -1042,7 +1037,7 @@ public final class Interval
 
         if (count > 0 && this.notEmpty())
         {
-            return Interval.fromToBy(this.from, this.locationAfterN(count - 1), this.step);
+            return Interval.fromToBy(this.from, this.valueAtIndex(count - 1), this.step);
         }
         return Lists.immutable.<Integer>empty().asLazy();
     }
@@ -1060,12 +1055,19 @@ public final class Interval
             return Lists.immutable.<Integer>of().asLazy();
         }
 
-        return Interval.fromToBy(this.locationAfterN(count), this.to, this.step);
+        return Interval.fromToBy(this.valueAtIndex(count), this.to, this.step);
     }
 
     @Override
     public LazyIterable<Integer> distinct()
     {
         return this;
+    }
+
+    private void readObject(ObjectInputStream ois)
+            throws IOException, ClassNotFoundException
+    {
+        ois.defaultReadObject();
+        this.size = IntervalUtils.intSize(this.from, this.to, this.step);
     }
 }

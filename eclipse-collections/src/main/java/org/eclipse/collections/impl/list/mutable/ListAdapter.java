@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Goldman Sachs and others.
+ * Copyright (c) 2020 Goldman Sachs and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v. 1.0 which accompany this distribution.
@@ -24,16 +24,14 @@ import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.ParallelListIterable;
 import org.eclipse.collections.api.ordered.OrderedIterable;
 import org.eclipse.collections.api.partition.list.PartitionMutableList;
-import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.impl.block.procedure.CollectionAddProcedure;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.lazy.parallel.list.NonParallelListIterable;
-import org.eclipse.collections.impl.stack.mutable.ArrayStack;
 import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.eclipse.collections.impl.utility.OrderedIterate;
@@ -119,12 +117,6 @@ public final class ListAdapter<T>
     public MutableList<T> newEmpty()
     {
         return FastList.newList();
-    }
-
-    @Override
-    public void forEach(Procedure<? super T> procedure)
-    {
-        this.each(procedure);
     }
 
     @Override
@@ -346,12 +338,6 @@ public final class ListAdapter<T>
     public PartitionMutableList<T> partitionWhile(Predicate<? super T> predicate)
     {
         return ListIterate.partitionWhile(this.delegate, predicate);
-    }
-
-    @Override
-    public MutableStack<T> toStack()
-    {
-        return ArrayStack.newStack(this.delegate);
     }
 
     @Override

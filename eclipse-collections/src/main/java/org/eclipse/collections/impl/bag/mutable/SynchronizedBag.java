@@ -38,8 +38,10 @@ import org.eclipse.collections.api.block.function.primitive.ShortFunction;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.block.predicate.Predicate2;
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
+import org.eclipse.collections.api.block.predicate.primitive.ObjectIntPredicate;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.block.procedure.primitive.ObjectIntProcedure;
+import org.eclipse.collections.api.factory.Bags;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.multimap.bag.MutableBagMultimap;
@@ -50,7 +52,6 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 import org.eclipse.collections.impl.collection.mutable.AbstractSynchronizedMutableCollection;
 import org.eclipse.collections.impl.collection.mutable.SynchronizedCollectionSerializationProxy;
-import org.eclipse.collections.impl.factory.Bags;
 
 /**
  * A synchronized view of a {@link MutableBag}. It is imperative that the user manually synchronize on the collection when iterating over it using the
@@ -96,34 +97,6 @@ public class SynchronizedBag<T>
     protected MutableBag<T> getDelegate()
     {
         return (MutableBag<T>) super.getDelegate();
-    }
-
-    @Override
-    public MutableBag<T> with(T element)
-    {
-        this.add(element);
-        return this;
-    }
-
-    @Override
-    public MutableBag<T> without(T element)
-    {
-        this.remove(element);
-        return this;
-    }
-
-    @Override
-    public MutableBag<T> withAll(Iterable<? extends T> elements)
-    {
-        this.addAllIterable(elements);
-        return this;
-    }
-
-    @Override
-    public MutableBag<T> withoutAll(Iterable<? extends T> elements)
-    {
-        this.removeAllIterable(elements);
-        return this;
     }
 
     @Override
@@ -200,6 +173,42 @@ public class SynchronizedBag<T>
         synchronized (this.getLock())
         {
             return this.getDelegate().bottomOccurrences(count);
+        }
+    }
+
+    @Override
+    public boolean anySatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().anySatisfyWithOccurrences(predicate);
+        }
+    }
+
+    @Override
+    public boolean allSatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().allSatisfyWithOccurrences(predicate);
+        }
+    }
+
+    @Override
+    public boolean noneSatisfyWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().noneSatisfyWithOccurrences(predicate);
+        }
+    }
+
+    @Override
+    public T detectWithOccurrences(ObjectIntPredicate<? super T> predicate)
+    {
+        synchronized (this.getLock())
+        {
+            return this.getDelegate().detectWithOccurrences(predicate);
         }
     }
 

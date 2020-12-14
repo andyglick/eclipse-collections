@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC
-    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
-    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.1//EN"
+    "https://checkstyle.org/dtds/suppressions_1_1.dtd">
 
 <!--
   ~ Copyright (c) 2015 Goldman Sachs.
@@ -99,6 +99,7 @@
     <suppress checks="RedundantModifier" files="ImmutableSortedSetSerializationProxy.java" />
     <suppress checks="RedundantModifier" files="ImmutableSetWithHashingStrategySerializationProxy.java" />
     <suppress checks="RedundantModifier" files="ImmutableArrayStack.java" />
+    <suppress checks="RedundantModifier" files="ImmutableStackSerializationProxy.java" />
     <suppress checks="RedundantModifier" files="FlatCollectBooleanToObjectIterable.java" />
     <suppress checks="RedundantModifier" files="FlatCollectByteToObjectIterable.java" />
     <suppress checks="RedundantModifier" files="FlatCollectCharToObjectIterable.java" />
@@ -115,5 +116,16 @@
     <suppress checks="RedundantModifier" files="ImmutableIntArrayStack.java" />
     <suppress checks="RedundantModifier" files="ImmutableLongArrayStack.java" />
     <suppress checks="RedundantModifier" files="ImmutableShortArrayStack.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableBooleanKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableByteKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableCharKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableDoubleKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableFloatKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableIntKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableShortKeySet.java" />
+    <suppress checks="RedundantModifier" files="AbstractMutableLongKeySet.java" />
+
+	<!-- Runs outside of a plugin Mojo and has no logging API on classpath -->
+	<suppress checks="RegexpSinglelineJava" files="JavadocUtil.java" />
 
 </suppressions>

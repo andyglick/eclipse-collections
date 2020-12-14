@@ -10,6 +10,7 @@
 
 package org.eclipse.collections.api.map;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.collections.api.block.procedure.Procedure;
@@ -22,4 +23,24 @@ public interface ConcurrentMutableMap<K, V>
 {
     @Override
     ConcurrentMutableMap<K, V> tap(Procedure<? super V> procedure);
+
+    @Override
+    default V getOrDefault(Object key, V defaultValue)
+    {
+        return this.getIfAbsentValue((K) key, defaultValue);
+    }
+
+    @Override
+    default ConcurrentMutableMap<K, V> withMap(Map<? extends K, ? extends V> map)
+    {
+        this.putAll(map);
+        return this;
+    }
+
+    @Override
+    default ConcurrentMutableMap<K, V> withMapIterable(MapIterable<? extends K, ? extends V> mapIterable)
+    {
+        this.putAllMapIterable(mapIterable);
+        return this;
+    }
 }

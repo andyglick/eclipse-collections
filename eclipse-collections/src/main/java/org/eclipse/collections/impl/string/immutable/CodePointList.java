@@ -26,6 +26,7 @@ import org.eclipse.collections.api.block.function.primitive.ObjectIntToObjectFun
 import org.eclipse.collections.api.block.predicate.primitive.IntPredicate;
 import org.eclipse.collections.api.block.procedure.primitive.IntIntProcedure;
 import org.eclipse.collections.api.block.procedure.primitive.IntProcedure;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.iterator.IntIterator;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -35,7 +36,6 @@ import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.primitive.AbstractIntIterable;
@@ -143,6 +143,12 @@ public class CodePointList extends AbstractIntIterable implements CharSequence, 
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return this.length() == 0;
+    }
+
+    @Override
     public String subSequence(int start, int end)
     {
         StringBuilder builder = this.toStringBuilder();
@@ -168,6 +174,12 @@ public class CodePointList extends AbstractIntIterable implements CharSequence, 
     public int[] toArray()
     {
         return this.codePoints.toArray();
+    }
+
+    @Override
+    public int[] toArray(int[] target)
+    {
+        return this.codePoints.toArray(target);
     }
 
     @Override
